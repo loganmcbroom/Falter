@@ -1,5 +1,6 @@
 .git/
 .vs/
 out/
+.vscode/
 build/
 CMakeSettings.json
