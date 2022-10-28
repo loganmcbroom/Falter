@@ -11,8 +11,8 @@ juce_add_gui_app( Falter
     # ICON_BIG ...                      # ICON_* arguments specify a path to an image file to use as an icon
     # ICON_SMALL ...
     # DOCUMENT_EXTENSIONS ...           # Specify file extensions that should be associated with this app
-    # COMPANY_NAME ...                  # Specify the name of the app's author
-    PRODUCT_NAME "Falter")     # The name of the final executable, which can differ from the target name
+    COMPANY_NAME "Logan McBroom"        # Specify the name of the app's author
+    PRODUCT_NAME "Falter")              # The name of the final executable, which can differ from the target name
 
 juce_generate_juce_header( Falter )
 

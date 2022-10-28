@@ -41,7 +41,7 @@ AltarClip::AltarClip( std::shared_ptr<flan::Audio> _audio
 	// Waveform thumbnail setup
 	thumbnail.addChangeListener( this );
 	thumbnail.reset( audio->getNumChannels(), audio->getSampleRate(), audio->getNumFrames() );
-	//thumbnail.addBlock( 0, juceAudio, 0, audio->getNumFrames() );
+	thumbnail.addBlock( 0, juceAudio, 0, audio->getNumFrames() );
 
 	addAndMakeVisible( busButton   );
 	addAndMakeVisible( saveButton  );
@@ -84,26 +84,33 @@ void AltarClip::paintButton(Graphics &g, bool isMouseOverButton, bool )
 	{
 	auto & lnf = FalterLookAndFeel::getLNF();
 
-	g.fillAll
-		(
-		getToggleState()?
-			lnf.shadow.withBrightness( .32f ) :
-			( isMouseOverButton? lnf.shadow.withBrightness( .27f ) : lnf.shadow )
-		);
-
-	g.setColour( lnf.accent1 );
-	juce::Rectangle<int> rect( getLocalBounds().withLeft( getHeight() / 2 ) );
-	thumbnail.drawChannels( g, rect.reduced( 2 ), 0, thumbnail.getTotalLength(), 1.0f );
-
-	g.setColour( lnf.light );
-	g.drawText( getName(), 
-				juce::Rectangle<int>( int( getWidth() / 5.0f ), 0, int( getWidth() * ( 4.0f / 5.0f ) ), getHeight() ).reduced( 3 ), 
-				Justification::topRight, true );
+	g.fillAll( lnf.shadow );
+	
 	if( audio )
 		{
-		g.drawText( String( audio->getLength() ),
-						juce::Rectangle<int>( int( getHeight() / 2.0f ), 0, int( getWidth() / 5.0f ), getHeight() ).reduced( 3 ),
-						Justification::topLeft );
+		// Draw audio thumbnail
+		g.setColour( isMouseOverButton? lnf.accent1.withAlpha( .3f ) : lnf.accent1 );
+		juce::Rectangle<int> rect( getLocalBounds().withLeft( getHeight() / 2 ) );
+		thumbnail.drawChannels( g, rect.reduced( 2 ), 0, thumbnail.getTotalLength(), 1.0f );
+
+		if( isMouseOverButton )
+			{
+			g.setFont( lnf.fontMonospace );
+
+			g.setColour( lnf.light );
+			const auto rect = juce::Rectangle<int>( int( getHeight() / 2.0f ), 0, int( getWidth() ), getHeight() ).reduced( 3 );
+
+			// Write audio length
+			auto r2dec = []( float x ){ return std::round( x * 1000 ) / 1000.0f; };
+			const float length = audio->getLength();
+			String lengthText = length > 60?
+				String( r2dec( length / 60.0f ) ) + " min" :
+				String( r2dec( length ) ) + " sec";
+			g.drawText( lengthText, rect, Justification::bottomLeft );
+
+			// write audio name
+			g.drawText( getName(), rect, Justification::topLeft );
+			}
 		}
 	}
 
@@ -166,15 +173,13 @@ void AltarClip::buttonClicked( Button * button )
 
 void AltarClip::timerCallback()
 	{
-	// I was doing this before ???
-	// const float initialX = transportSource.getCurrentPosition() 
-	// 	* ( getWidth() - getHeight() / 2.0f )
-	// 	/ audio->getLength() 
-	// 	/ audio->getSampleRate() 
-	// 	+ getHeight() / 2.0f;
-
+	// The weird computation handles some buttons being stuck on top of the component
+	const float s = getHeight() / 2.0f;
+	const float e = getWidth();
+	const float r = transportSource.getCurrentPosition() / audio->getLength();
+	const float initialX = s + ( e - s ) * r;
+	
 	// Draw white line to show current playback position
-	const float initialX = transportSource.getCurrentPosition() / audio->getLength() * getWidth();
 	currentPosition.setRectangle( juce::Rectangle<float>( 
 		initialX,
 		0.0f, 

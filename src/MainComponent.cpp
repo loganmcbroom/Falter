@@ -9,7 +9,7 @@
 MainComponent::MainComponent()
 	: procButton( "P", 			&FalterLookAndFeel::getLNF().fontSymbol 	)
 	, scriptSelectButton( "3", 	&FalterLookAndFeel::getLNF().fontWingdings 	)
-	, command( "" )
+	, scriptLabel( "" )
 	, formatManager()
 	, transportSource()
 	, sampleBrowser()
@@ -26,7 +26,7 @@ MainComponent::MainComponent()
 	addAndMakeVisible( *log 				);
 	addAndMakeVisible( &procButton 			);
 	addAndMakeVisible( &scriptSelectButton 	);
-	addAndMakeVisible( &command    			);
+	addAndMakeVisible( &scriptLabel    		);
 	addAndMakeVisible( &sampleBrowser 		);
 	addAndMakeVisible( &inClips    			);
 	addAndMakeVisible( &threads	   			);
@@ -36,8 +36,8 @@ MainComponent::MainComponent()
 	scriptSelectButton	.addListener( this );
 	sampleBrowser		.addListener( this );
 
-	command.setFont( FalterLookAndFeel::getLNF().fontMonospace );
-	command.setText( "Falter.lua", dontSendNotification );
+	scriptLabel.setFont( FalterLookAndFeel::getLNF().fontMonospace );
+	scriptLabel.setText( "Falter.lua", dontSendNotification );
 
 	setSize( 1000, 700 );
 
@@ -117,10 +117,10 @@ void MainComponent::resized()
 	boundButton( 0, &procButton );
 	boundButton( 1, &scriptSelectButton );
 
-	command.setBounds( 
+	scriptLabel.setBounds( 
 		numButtons * ( u + m ) + m, 
 		m, 
-		w - ( 4 * ( u + m ) + 2 * m ), 
+		w - ( numButtons * ( u + m ) + 2 * m ), 
 		u 
 		);
 
@@ -169,10 +169,10 @@ void MainComponent::importFile( File file )
 
 void MainComponent::procButtonClicked() 
 	{
-	if( ! File( File::getCurrentWorkingDirectory().getFullPathName() + "/" + command.getText() ).exists() )
+	if( ! File( File::getCurrentWorkingDirectory().getFullPathName() + "/" + scriptLabel.getText() ).exists() )
 		{
 		Logger::writeToLog( "The provided script does not exist:" );
-		Logger::writeToLog( command.getText() );
+		Logger::writeToLog( scriptLabel.getText() );
 		return;
 		}
 
@@ -186,7 +186,7 @@ void MainComponent::procButtonClicked()
 	for( int i = 0; i < inClips.getNumItems(); ++i )
 		inAudio.emplace_back( inClips.getItem( i )->getAudio() );
 		
-	threads.addThread( command.getText(), retrieveFiles, inAudio );
+	threads.addThread( scriptLabel.getText(), retrieveFiles, inAudio );
 	}
 
 void MainComponent::scriptSelectButtonClicked()

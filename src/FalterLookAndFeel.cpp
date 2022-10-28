@@ -1,5 +1,3 @@
-#include "FalterLookAndFeel.h"
-
 #include "FalterLookandFeel.h"
 
 FalterLookAndFeel& FalterLookAndFeel::getLNF()
@@ -23,14 +21,10 @@ FalterLookAndFeel::FalterLookAndFeel()
     , fontWingdings ( "Wingdings", fontSize, Font::bold )
 	, fontWebdings  ( "Webdings" , fontSize, Font::bold )
 	, fontSymbol    ( "Symbol"	 , fontSize, Font::bold )
-	//, fontRoboto    ( "Roboto"   , 18,		  		   Font::plain )
 	, fontMonospace ( Font::getDefaultMonospacedFontName() , 12, Font::plain )
     {
     setColour( TextEditor::textColourId, light );
     setColour( TextEditor::outlineColourId, dark );
-
-    setColour( Label::textColourId, light );
-    setColour( Label::backgroundColourId, dark );
     
     setColour( TreeView::backgroundColourId, dark );
 
@@ -39,6 +33,7 @@ FalterLookAndFeel::FalterLookAndFeel()
     setColour( FileBrowserComponent::currentPathBoxArrowColourId, light );
     setColour( FileBrowserComponent::filenameBoxBackgroundColourId, dark );
     setColour( FileBrowserComponent::filenameBoxTextColourId, light );
+
     }
 
 void FalterLookAndFeel::drawScrollbar( Graphics &g, ScrollBar &, 
@@ -103,10 +98,11 @@ void FalterLookAndFeel::drawLabel( Graphics & g, Label & l )
     {
     
     g.setFont( fontMonospace );
-    g.setColour( light );
+    
 
     if( File::isAbsolutePath( l.getText() ) )
         {
+        g.setColour( light );
         const File path = l.getText();
         l.hideEditor( true );
         const String shortPath = path.getRelativePathFrom( path.getParentDirectory() );
@@ -114,6 +110,10 @@ void FalterLookAndFeel::drawLabel( Graphics & g, Label & l )
         return;
         }
     else
-        g.drawText( l.getText(), Rectangle<float>( 0, 2, l.getWidth(), l.getHeight() ), Justification::left );
-    
+        {
+        g.fillAll( dark );
+
+        g.setColour( light );
+        g.drawText( l.getText(), Rectangle<float>( margin, 2, l.getWidth(), l.getHeight() ), Justification::left );
+        }
     }

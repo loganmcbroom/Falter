@@ -49,23 +49,24 @@ AltarThread::AltarThread(
 	, script( _script )
 	, L( lua_open() )
 	, startTime( )
+	, endTime( )
 	, cdpDir( )
 	, workingDir( )
 	, threadFinished( false )
+	, threadSuccess( false )
 	, allProcessesSetUp( true )
 	//, inputs( _inputs )
 	{
 	bool startupError = false;
 	auto err = [&]( const char * error )
 		{
-		log( String("[Thread Setup] ") + String( error ) );
+		log( String("[Thread Setup] ") + String( error ) + "\n" );
 		startupError = true;
 		};
 
 	auto luaerr = [&]( lua_State * L )
 		{
-		log( std::string("[Thread Setup] ") + std::string( lua_tostring(L, -1) ) );
-		startupError = true;
+		err( lua_tostring(L, -1) );
 		};
 
 	luaL_openlibs( L );
@@ -102,7 +103,8 @@ AltarThread::AltarThread(
 	//Boot it up!
 	if( ! startupError ) 
 		{
-		startTime = Time::getMillisecondCounter(); 
+		startTime = Time::getCurrentTime(); 
+		startTimer( 33 );
 		startThread();
 		}
 	}
@@ -121,165 +123,100 @@ void AltarThread::log( const String & s )
 	Logger::writeToLog( "{Thread: " + getThreadName() + "} " + s );
 	}
 
-// bool AltarThread::isInput( flan::Audio * a )
-// 	{
-// 	// for( auto & _a : inputs )
-// 	// 	if( _a.get() == a )
-// 	// 		return true;
-// 	return false;
-// 	}
-
 void AltarThread::paint( Graphics & g )
 	{
 	auto & lnf = FalterLookAndFeel::getLNF();
-	g.fillAll( threadFinished? lnf.accent2 : lnf.mid );
+	
+	// Draw background
+	g.setColour( lnf.shadow );
+	g.fillRect( getLocalBounds() );
 
-	g.setFont( Font( 18 ) );
-	g.setColour( lnf.light );
-	g.drawText( getThreadName().substring( 5 ), getLocalBounds(), Justification::centred );
+	// Draw info text
+	const auto bound = getLocalBounds().reduced( 6 );
+	g.setFont( lnf.fontMonospace );
+	g.setColour( threadFinished? threadSuccess? lnf.accent2 : lnf.accent1 :lnf.light );
+	g.drawText( "Start:", bound, Justification::topLeft );
+	g.drawText( getStartTimeString(), bound, Justification::topRight );
+	g.drawText( "Elapsed:", bound, Justification::bottomLeft );
+	g.drawText( getElapsedTimeString(), bound, Justification::bottomRight );
 	}
 
 void AltarThread::run()
 	{
-	auto luaerr = [&]( lua_State * L )
-		{
-		log( std::string("[Lua] Error: ") + std::string( lua_tostring(L, -1) ) );
-		};
-
 	if( threadShouldExit() )
 		{
-		log( "Exiting thread early due to startup error." );
+		log( "Exiting thread early due to startup error.\n" );
 		return;
 		}
 	
 	if( lua_gettop( L ) != 1 ) // There should only be the script
 		{
-		log( "Lua stack size was > 1 when starting a new thread, stack size was " + String( lua_gettop( L ) ) + "." );
+		log( "Lua stack size was > 1 when starting a new thread, stack size was " + String( lua_gettop( L ) ) + ".\n" );
 		return;
 		}
 
 	log( "[PROCESSING START]" );
 
 	// ...Make the call
-	if( lua_pcall( L, 0, LUA_MULTRET, 0 ) )
+	if( ! lua_pcall( L, 0, LUA_MULTRET, 0 ) ) // if call succeeds
+		{
+		log( String( "[PROCESSING END] Time elapsed: " ) + getElapsedTimeString() + "\n" );
+
+		threadSuccess = true;	
+
+		// Pull all the audios returned from lua into a container and send them to the callback
+		AudioVec outputs;
+		const int numLuaOutputs = lua_gettop( L );
+		for( int i = 1; i <= numLuaOutputs; ++i )
+			{
+			if( luaF_isAudio( L, i ) )
+				{
+				outputs.push_back( luaF_checkAudio( L, i ) );
+				}
+			else if( luaF_isAudioVec( L, i ) )
+				{
+				auto audioVec = luaF_checkAudioVec( L, i );
+				for( auto & audio : audioVec )
+					outputs.push_back( audio );
+				}
+			}
+		const ScopedLock lock( mutex );
+		MessageManagerLock mml;
+		callback( outputs );
+		}
+	else
 		{
 		//We can't do this stuff if the failure is due to the user exiting the thread early
 		if( ! threadShouldExit() ) 
 			{
-			luaerr( L );
-			log( "[PROCESSING FAILED] Time elapsed: " 
-				+ Time( Time::getMillisecondCounter() - startTime ).formatted( "%M:%S:" ) + 
-				std::to_string( ( Time::getMillisecondCounter() - startTime ) % 1000 ) );
-			const ScopedLock lock( mutex );
-			MessageManagerLock mml;
-			threadFinished = true;
-			repaint();
-			}
-		return;
-		}
-	log( "[PROCESSING END] Time elapsed: "
-		+ Time( Time::getMillisecondCounter() - startTime ).formatted( "%M:%S:" ) + 
-		std::to_string( ( Time::getMillisecondCounter() - startTime ) % 1000 )
-		+ std::string("\n\n\n") );
-
-	const int numLuaOutputs = lua_gettop( L );
-
-	// Pull all the audios returned from lua into a container
-	AudioVec outputs;
-	for( int i = 1; i <= numLuaOutputs; ++i )
-		{
-		if( luaF_isAudio( L, i ) )
-			{
-			outputs.push_back( luaF_checkAudio( L, i ) );
-			}
-		else if( luaF_isAudioVec( L, i ) )
-			{
-			auto audioVec = luaF_checkAudioVec( L, i );
-			for( auto & audio : audioVec )
-				outputs.push_back( audio );
+			log( std::string("[Lua] Error: ") + std::string( lua_tostring(L, -1) ) );
+			log( String( "[PROCESSING FAILED] Time elapsed: " ) + getElapsedTimeString() + "\n" );
 			}
 		}
 
-	{ // Close it up, ship it out
+	// Success or not these need to be called
 	const ScopedLock lock( mutex );
 	MessageManagerLock mml;
-	callback( outputs );
+	stopTimer();
 	threadFinished = true;
+	endTime = Time::getCurrentTime();
 	repaint();
 	}
+
+void AltarThread::timerCallback()
+	{
+	repaint();
 	}
 
-// void AltarThread::setUpProcess( string & command, cdpInfo_t info )
-// 	{
-// 	processList.emplace_back( cdpDir + "/" + command, info );
-// 	}
+String AltarThread::getStartTimeString() const
+	{
+	return startTime.formatted( "%H:%M:%S:" ) + String( startTime.getMilliseconds() );
+	}
 
-// vector<string> AltarThread::process()
-// 	{
-// 	struct Child 
-// 		{
-// 		ChildProcess process;
-// 		bool startStatus;
-// 		string output;
-// 		vector<string> generatedFileNames;
-// 		};
-// 	{
-// 	vector<Child> children( processList.size() );
-
-// 	for( int i = 0; i < processList.size(); ++i )
-// 		{
-// 		//improved tokenreplace, generates file names for placeholder character ('$')
-// 		size_t stringPos = 0;
-// 		while( ( stringPos = processList[i].first.find( '$', stringPos ) ) != string::npos )
-// 			{ //We have to add _altar to deal with wacko multi out procs
-// 			size_t extensionSize = processList[i].first.find( ' ', stringPos ) - ( stringPos + 1 );
-// 			string extension = processList[i].first.substr( stringPos + 1, extensionSize );
-// 			string path = getFreeFilename( extension );
-// 			children[i].generatedFileNames.emplace_back( path );
-// 			processList[i].first.replace( stringPos, 1 + extensionSize, path );
-// 			}
-// 		}
-	
-// 	//Start running each process
-// 	for( int i = 0; i < processList.size(); ++i )
-// 		{
-// 		children[i].startStatus = children[i].process.start( processList[i].first );
-// 		}
-// 	//Wait for everything to finish and escape if needed
-// 	for( int i = 0; i < processList.size(); ++i )
-// 		{
-// 		while( children[i].process.isRunning() )
-// 			{
-// 			//We can't simply block because the gui thread might ask this thread to exit
-// 			Thread::wait( 30 );
-// 			if( threadShouldExit() ) 
-// 				{
-// 				for( auto &i : children )
-// 					i.process.kill();
-// 				goto killSwitch; //Using goto to force ChildProcess off the stack, avoids memory leak
-// 				}
-// 			}
-// 		}
-// 	vector<string> output;
-// 	for( int i = 0; i < children.size(); ++i ) 
-// 		{
-// 		children[i].output = children[i].process.readAllProcessOutput().toStdstd::string();
-// 		if( ! children[i].startStatus || children[i].process.getExitCode() != 0 ) //If either startup or processing went wrong, error out
-// 			{
-// 			log( "[CDP] Error running command " + get<0>(processList[i]) + "\n[CDP] " + children[i].output );
-// 			}
-// 		else
-// 			{
-// 			//This is handled outside the output lookup because we need access to the output string
-// 			if( get<1>( processList[i] ).first == cmdInfo ) 
-// 				log( "[CDP] " + get<0>( processList[i] ) + " gave info: " + children[i].output );
-// 			//Do lookup for outfile names. Most cdp processes output a single given file but some
-// 			//	output multiple with related names. We use this to handle those cases.	
-// 			else outFileTypeLookup( output, children[i].generatedFileNames, processList[i].first, processList[i].second );
-// 			}
-// 		}
-// 	return output;
-// 	}
-// 	killSwitch: luaL_error( L, "Escaping processes for thread close" );
-// 	}
-
+String AltarThread::getElapsedTimeString() const
+	{
+	const uint64_t startTimeMS = startTime.toMilliseconds();
+	const uint64_t endTimeMS = threadFinished? endTime.toMilliseconds() : Time::currentTimeMillis();
+	const uint64_t elapsedMS = endTimeMS - startTimeMS;
+	return juce::Time( elapsedMS ).formatted( "%M:%S:" ) + String( elapsedMS % 1000 );
+	}

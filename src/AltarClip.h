@@ -9,7 +9,7 @@
 class AltarClipList;
 namespace flan { class Audio; }
 
-class AltarClip : public Button
+class AltarClip : public Button // Button allows hover color
 				, public ChangeListener
 				, public Button::Listener
 				, public Timer

@@ -49,7 +49,7 @@ private:
 	AltarButton procButton;
 	AltarButton scriptSelectButton;
 	
-	Label command;
+	Label scriptLabel;
 	
 	AudioFormatManager formatManager;
 	AudioTransportSource transportSource;

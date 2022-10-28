@@ -12,20 +12,15 @@ todo:
     use namespace Falter instead of FalterThing
     use juce without including in build tree
     make sure audio algos are moving the buffer not copying
-
-
-Visual:
-    Command background is wrong color
-    Thread background is wrong color
-    Audio thumbnail stopped loading
-    Fix sample button icon
-    Successful process has 2 newline in logger, failed has 0, switch both to 1
-    color thread red or green based on thread succeeding
-    AltarClip playhead line starts at wrong position
+    package flan dox with program
+    script and sample folder select should start in a better folder
+    Clip is being given title "Temp Name"
+    Threads need better title
+    Graph lua map?
+    Func2x1 lua map
+    Func2x2 lua map
+    PVOC lua map
 
 task:
-    Func2x1
-    Func2x2
-    PVOC
-    Graph?
-    remove extra buttons, package flan dox with program
+    func1x1 bug
+    
