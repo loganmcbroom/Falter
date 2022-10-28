@@ -8,9 +8,7 @@
 
 MainComponent::MainComponent()
 	: procButton( "P", 			&FalterLookAndFeel::getLNF().fontSymbol 	)
-	, docButton( "&", 			&FalterLookAndFeel::getLNF().fontWingdings )
-	, sampleFolderButton( "%", 	&FalterLookAndFeel::getLNF().fontWingdings )
-	, scriptSelectButton( "3", 	&FalterLookAndFeel::getLNF().fontWingdings )
+	, scriptSelectButton( "3", 	&FalterLookAndFeel::getLNF().fontWingdings 	)
 	, command( "" )
 	, formatManager()
 	, transportSource()
@@ -27,8 +25,6 @@ MainComponent::MainComponent()
 	Logger::setCurrentLogger( log.get() );
 	addAndMakeVisible( *log 				);
 	addAndMakeVisible( &procButton 			);
-	addAndMakeVisible( &docButton 			);
-	addAndMakeVisible( &sampleFolderButton 	);
 	addAndMakeVisible( &scriptSelectButton 	);
 	addAndMakeVisible( &command    			);
 	addAndMakeVisible( &sampleBrowser 		);
@@ -37,8 +33,6 @@ MainComponent::MainComponent()
 	addAndMakeVisible( &outClips   			);
 
 	procButton			.addListener( this );
-	docButton			.addListener( this );
-	sampleFolderButton	.addListener( this );
 	scriptSelectButton	.addListener( this );
 	sampleBrowser		.addListener( this );
 
@@ -113,6 +107,7 @@ void MainComponent::resized()
 	const int u = FalterLookAndFeel::getLNF().unit;
 	const int w = getWidth();
 	const int h = getHeight();
+	const int numButtons = 2;
 
 	auto boundButton = [&]( int n, Component * c )
 		{
@@ -120,12 +115,10 @@ void MainComponent::resized()
 		};
 
 	boundButton( 0, &procButton );
-	boundButton( 1, &docButton );
-	boundButton( 2, &sampleFolderButton );
-	boundButton( 3, &scriptSelectButton );
+	boundButton( 1, &scriptSelectButton );
 
 	command.setBounds( 
-		4 * ( u + m ) + m, 
+		numButtons * ( u + m ) + m, 
 		m, 
 		w - ( 4 * ( u + m ) + 2 * m ), 
 		u 
@@ -163,8 +156,6 @@ void MainComponent::changeListenerCallback( ChangeBroadcaster * )
 void MainComponent::buttonClicked( Button* button )
 	{
 		 if( button == &procButton	) 			{ procButtonClicked(); }
-	else if( button == &docButton	) 			{ docButtonClicked(); }
-	else if( button == &sampleFolderButton	) 	{ sampleFolderButtonClicked(); }
 	else if( button == &scriptSelectButton	) 	{ scriptSelectButtonClicked(); }
 	}
 
@@ -196,16 +187,6 @@ void MainComponent::procButtonClicked()
 		inAudio.emplace_back( inClips.getItem( i )->getAudio() );
 		
 	threads.addThread( command.getText(), retrieveFiles, inAudio );
-	}
-
-void MainComponent::docButtonClicked()
-	{
-	Logger::writeToLog( "Remove this button." );
-	}
-
-void MainComponent::sampleFolderButtonClicked()
-	{
-	Logger::writeToLog( "Remove this button." );
 	}
 
 void MainComponent::scriptSelectButtonClicked()

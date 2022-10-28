@@ -34,8 +34,6 @@ private:
     void importFile( File file );
 
 	void procButtonClicked(); // Processes input files with the supplied lua script
-	void docButtonClicked(); // Opens Doxygen docs
-	void sampleFolderButtonClicked();
 	void scriptSelectButtonClicked();
 
 	void filesDropped( const StringArray & files, int x, int y ) override;
@@ -49,8 +47,6 @@ private:
 	void browserRootChanged( const File & newRoot ) override {}
 
 	AltarButton procButton;
-	AltarButton docButton;
-	AltarButton sampleFolderButton;
 	AltarButton scriptSelectButton;
 	
 	Label command;
