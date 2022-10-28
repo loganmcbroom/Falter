@@ -1,6 +1,6 @@
 New project, no readme
 
-###Notes about systems:
+### Notes about systems
 For each flan data type T, there are two Lua types:
 - userdata containing a shared_ptr<T>
 - Lua array of the first type
