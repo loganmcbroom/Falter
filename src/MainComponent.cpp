@@ -51,7 +51,7 @@ MainComponent::MainComponent()
 	// 	if( ! chooser.browseForDirectory() 
 	// 	 || ! chooser.getResult().exists()
 	// 	 || ! chooser.getResult().getChildFile( "modify.exe" ).exists() )
-	// 		Logger::writeToLog( "Things won't work until you pick the correct _cdprogs directory" );
+	// 		Logger::writeToLog( "Things won't work until you pick the correct _cdprogs directory\n" );
 	// 	else
 	// 		{
 	// 		std::ofstream settingsFile( "Settings.lua" ); 
@@ -59,7 +59,7 @@ MainComponent::MainComponent()
 	// 		}
 	// 	}
 
-	Logger::writeToLog( "Falter Initialized" );
+	Logger::writeToLog( "Falter Initialized\n" );
 	}
 
 MainComponent::~MainComponent()
@@ -162,7 +162,7 @@ void MainComponent::buttonClicked( Button* button )
 // Adds given file to the input cliplist
 void MainComponent::importFile( File file )
 	{
-	auto audio = std::make_shared<flan::Audio>( file.getFullPathName().toStdString() );
+	auto audio = flan::Audio( file.getFullPathName().toStdString() );
 	inClips.addClipFromAudio( audio );
 	procButton.setEnabled( true );
 	}
@@ -171,18 +171,18 @@ void MainComponent::procButtonClicked()
 	{
 	if( ! File( File::getCurrentWorkingDirectory().getFullPathName() + "/" + scriptLabel.getText() ).exists() )
 		{
-		Logger::writeToLog( "The provided script does not exist:" );
-		Logger::writeToLog( scriptLabel.getText() );
+		Logger::writeToLog( "The provided script does not exist: " + scriptLabel.getText() );
 		return;
 		}
 
-	std::function< void( std::vector<std::shared_ptr<flan::Audio>> & ) > retrieveFiles = [&]( std::vector<std::shared_ptr<flan::Audio>> & as )
+	std::function< void( AudioVec & ) > retrieveFiles = [&]( AudioVec & as )
 		{
 		for( auto & a : as )
-			outClips.addClipFromAudio( a );
+			if( ! a.isNull() )
+				outClips.addClipFromAudio( a );
 		};
 
-	std::vector<std::shared_ptr<flan::Audio>> inAudio;
+	AudioVec inAudio;
 	for( int i = 0; i < inClips.getNumItems(); ++i )
 		inAudio.emplace_back( inClips.getItem( i )->getAudio() );
 		

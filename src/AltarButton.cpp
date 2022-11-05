@@ -33,7 +33,7 @@ void AltarButton::paintButton(Graphics &g, bool isMouseOverButton, bool isButton
 		}
 
 	if( font == nullptr ) return;
-	Font &f = Font( *font );
+	Font && f = Font( *font );
 	f.setHeight( fontHeight );
 	if( isButtonDown ) f.setHeight( f.getHeight() * 0.9f );
 	g.setFont( f );

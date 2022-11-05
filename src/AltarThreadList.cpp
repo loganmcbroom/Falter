@@ -14,13 +14,14 @@ AltarThreadList::~AltarThreadList()
 	{
 	}
 
-void AltarThreadList::addThread( 
-	const String & script, 
-	std::function< void( std::vector<std::shared_ptr<flan::Audio>> & ) > & callback, 
-	const std::vector<std::shared_ptr<flan::Audio>> & files )
+void AltarThreadList::addThread( const String & script, std::function< void ( AudioVec & ) > & callback, const AudioVec & files )
 	{
+	static int n = 0;
+	++n;
+	Time t = Time::getCurrentTime();
 	addItem( new AltarThread( 
-		File( File::getCurrentWorkingDirectory().getFullPathName() + "/" + script ).getFileNameWithoutExtension() + String( Time::currentTimeMillis() ), 
+		String( n ) + " " + script,
+			//+ t.formatted( "%M:%S." ) + String( t.getMilliseconds() ), 
 		script, 
 		callback, 
 		files ) );

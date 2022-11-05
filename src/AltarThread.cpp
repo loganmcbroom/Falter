@@ -11,12 +11,10 @@ extern "C"
 #include "lauxlib.h"
 }
 
-#include <flan/Audio.h>
-
 #include "FalterLookandFeel.h"
 
-#include "Lua/Audio.h"
-#include "Lua/Function.h"
+#include "Lua/Utility.h"
+#include "Lua/Usertypes.h"
 
 static int lua_print( lua_State * L ) 
 	{
@@ -55,8 +53,10 @@ AltarThread::AltarThread(
 	, threadFinished( false )
 	, threadSuccess( false )
 	, allProcessesSetUp( true )
-	//, inputs( _inputs )
+	, listener()
 	{
+	addListener( &listener );
+
 	bool startupError = false;
 	auto err = [&]( const char * error )
 		{
@@ -84,11 +84,11 @@ AltarThread::AltarThread(
 	// 	err( lua_tostring(L, -1) );
 	
 	lua_settop( L, 0 ); //Clear the stack
-	luaF_register_Audio( L ); // Register Audio class into the Lua context
-	luaF_register_function_types( L ); // Register all function types into the Lua context
+	luaF_register_Usertypes( L );
 
 	// Create global "f" with all the input file paths and metatable to stop bad array access
-	luaF_pushAudioVec( L, inputs );
+	luaF_push( L, inputs );
+
 	lua_setglobal( L, "f" );
 
 	// Load the supplied script
@@ -120,7 +120,12 @@ AltarThread::~AltarThread()
 void AltarThread::log( const String & s )
 	{
 	MessageManagerLock mml;
-	Logger::writeToLog( "{Thread: " + getThreadName() + "} " + s );
+	Logger::writeToLog( s );
+	}
+
+std::atomic<bool> & AltarThread::getCanceller()
+	{
+	return listener.canceller;
 	}
 
 void AltarThread::paint( Graphics & g )
@@ -169,16 +174,8 @@ void AltarThread::run()
 		const int numLuaOutputs = lua_gettop( L );
 		for( int i = 1; i <= numLuaOutputs; ++i )
 			{
-			if( luaF_isAudio( L, i ) )
-				{
-				outputs.push_back( luaF_checkAudio( L, i ) );
-				}
-			else if( luaF_isAudioVec( L, i ) )
-				{
-				auto audioVec = luaF_checkAudioVec( L, i );
-				for( auto & audio : audioVec )
-					outputs.push_back( audio );
-				}
+			AudioVec currentReturn = luaF_checkAsArray<flan::Audio>( L, i );
+			outputs.insert( outputs.end(), currentReturn.begin(), currentReturn.end() );
 			}
 		const ScopedLock lock( mutex );
 		MessageManagerLock mml;
@@ -186,7 +183,7 @@ void AltarThread::run()
 		}
 	else
 		{
-		//We can't do this stuff if the failure is due to the user exiting the thread early
+		// We can't do this stuff if the failure is due to the user exiting the thread early
 		if( ! threadShouldExit() ) 
 			{
 			log( std::string("[Lua] Error: ") + std::string( lua_tostring(L, -1) ) );
@@ -210,7 +207,7 @@ void AltarThread::timerCallback()
 
 String AltarThread::getStartTimeString() const
 	{
-	return startTime.formatted( "%H:%M:%S:" ) + String( startTime.getMilliseconds() );
+	return startTime.formatted( "%H:%M:%S." ) + String( startTime.getMilliseconds() );
 	}
 
 String AltarThread::getElapsedTimeString() const
@@ -218,5 +215,5 @@ String AltarThread::getElapsedTimeString() const
 	const uint64_t startTimeMS = startTime.toMilliseconds();
 	const uint64_t endTimeMS = threadFinished? endTime.toMilliseconds() : Time::currentTimeMillis();
 	const uint64_t elapsedMS = endTimeMS - startTimeMS;
-	return juce::Time( elapsedMS ).formatted( "%M:%S:" ) + String( elapsedMS % 1000 );
+	return juce::Time( elapsedMS ).formatted( "%M:%S." ) + String( elapsedMS % 1000 );
 	}

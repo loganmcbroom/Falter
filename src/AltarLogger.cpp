@@ -15,22 +15,31 @@ AltarLogger::AltarLogger()
 	clearButton.addListener( this );
 	
 	setFont( FalterLookAndFeel::getLNF().fontMonospace );
+
+	// redirect std::cout to the logger
+	oldStreamBuffer = std::cout.rdbuf( this );
 	}
 
 AltarLogger::~AltarLogger() 
 	{
+	std::cout.rdbuf( oldStreamBuffer );
 	}
 
 void AltarLogger::logMessage( const String & message )
 	{
 	// insertTextAtCaret( Time::getCurrentTime().formatted( "(%I:%M:%S) " ) );
 	setCaretPosition( getText().length() );
-	insertTextAtCaret( message + "\n" );
+	juce::Thread * thread = Thread::getCurrentThread();
+	if( thread )
+		insertTextAtCaret( "{" + thread->getThreadName() + "} " + message + "\n" );
+	else
+		insertTextAtCaret( "{Main} " + message + "\n" );
 
 	// Make sure we don't go too crazy with this thing... A long program could output a ridiculous amount of text.
 	// If it gets too long cut out half the text so we don't have to do it often
-	if( getText().length() > 65536 ) 
-		setText( getText().substring( getText().length() - 65536 / 2, false ) );
+	constexpr int maxLength = 65536;
+	if( getText().length() > maxLength ) 
+		setText( getText().substring( getText().length() - maxLength / 2, false ) );
 	}
 
 void AltarLogger::paint( Graphics & g )
@@ -50,3 +59,14 @@ void AltarLogger::buttonClicked( Button * )
 	{
 	TextEditor::clear();
 	}
+
+std::streamsize AltarLogger::xsputn( const char_type * s, std::streamsize n ) 
+	{
+	MessageManagerLock mml;
+	logMessage( s );
+	return n;
+    }
+
+// I don't know what this does but the base class streambuf defaults to a "failed to overflow" return value
+// So if it isn't overloaded the cout redirect stops working
+std::streambuf::int_type AltarLogger::overflow( int_type ch ) {	return 0; }

@@ -2,11 +2,20 @@
 
 #include <functional>
 
+#include <flan/Audio.h>
+
 #include <JuceHeader.h>
+
+#include "./Types.h"
 
 #include "AltarLogger.h"
 
-#include "./Types.h"
+struct AltarThreadListener : public Thread::Listener
+{
+	AltarThreadListener() : canceller( false ) {}
+	void exitSignalSent() override { canceller = true; }
+	std::atomic<bool> canceller;
+};
 
 class AltarThread : public Thread
 				  , public Component
@@ -21,6 +30,7 @@ public:
 	~AltarThread();
 
 	void log( const String & s ); // Passes to Logger with added thread info and lock
+	std::atomic<bool> & getCanceller();
 	
 private:
 	void paint( Graphics & g ) override;
@@ -40,6 +50,8 @@ private:
 	bool threadFinished;
 	bool threadSuccess;
 	bool allProcessesSetUp;
+
+	AltarThreadListener listener;
 
 	static CriticalSection mutex;
 };

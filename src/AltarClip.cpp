@@ -10,17 +10,17 @@
 AltarClip * AltarClip::active = nullptr;
 
 
-static std::vector<const float *> getFlanChanPointers( std::shared_ptr<flan::Audio> a )
+static std::vector<const float *> getFlanChanPointers( flan::Audio a )
 	{
 	std::vector<const float *> ps;
-	for( flan::Channel channel = 0; channel < a->getNumChannels(); ++channel )
+	for( flan::Channel channel = 0; channel < a.getNumChannels(); ++channel )
 		{
-		ps.emplace_back( a->getSamplePointer( channel, 0 ) );
+		ps.emplace_back( a.getSamplePointer( channel, 0 ) );
 		}
 	return ps;
 	}
 
-AltarClip::AltarClip( std::shared_ptr<flan::Audio> _audio
+AltarClip::AltarClip( flan::Audio _audio
 			, AudioFormatManager &_formatManager
 			, AudioThumbnailCache &_thumbnailCache
 			, AudioTransportSource &_transportSource
@@ -30,7 +30,7 @@ AltarClip::AltarClip( std::shared_ptr<flan::Audio> _audio
 	, formatManager( _formatManager )
 	, audio( _audio )
 	, flanAudioChanPointers( getFlanChanPointers( audio ) )
-	, juceAudio( (float * const *) &flanAudioChanPointers[0], audio->getNumChannels(), audio->getNumFrames() )
+	, juceAudio( (float * const *) &flanAudioChanPointers[0], audio.getNumChannels(), audio.getNumFrames() )
 	, audioSource( juceAudio, false )
 	, thumbnail( 512, _formatManager, _thumbnailCache )
 	, busButton  ( "4", &FalterLookAndFeel::getLNF().fontWebdings, 18 ) 
@@ -40,8 +40,8 @@ AltarClip::AltarClip( std::shared_ptr<flan::Audio> _audio
 
 	// Waveform thumbnail setup
 	thumbnail.addChangeListener( this );
-	thumbnail.reset( audio->getNumChannels(), audio->getSampleRate(), audio->getNumFrames() );
-	thumbnail.addBlock( 0, juceAudio, 0, audio->getNumFrames() );
+	thumbnail.reset( audio.getNumChannels(), audio.getSampleRate(), audio.getNumFrames() );
+	thumbnail.addBlock( 0, juceAudio, 0, audio.getNumFrames() );
 
 	addAndMakeVisible( busButton   );
 	addAndMakeVisible( saveButton  );
@@ -86,7 +86,7 @@ void AltarClip::paintButton(Graphics &g, bool isMouseOverButton, bool )
 
 	g.fillAll( lnf.shadow );
 	
-	if( audio )
+	if( audio.getNumFrames() > 0 )
 		{
 		// Draw audio thumbnail
 		g.setColour( isMouseOverButton? lnf.accent1.withAlpha( .3f ) : lnf.accent1 );
@@ -102,7 +102,7 @@ void AltarClip::paintButton(Graphics &g, bool isMouseOverButton, bool )
 
 			// Write audio length
 			auto r2dec = []( float x ){ return std::round( x * 1000 ) / 1000.0f; };
-			const float length = audio->getLength();
+			const float length = audio.getLength();
 			String lengthText = length > 60?
 				String( r2dec( length / 60.0f ) ) + " min" :
 				String( r2dec( length ) ) + " sec";
@@ -131,7 +131,7 @@ void AltarClip::playPressed()
 	busButton.setButtonText( "n" );
 	busButton.font = &FalterLookAndFeel::getLNF().fontWingdings;
 
-	transportSource.setSource( &audioSource, 0, nullptr, audio->getSampleRate(), audio->getNumChannels() );
+	transportSource.setSource( &audioSource, 0, nullptr, audio.getSampleRate(), audio.getNumChannels() );
 	transportSource.start();
 	transportSource.addChangeListener( this );
 	}
@@ -164,7 +164,7 @@ void AltarClip::buttonClicked( Button * button )
 		if( chooser.browseForFileToSave( true ) )
 			{
 			File choice = chooser.getResult();
-			audio->save( choice.getFullPathName().toStdString() );
+			audio.save( choice.getFullPathName().toStdString() );
 			}
 		setName( chooser.getResult().getFileName() );
 		repaint();
@@ -176,7 +176,7 @@ void AltarClip::timerCallback()
 	// The weird computation handles some buttons being stuck on top of the component
 	const float s = getHeight() / 2.0f;
 	const float e = getWidth();
-	const float r = transportSource.getCurrentPosition() / audio->getLength();
+	const float r = transportSource.getCurrentPosition() / audio.getLength();
 	const float initialX = s + ( e - s ) * r;
 	
 	// Draw white line to show current playback position

@@ -16,8 +16,8 @@ public:
 	void erase( unsigned int pos );
 	void clear();
 
-	void addClipFromAudio( std::shared_ptr<flan::Audio> );
-	void insertClipFromAudio( std::shared_ptr<flan::Audio> file, size_t index );
+	void addClipFromAudio( flan::Audio );
+	void insertClipFromAudio( flan::Audio file, size_t index );
 
 private:
 	bool isInterestedInDragSource( const SourceDetails & dragSourceDetails ) override;

@@ -20,7 +20,7 @@ AltarClipList::~AltarClipList()
 	{
 	for( int i = 0; i < getNumItems(); ++i )
 		{
-		 getItem( i )->getThumbnail().setSource( nullptr );
+		getItem( i )->getThumbnail().setSource( nullptr );
 		}
 	}
 
@@ -51,13 +51,13 @@ void AltarClipList::clear()
 	thumbnailCache.clear();
 	}
 
-void AltarClipList::addClipFromAudio( std::shared_ptr<flan::Audio> a )
+void AltarClipList::addClipFromAudio( flan::Audio a )
 	{
 	insertClipFromAudio( a, getNumItems() );
 	}
 
 //
-void AltarClipList::insertClipFromAudio( std::shared_ptr<flan::Audio> a, size_t index )
+void AltarClipList::insertClipFromAudio( flan::Audio a, size_t index )
 	{
 	insertItem( new AltarClip( a, formatManager, thumbnailCache, transportSource ), index );
 	}

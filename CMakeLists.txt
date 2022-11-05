@@ -32,12 +32,17 @@ target_sources( Falter
         src/Types.h
 
         src/Lua/Utility.cpp
+        src/Lua/Usertypes.h
+        src/Lua/Usertypes.cpp
+        src/Lua/LTMP.h
+        src/Lua/LTMP.cpp
         src/Lua/Audio.cpp
+        src/Lua/AudioMod.cpp
         src/Lua/PVOC.cpp
         src/Lua/Function.cpp
         )
 
-target_compile_features( Falter PRIVATE cxx_std_17 )
+target_compile_features( Falter PRIVATE cxx_std_20 )
 set_target_properties( Falter PROPERTIES CXX_EXTENSIONS OFF )
 target_include_directories( Falter PRIVATE src )
 

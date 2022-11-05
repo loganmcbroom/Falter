@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include <flan/Audio.h>
+
 #include <JuceHeader.h>
 
 #include "AltarButton.h"
@@ -16,7 +18,7 @@ class AltarClip : public Button // Button allows hover color
 {
 	friend class AltarClipList;
 public:
-	AltarClip( std::shared_ptr<flan::Audio> audio
+	AltarClip( flan::Audio audio
 			 , AudioFormatManager & formatManager
 			 , AudioThumbnailCache & thumbnailCache
 			 , AudioTransportSource & transportSource
@@ -26,7 +28,7 @@ public:
 
 	AudioThumbnail & getThumbnail();
 
-	std::shared_ptr<flan::Audio> getAudio() { return audio; };
+	flan::Audio getAudio() { return audio; };
 
 	void playPressed();
 	void stopPressed();
@@ -44,7 +46,7 @@ private:
 	AudioTransportSource & transportSource;
 	AudioFormatManager & formatManager; 
 	
-	std::shared_ptr<flan::Audio> audio;
+	flan::Audio audio;
 	std::vector<const float *> flanAudioChanPointers; // Needed to wrap flan buffer in Juce object
 	AudioBuffer<float> juceAudio; // Juce buffer wrapper for flan Audio
 	MemoryAudioSource audioSource; // Juce AudioSource wrapper for Juce buffer
