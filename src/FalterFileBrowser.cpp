@@ -25,7 +25,7 @@ void FalterFileBrowser::paint( Graphics & g )
     //FileBrowserComponent::paint( g );
     }
 
-// void AltarList<T>::paintButton( Graphics & g, bool, bool )
+// void FalterList<T>::paintButton( Graphics & g, bool, bool )
 // 	{
 // 	g.fillAll( dark );
 // 	}

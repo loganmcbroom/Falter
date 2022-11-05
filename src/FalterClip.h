@@ -6,25 +6,25 @@
 
 #include <JuceHeader.h>
 
-#include "AltarButton.h"
+#include "FalterButton.h"
 
-class AltarClipList;
+class FalterClipList;
 namespace flan { class Audio; }
 
-class AltarClip : public Button // Button allows hover color
+class FalterClip : public Button // Button allows hover color
 				, public ChangeListener
 				, public Button::Listener
 				, public Timer
 {
-	friend class AltarClipList;
+	friend class FalterClipList;
 public:
-	AltarClip( flan::Audio audio
+	FalterClip( flan::Audio audio
 			 , AudioFormatManager & formatManager
 			 , AudioThumbnailCache & thumbnailCache
 			 , AudioTransportSource & transportSource
 			 );
 
-	~AltarClip();
+	~FalterClip();
 
 	AudioThumbnail & getThumbnail();
 
@@ -33,7 +33,7 @@ public:
 	void playPressed();
 	void stopPressed();
 
-	static AltarClip * active;
+	static FalterClip * active;
 
 private:  
 	void timerCallback();
@@ -52,6 +52,6 @@ private:
 	MemoryAudioSource audioSource; // Juce AudioSource wrapper for Juce buffer
 
 	AudioThumbnail thumbnail;
-	AltarButton busButton, saveButton;
+	FalterButton busButton, saveButton;
 	DrawableRectangle currentPosition;
 }; 

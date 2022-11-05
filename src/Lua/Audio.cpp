@@ -157,7 +157,7 @@ void luaF_register_Audio( lua_State * L )
 
     // Conversion
     //luaF_register_helper<F_Audio_convertToGraph, flan::Graph, flan::Audio, Interval, Pixel, Pixel, float>( L, "convertToGraph" );
-    //luaF_register_helper<F_Audio_saveToBMP, flan::Audio, flan::Audio, const std::string &, Interval, Pixel, Pixel>( L, "saveToBMP" );
+    luaF_register_helper<F_Audio_saveToBMP, flan::Audio, flan::Audio, std::string, Interval, Pixel, Pixel>( L, "saveToBMP" );
     luaF_register_helper<F_Audio_convertToPVOC, flan::PVOC, flan::Audio, Frame, Frame, Frame>( L, "convertToPVOC" );
     luaF_register_helper<F_Audio_convertToPVOC, flan::PVOC, flan::Audio, Frame, Frame, Frame>( L, "__call" );
     luaF_register_helper<F_Audio_convertToFunction, flan::Func1x1, flan::Audio, flan::Time>( L, "convertToFunction" );

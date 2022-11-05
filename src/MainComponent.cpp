@@ -4,7 +4,7 @@
 
 #include <flan/Audio.h>
 
-#include "AltarLogger.h"
+#include "FalterLogger.h"
 
 MainComponent::MainComponent()
 	: procButton( "P", 			&FalterLookAndFeel::getLNF().fontSymbol 	)
@@ -20,7 +20,7 @@ MainComponent::MainComponent()
 	{
 	setLookAndFeel( &FalterLookAndFeel::getLNF() );
 
-	log.reset( new AltarLogger() );
+	log.reset( new FalterLogger() );
 
 	Logger::setCurrentLogger( log.get() );
 	addAndMakeVisible( *log 				);
@@ -79,7 +79,7 @@ void MainComponent::prepareToPlay( int samplesPerBlockExpected, double sampleRat
 //This function is handed an audio buffer to fill as is needed for output
 void MainComponent::getNextAudioBlock( const AudioSourceChannelInfo& bufferToFill )
 	{
-	if( AltarClip::active == nullptr )
+	if( FalterClip::active == nullptr )
 		{
 		bufferToFill.clearActiveBufferRegion();
 		return;

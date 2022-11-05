@@ -2,16 +2,16 @@
 
 #include <JuceHeader.h>
 
-class AltarButton;
+class FalterButton;
 
 template < typename T >
-class AltarList  : public Component
+class FalterList  : public Component
 				 , public ScrollBar::Listener
 				 , public Button::Listener
 	{
 public:
-	AltarList();
-	~AltarList();
+	FalterList();
+	~FalterList();
 
 	virtual int getItemHeight() = 0;
 	
@@ -37,9 +37,9 @@ private:
 	void mouseWheelMove(const MouseEvent & event, const MouseWheelDetails & wheel ) override;
 	
 	
-	std::vector< std::pair< std::shared_ptr<T>, std::unique_ptr<AltarButton> > > items;
+	std::vector< std::pair< std::shared_ptr<T>, std::unique_ptr<FalterButton> > > items;
 
 	ScrollBar scroll;
 
-	std::unique_ptr<AltarButton> clearButton;
+	std::unique_ptr<FalterButton> clearButton;
 	};

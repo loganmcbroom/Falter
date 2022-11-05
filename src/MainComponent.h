@@ -2,12 +2,12 @@
 
 #include <JuceHeader.h>
 
-#include "AltarButton.h"
+#include "FalterButton.h"
 #include "FalterFileBrowser.h"
-#include "AltarClipList.h"
-#include "AltarThreadList.h"
+#include "FalterClipList.h"
+#include "FalterThreadList.h"
 #include "FalterLookAndFeel.h"
-class AltarLogger;
+class FalterLogger;
 
 #include "FalterLookandFeel.h"
 
@@ -46,8 +46,8 @@ private:
 	void fileDoubleClicked( const File & file ) override;
 	void browserRootChanged( const File & newRoot ) override {}
 
-	AltarButton procButton;
-	AltarButton scriptSelectButton;
+	FalterButton procButton;
+	FalterButton scriptSelectButton;
 	
 	Label scriptLabel;
 	
@@ -55,10 +55,10 @@ private:
 	AudioTransportSource transportSource;
 
 	FalterFileBrowser sampleBrowser;
-	AltarClipList inClips, outClips;
-	AltarThreadList threads;
+	FalterClipList inClips, outClips;
+	FalterThreadList threads;
 
-	std::unique_ptr<AltarLogger> log; // Using ptr because logger needs lnf access which doesn't exist until after we set it in ctor
+	std::unique_ptr<FalterLogger> log; // Using ptr because logger needs lnf access which doesn't exist until after we set it in ctor
 	const int logHeight;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)

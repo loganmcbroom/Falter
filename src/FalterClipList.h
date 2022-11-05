@@ -1,18 +1,18 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "AltarList.h"
-#include "AltarClip.h"
+#include "FalterList.h"
+#include "FalterClip.h"
 
-class AltarClipList : public AltarList<AltarClip>
+class FalterClipList : public FalterList<FalterClip>
 					, public DragAndDropTarget
 	{
 public:
-	AltarClipList( AudioFormatManager &_formatManager, AudioTransportSource &_transportSource );
-	~AltarClipList();
+	FalterClipList( AudioFormatManager &_formatManager, AudioTransportSource &_transportSource );
+	~FalterClipList();
 
 	int getItemHeight() override;
-	void erase( AltarClip * child );
+	void erase( FalterClip * child );
 	void erase( unsigned int pos );
 	void clear();
 

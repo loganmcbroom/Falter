@@ -1,4 +1,4 @@
-#include "AltarClipList.h"
+#include "FalterClipList.h"
 
 #include <algorithm>
 #include <cassert>
@@ -8,7 +8,7 @@
 using namespace std;
 
 //Constructor
-AltarClipList::AltarClipList( AudioFormatManager &_formatManager, AudioTransportSource &_transportSource )
+FalterClipList::FalterClipList( AudioFormatManager &_formatManager, AudioTransportSource &_transportSource )
 	: transportSource( _transportSource )
 	, formatManager( _formatManager )
 	, thumbnailCache( MAX_CLIPS )
@@ -16,7 +16,7 @@ AltarClipList::AltarClipList( AudioFormatManager &_formatManager, AudioTransport
 	}
 
 //Destructor
-AltarClipList::~AltarClipList()
+FalterClipList::~FalterClipList()
 	{
 	for( int i = 0; i < getNumItems(); ++i )
 		{
@@ -25,53 +25,53 @@ AltarClipList::~AltarClipList()
 	}
 
 //Just how big is each clip?
-int AltarClipList::getItemHeight()
+int FalterClipList::getItemHeight()
 	{
 	return 50;
 	}
 
 //Erase given item from the list
-void AltarClipList::erase( AltarClip * item )
+void FalterClipList::erase( FalterClip * item )
 	{
-	AltarClipList::erase( getIndex( item ) );
+	FalterClipList::erase( getIndex( item ) );
 	}
 
 //Erase the item at the given index from the list
-void AltarClipList::erase( unsigned int index )
+void FalterClipList::erase( unsigned int index )
 	{	
 
 	thumbnailCache.removeThumb( getItem( index )->getThumbnail().getHashCode() );
-	AltarList::erase( index );
+	FalterList::erase( index );
 	}
 
 //Erase all items
-void AltarClipList::clear()
+void FalterClipList::clear()
 	{
-	AltarList::clear();
+	FalterList::clear();
 	thumbnailCache.clear();
 	}
 
-void AltarClipList::addClipFromAudio( flan::Audio a )
+void FalterClipList::addClipFromAudio( flan::Audio a )
 	{
 	insertClipFromAudio( a, getNumItems() );
 	}
 
 //
-void AltarClipList::insertClipFromAudio( flan::Audio a, size_t index )
+void FalterClipList::insertClipFromAudio( flan::Audio a, size_t index )
 	{
-	insertItem( new AltarClip( a, formatManager, thumbnailCache, transportSource ), index );
+	insertItem( new FalterClip( a, formatManager, thumbnailCache, transportSource ), index );
 	}
 
-bool AltarClipList::isInterestedInDragSource( const SourceDetails & dragSourceDetails )
+bool FalterClipList::isInterestedInDragSource( const SourceDetails & dragSourceDetails )
 {
 	return dragSourceDetails.description == "Clip";
 }
 
 //This function sucks but it works
-void AltarClipList::itemDropped( const SourceDetails & s )
+void FalterClipList::itemDropped( const SourceDetails & s )
 	{
-	// auto parent = static_cast< AltarClipList * >( s.sourceComponent->getParentComponent() );
-	// auto item = static_cast< AltarClip * >( s.sourceComponent.get() );
+	// auto parent = static_cast< FalterClipList * >( s.sourceComponent->getParentComponent() );
+	// auto item = static_cast< FalterClip * >( s.sourceComponent.get() );
 
 	// //Figure out what slot this thing should be in	
 	// int slot = s.localPosition.y / getItemHeight();

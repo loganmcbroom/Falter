@@ -12,7 +12,7 @@ extern "C"
 #include "lauxlib.h"
 }
 
-#include "./AltarThread.h"
+#include "./FalterThread.h"
 #include "./Types.h"
 
 #include "Utility.h"
@@ -79,7 +79,7 @@ static int luaF_LTMP( lua_State* L )
     if( minArgLength == 0 ) luaL_error( L, "Flan method recieved an empty argument in LTMP" );
 
     // If this gets called from the main thread, thread will be nullptr and it will crash, juce fyi
-    AltarThread * thread = static_cast<AltarThread *>( Thread::getCurrentThread() );
+    FalterThread * thread = static_cast<FalterThread *>( Thread::getCurrentThread() );
 
     std::vector<R> outputs;
     for( int i = 0; i < maxArgLength; ++i )
@@ -106,7 +106,7 @@ static int luaF_LTMP( lua_State* L )
     if( minArgLength == 0 ) luaL_error( L, "Flan method recieved an empty argument in LTMP" );
 
     // If this gets called from the main thread, thread will be nullptr and it will crash, juce fyi
-    AltarThread * thread = static_cast<AltarThread *>( Thread::getCurrentThread() );
+    FalterThread * thread = static_cast<FalterThread *>( Thread::getCurrentThread() );
 
     std::vector<R> outputs;
     for( int i = 0; i < maxArgLength; ++i )
@@ -135,7 +135,7 @@ static int luaF_LTMP( lua_State* L )
     if( minArgLength == 0 ) luaL_error( L, "Flan method recieved an empty argument in LTMP" );
 
     // If this gets called from the main thread, thread will be nullptr and it will crash, juce fyi
-    AltarThread * thread = static_cast<AltarThread *>( Thread::getCurrentThread() );
+    FalterThread * thread = static_cast<FalterThread *>( Thread::getCurrentThread() );
 
     std::vector<R> outputs;
     for( int i = 0; i < maxArgLength; ++i )
@@ -166,7 +166,7 @@ static int luaF_LTMP( lua_State* L )
     if( minArgLength == 0 ) luaL_error( L, "Flan method recieved an empty argument in LTMP" );
 
     // If this gets called from the main thread, thread will be nullptr and it will crash, juce fyi
-    AltarThread * thread = static_cast<AltarThread *>( Thread::getCurrentThread() );
+    FalterThread * thread = static_cast<FalterThread *>( Thread::getCurrentThread() );
 
     std::vector<R> outputs;
     for( int i = 0; i < maxArgLength; ++i )
@@ -199,7 +199,7 @@ static int luaF_LTMP( lua_State* L )
     if( minArgLength == 0 ) luaL_error( L, "Flan method recieved an empty argument in LTMP" );
 
     // If this gets called from the main thread, thread will be nullptr and it will crash, juce fyi
-    AltarThread * thread = static_cast<AltarThread *>( Thread::getCurrentThread() );
+    FalterThread * thread = static_cast<FalterThread *>( Thread::getCurrentThread() );
 
     std::vector<R> outputs;
     for( int i = 0; i < maxArgLength; ++i )
@@ -234,7 +234,7 @@ static int luaF_LTMP( lua_State* L )
     if( minArgLength == 0 ) luaL_error( L, "Flan method recieved an empty argument in LTMP" );
 
     // If this gets called from the main thread, thread will be nullptr and it will crash, juce fyi
-    AltarThread * thread = static_cast<AltarThread *>( Thread::getCurrentThread() );
+    FalterThread * thread = static_cast<FalterThread *>( Thread::getCurrentThread() );
 
     std::vector<R> outputs;
     for( int i = 0; i < maxArgLength; ++i )
@@ -271,7 +271,7 @@ static int luaF_LTMP( lua_State* L )
     if( minArgLength == 0 ) luaL_error( L, "Flan method recieved an empty argument in LTMP" );
 
     // If this gets called from the main thread, thread will be nullptr and it will crash, juce fyi
-    AltarThread * thread = static_cast<AltarThread *>( Thread::getCurrentThread() );
+    FalterThread * thread = static_cast<FalterThread *>( Thread::getCurrentThread() );
 
     std::vector<R> outputs;
     for( int i = 0; i < maxArgLength; ++i )
@@ -310,7 +310,7 @@ static int luaF_LTMP( lua_State* L )
     if( minArgLength == 0 ) luaL_error( L, "Flan method recieved an empty argument in LTMP" );
 
     // If this gets called from the main thread, thread will be nullptr and it will crash, juce fyi
-    AltarThread * thread = static_cast<AltarThread *>( Thread::getCurrentThread() );
+    FalterThread * thread = static_cast<FalterThread *>( Thread::getCurrentThread() );
 
     std::vector<R> outputs;
     for( int i = 0; i < maxArgLength; ++i )

@@ -1,13 +1,13 @@
 #pragma once
 
-#include "AltarList.h"
-#include "AltarThread.h"
+#include "FalterList.h"
+#include "FalterThread.h"
 
-class AltarThreadList : public AltarList< AltarThread >
+class FalterThreadList : public FalterList< FalterThread >
 {
 public:
-	AltarThreadList();
-	~AltarThreadList();
+	FalterThreadList();
+	~FalterThreadList();
 
 	int getItemHeight() override { return 50; }
 

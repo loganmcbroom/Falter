@@ -8,26 +8,26 @@
 
 #include "./Types.h"
 
-#include "AltarLogger.h"
+#include "FalterLogger.h"
 
-struct AltarThreadListener : public Thread::Listener
+struct FalterThreadListener : public Thread::Listener
 {
-	AltarThreadListener() : canceller( false ) {}
+	FalterThreadListener() : canceller( false ) {}
 	void exitSignalSent() override { canceller = true; }
 	std::atomic<bool> canceller;
 };
 
-class AltarThread : public Thread
+class FalterThread : public Thread
 				  , public Component
 				  , public Timer
 {
 public:
-	AltarThread( 
+	FalterThread( 
 		const String & name, 
 		const String & script, 
 		std::function< void( AudioVec & ) > & callback,
 		const AudioVec & files = AudioVec() );
-	~AltarThread();
+	~FalterThread();
 
 	void log( const String & s ); // Passes to Logger with added thread info and lock
 	std::atomic<bool> & getCanceller();
@@ -51,7 +51,7 @@ private:
 	bool threadSuccess;
 	bool allProcessesSetUp;
 
-	AltarThreadListener listener;
+	FalterThreadListener listener;
 
 	static CriticalSection mutex;
 };

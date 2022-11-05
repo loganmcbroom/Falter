@@ -1,4 +1,4 @@
-#include "AltarThread.h"
+#include "FalterThread.h"
 
 #include <vector>
 #include <sstream>
@@ -19,7 +19,7 @@ extern "C"
 static int lua_print( lua_State * L ) 
 	{
     const int nargs = lua_gettop( L );
-	AltarThread * T = static_cast<AltarThread *>( Thread::getCurrentThread() );
+	FalterThread * T = static_cast<FalterThread *>( Thread::getCurrentThread() );
     for( int i = 1; i <= nargs; ++i ) 
 		{
         if( lua_isstring( L, i ) )	T->log( lua_tostring( L, i ) );
@@ -35,9 +35,9 @@ static const struct luaL_Reg printlib [] =
 	{NULL, NULL} /* end of array */
 	};
 
-CriticalSection AltarThread::mutex;
+CriticalSection FalterThread::mutex;
 
-AltarThread::AltarThread( 
+FalterThread::FalterThread( 
 	const String & name, 
 	const String & _script, 
 	std::function< void( AudioVec & ) > & _callback, 
@@ -109,7 +109,7 @@ AltarThread::AltarThread(
 		}
 	}
 
-AltarThread::~AltarThread()
+FalterThread::~FalterThread()
 	{
 	if( isThreadRunning() )
 		stopThread( -1 );
@@ -117,18 +117,18 @@ AltarThread::~AltarThread()
 	lua_close( L );
 	}
 
-void AltarThread::log( const String & s )
+void FalterThread::log( const String & s )
 	{
 	MessageManagerLock mml;
 	Logger::writeToLog( s );
 	}
 
-std::atomic<bool> & AltarThread::getCanceller()
+std::atomic<bool> & FalterThread::getCanceller()
 	{
 	return listener.canceller;
 	}
 
-void AltarThread::paint( Graphics & g )
+void FalterThread::paint( Graphics & g )
 	{
 	auto & lnf = FalterLookAndFeel::getLNF();
 	
@@ -146,7 +146,7 @@ void AltarThread::paint( Graphics & g )
 	g.drawText( getElapsedTimeString(), bound, Justification::bottomRight );
 	}
 
-void AltarThread::run()
+void FalterThread::run()
 	{
 	if( threadShouldExit() )
 		{
@@ -200,17 +200,17 @@ void AltarThread::run()
 	repaint();
 	}
 
-void AltarThread::timerCallback()
+void FalterThread::timerCallback()
 	{
 	repaint();
 	}
 
-String AltarThread::getStartTimeString() const
+String FalterThread::getStartTimeString() const
 	{
 	return startTime.formatted( "%H:%M:%S." ) + String( startTime.getMilliseconds() );
 	}
 
-String AltarThread::getElapsedTimeString() const
+String FalterThread::getElapsedTimeString() const
 	{
 	const uint64_t startTimeMS = startTime.toMilliseconds();
 	const uint64_t endTimeMS = threadFinished? endTime.toMilliseconds() : Time::currentTimeMillis();

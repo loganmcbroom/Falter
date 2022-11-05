@@ -1,13 +1,13 @@
-#include "AltarClip.h"
+#include "FalterClip.h"
 
 #include <Windows.h>
 
 #include <flan/Audio.h>
 
-#include "AltarClipList.h"
+#include "FalterClipList.h"
 #include "FalterLookandFeel.h"
 
-AltarClip * AltarClip::active = nullptr;
+FalterClip * FalterClip::active = nullptr;
 
 
 static std::vector<const float *> getFlanChanPointers( flan::Audio a )
@@ -20,7 +20,7 @@ static std::vector<const float *> getFlanChanPointers( flan::Audio a )
 	return ps;
 	}
 
-AltarClip::AltarClip( flan::Audio _audio
+FalterClip::FalterClip( flan::Audio _audio
 			, AudioFormatManager &_formatManager
 			, AudioThumbnailCache &_thumbnailCache
 			, AudioTransportSource &_transportSource
@@ -57,19 +57,19 @@ AltarClip::AltarClip( flan::Audio _audio
 	}
 
 
-AltarClip::~AltarClip()
+FalterClip::~FalterClip()
 	{
 	if( this == active ) stopPressed();
 	}
 
-void AltarClip::resized()
+void FalterClip::resized()
 	{
 	int s = getHeight() / 2;
 	busButton.setBounds  ( 0, 0, s, s );
 	saveButton.setBounds ( 0, s, s, s );
 	}
 
-void AltarClip::mouseDrag( const MouseEvent & )
+void FalterClip::mouseDrag( const MouseEvent & )
 	{
 	DragAndDropContainer * dragC = DragAndDropContainer::findParentDragContainerFor( this );
 	if (! dragC->isDragAndDropActive() ) 
@@ -78,9 +78,9 @@ void AltarClip::mouseDrag( const MouseEvent & )
 		}
 	}
 
-AudioThumbnail &AltarClip::getThumbnail() { return thumbnail; }
+AudioThumbnail &FalterClip::getThumbnail() { return thumbnail; }
 
-void AltarClip::paintButton(Graphics &g, bool isMouseOverButton, bool )
+void FalterClip::paintButton(Graphics &g, bool isMouseOverButton, bool )
 	{
 	auto & lnf = FalterLookAndFeel::getLNF();
 
@@ -114,13 +114,13 @@ void AltarClip::paintButton(Graphics &g, bool isMouseOverButton, bool )
 		}
 	}
 
-void AltarClip::changeListenerCallback( ChangeBroadcaster* source )
+void FalterClip::changeListenerCallback( ChangeBroadcaster* source )
 	{
 	if( source == &transportSource ) stopPressed();
 	else if( source == &thumbnail ) repaint();
 	}
 
-void AltarClip::playPressed()
+void FalterClip::playPressed()
 	{
 	if( active != nullptr ) active->stopPressed();
 
@@ -136,7 +136,7 @@ void AltarClip::playPressed()
 	transportSource.addChangeListener( this );
 	}
 
-void AltarClip::stopPressed()
+void FalterClip::stopPressed()
 	{
 	stopTimer();
 	transportSource.setSource( nullptr );
@@ -149,7 +149,7 @@ void AltarClip::stopPressed()
 	currentPosition.setRectangle( juce::Rectangle< float >(0,0,0,0) );
 	}
 
-void AltarClip::buttonClicked( Button * button )
+void FalterClip::buttonClicked( Button * button )
 	{
 	if( button == &busButton )
 		{
@@ -171,7 +171,7 @@ void AltarClip::buttonClicked( Button * button )
 		}
 	}
 
-void AltarClip::timerCallback()
+void FalterClip::timerCallback()
 	{
 	// The weird computation handles some buttons being stuck on top of the component
 	const float s = getHeight() / 2.0f;

@@ -2,23 +2,23 @@
 
 #include <JuceHeader.h>
 
-#include "AltarButton.h"
+#include "FalterButton.h"
 
-class AltarLogger : public Logger
+class FalterLogger : public Logger
 				  , public TextEditor
 				  , public Button::Listener
 				  , public std::streambuf
 {
 public:
-	AltarLogger();
-	~AltarLogger();
+	FalterLogger();
+	~FalterLogger();
 
 	void logMessage( const String & message ) override;
 	void paint( Graphics & g ) override;
 	void resized() override;
 	void buttonClicked( Button * b ) override;
 	
-	AltarButton clearButton;
+	FalterButton clearButton;
 
 protected:
 	std::streamsize xsputn( const char_type * s, std::streamsize n ) override;

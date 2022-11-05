@@ -1,6 +1,6 @@
-#include "AltarList.h"
+#include "FalterList.h"
 
-#include "AltarButton.h"
+#include "FalterButton.h"
 #include "FalterLookAndFeel.h"
 
 #define CLEAR_HEIGHT 25
@@ -9,10 +9,10 @@
 using namespace std;
 
 template <typename T>
-AltarList<T>::AltarList()
+FalterList<T>::FalterList()
 	: Component()
 	, scroll( true )
-	, clearButton( new AltarButton("r", &FalterLookAndFeel::getLNF().fontWebdings, int( CLEAR_HEIGHT * .67f ) ) )
+	, clearButton( new FalterButton("r", &FalterLookAndFeel::getLNF().fontWebdings, int( CLEAR_HEIGHT * .67f ) ) )
 	{
 	addAndMakeVisible( &scroll );
 	scroll.addListener( this );
@@ -24,21 +24,21 @@ AltarList<T>::AltarList()
 	}
 
 template <class T>
-AltarList<T>::~AltarList()
+FalterList<T>::~FalterList()
 	{
 	}
 
 template<typename T>
-shared_ptr<T> AltarList<T>::addItem( T * item )
+shared_ptr<T> FalterList<T>::addItem( T * item )
 	{
 	return insertItem( item, items.size() );
 	}
 
 template<typename T>
-shared_ptr<T> AltarList<T>::insertItem( T * item, size_t index )
+shared_ptr<T> FalterList<T>::insertItem( T * item, size_t index )
 	{
 	if( index < 0 ) index = 0;
-	AltarButton * button = new AltarButton( "r", &FalterLookAndFeel::getLNF().fontWebdings, int( ERASE_WIDTH / 2.0f ) );
+	FalterButton * button = new FalterButton( "r", &FalterLookAndFeel::getLNF().fontWebdings, int( ERASE_WIDTH / 2.0f ) );
 	items.emplace( items.begin() + index, item, button );
 	addAndMakeVisible( item );
 	addAndMakeVisible( button );
@@ -53,7 +53,7 @@ shared_ptr<T> AltarList<T>::insertItem( T * item, size_t index )
 }
 
 template<typename T>
-int AltarList<T>::getIndex( T * clip )
+int FalterList<T>::getIndex( T * clip )
 	{
 	for( int i = 0; i < getNumItems(); ++i )
 		{
@@ -66,7 +66,7 @@ int AltarList<T>::getIndex( T * clip )
 	}
 
 template<typename T>
-void AltarList<T>::erase( int index )
+void FalterList<T>::erase( int index )
 	{
 	items.erase( items.begin() + index );
 	scroll.setRangeLimits( 0, float( getItemHeight() ) * float( items.size() ) + CLEAR_HEIGHT, NotificationType::dontSendNotification );
@@ -74,32 +74,32 @@ void AltarList<T>::erase( int index )
 	}
 
 template<typename T>
-void AltarList<T>::erase( T * item )
+void FalterList<T>::erase( T * item )
 	{
 	erase( getIndex( item ) );
 	}
 
 template<typename T>
-void AltarList<T>::clear()
+void FalterList<T>::clear()
 	{
 	items.clear();
 	}
 
 template<typename T>
-void AltarList<T>::swap( int a, int b )
+void FalterList<T>::swap( int a, int b )
 	{
 	iter_swap( items.begin() + a, items.begin() + b );
 	resized();
 	}
 
 template<typename T>
-shared_ptr<T> AltarList<T>::getItem( int index )
+shared_ptr<T> FalterList<T>::getItem( int index )
 	{
 	return items[index].first; 
 	}
 
 template<typename T>
-shared_ptr<T> AltarList<T>::getItem( Component * c )
+shared_ptr<T> FalterList<T>::getItem( Component * c )
 {
 	return getItem( getIndex( static_cast< T * >( c ) ) );
 }
@@ -109,14 +109,14 @@ shared_ptr<T> AltarList<T>::getItem( Component * c )
 
 // Paint
 template<typename T>
-void AltarList<T>::paint( Graphics & g )
+void FalterList<T>::paint( Graphics & g )
 	{
 	g.fillAll( FalterLookAndFeel::getLNF().dark );
 	}
 
 // Resized
 template <class T>
-void AltarList<T>::resized()
+void FalterList<T>::resized()
 	{ 
 	bool scrollVisible = float( getItemHeight() ) * float( getNumItems() ) > getHeight();
 	scroll.setCurrentRange( scroll.getCurrentRangeStart(), getHeight(), NotificationType::dontSendNotification );
@@ -130,7 +130,7 @@ void AltarList<T>::resized()
 
 // Repositions all the items based on relevant info
 template <class T>
-void AltarList<T>::positionItems( bool scrollVisible )
+void FalterList<T>::positionItems( bool scrollVisible )
 	{
 	for( int i = 0; i < items.size(); ++i )
 		{
@@ -147,21 +147,21 @@ void AltarList<T>::positionItems( bool scrollVisible )
 
 // Callback for the scroll object having changed
 template<typename T>
-void AltarList<T>::scrollBarMoved( ScrollBar *, double )
+void FalterList<T>::scrollBarMoved( ScrollBar *, double )
 	{
 	positionItems( true );
 	}
 
 // Callback for scrolling with mouse
 template<typename T>
-void AltarList<T>::mouseWheelMove( const MouseEvent &, const MouseWheelDetails & wheel )
+void FalterList<T>::mouseWheelMove( const MouseEvent &, const MouseWheelDetails & wheel )
 	{
 	scroll.setCurrentRangeStart( scroll.getCurrentRangeStart() - wheel.deltaY * getItemHeight() * 4 );
 	}
 
 //
 template<typename T>
-void AltarList<T>::buttonClicked( Button * b )
+void FalterList<T>::buttonClicked( Button * b )
 	{
 	if( b == clearButton.get() )
 		{
@@ -181,7 +181,7 @@ void AltarList<T>::buttonClicked( Button * b )
 	}
 
 //Instantiate templates
-#include "AltarClip.h"
-template class AltarList<AltarClip>;
-#include "AltarThread.h"
-template class AltarList<AltarThread>;
+#include "FalterClip.h"
+template class FalterList<FalterClip>;
+#include "FalterThread.h"
+template class FalterList<FalterThread>;

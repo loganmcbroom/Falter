@@ -2,10 +2,10 @@
 
 #include <JuceHeader.h>
 
-class AltarButton : public Button
+class FalterButton : public Button
 {
 public:
-	AltarButton( const String & text = "", const Font * font = nullptr, size_t fontHeight = 0 );
+	FalterButton( const String & text = "", const Font * font = nullptr, size_t fontHeight = 0 );
 
 	void paintButton( Graphics &g, bool isMouseOverButton, bool isButtonDown) override;
 

@@ -19,12 +19,7 @@ template<typename T> bool luaF_is( lua_State * L, int );
 template<typename T> T luaF_check( lua_State * L, int );
 template<typename T> void luaF_push( lua_State * L, T );
 
-template<typename T>
-concept is_vector = requires( T v, int i )
-    {
-    v.size();  
-    v[i];
-    };
+template<typename T> concept is_vector = std::same_as<T, std::vector<typename T::value_type>>;
 template<is_vector T> bool luaF_is( lua_State * L, int i ) { return luaF_isArrayOfType<typename T::value_type>( L, i ); }
 template<is_vector T> T luaF_check( lua_State * L, int i ) { return luaF_checkArrayOfType<typename T::value_type>( L, i ); }
 template<is_vector T> void luaF_push( lua_State * L, T v ) { return luaF_pushArrayOfType<typename T::value_type>( L, v ); }
@@ -47,12 +42,13 @@ bool luaF_isArrayOfType( lua_State * L, int i )
 template<typename T>
 std::vector<T> luaF_checkArrayOfType( lua_State * L, int i )
     {
-    const int numInputs = lua_objlen( L, i );
-    std::vector<T> outputs( numInputs );
-    for( int n = 1; n <= numInputs; ++n )
+    const int N = lua_objlen( L, i );
+    std::vector<T> outputs;
+    outputs.reserve( N );
+    for( int n = 1; n <= N; ++n )
         {
         lua_rawgeti( L, i, n );
-        outputs[n-1] = luaF_check<T>( L, -1 );
+        outputs.push_back( luaF_check<T>( L, -1 ) );
         }
     return outputs;
     }

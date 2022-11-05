@@ -31,7 +31,7 @@ struct F_PVOC_convertToAudio { flan::Audio operator()( std::atomic<bool> & z, fl
     { return a.convertToAudio( nullptr, z ); } };
 struct F_PVOC_convertToGraph { flan::Graph operator()( std::atomic<bool> & z, flan::PVOC a, Rect b = { 0, 0, -1, -1 }, Pixel c = -1, Pixel d = -1, float e=0 )
     { return a.convertToGraph( b, c, d, e, z ); } };
-struct F_PVOC_saveToBMP { flan::PVOC operator()( std::atomic<bool> & z, flan::PVOC a, const std::string &b = "Falter.bmp", Rect c = { 0, 0, -1, -1 }, Pixel d = -1, Pixel e = -1 )
+struct F_PVOC_saveToBMP { flan::PVOC operator()( std::atomic<bool> & z, flan::PVOC a, const std::string & b = "PVOC.bmp", Rect c = { 0, 0, -1, -1 }, Pixel d = -1, Pixel e = -1 )
     { return a.saveToBMP( b, c, d, e, z ); } };
 
 // Contours
@@ -93,16 +93,8 @@ struct F_PVOC_resonate { flan::PVOC operator()( std::atomic<bool> & z, flan::PVO
     { return a.resonate( b, c, z ); } };
 
 // Static
-//static PVOC 	generate (Time length, Func1x1 freq, flan::Func2x1 harmonicWeights, flan_CANCEL_ARG)
-
-
-// Overloads =====================================================================================================================
-// static int luaF_PVOC_call( lua_State * L )
-//     {
-//     auto out = luaF_check<flan::PVOC>( L, 1 ).convertToAudio();
-//     luaF_push( L, out );
-//     return 1;
-//     }
+struct F_PVOC_generate { PVOC operator()( std::atomic<bool> & z, flan::Time a, Func1x1 b = 5, Func2x1 c = 1 )
+    { return PVOC::generate( a, b, c, z ); } };
 
 
 // Registration ==============================================================================================================
@@ -126,7 +118,7 @@ void luaF_register_PVOC( lua_State * L )
     luaF_register_helper<F_PVOC_convertToAudio, flan::Audio, flan::PVOC>( L, "convertToAudio" );
     luaF_register_helper<F_PVOC_convertToAudio, flan::Audio, flan::PVOC>( L, "__call" );
     // luaF_register_helper<F_PVOC_convertToGraph, flan::Graph, flan::PVOC, Rect, Pixel, Pixel, float>( L, "convertToGraph" );
-    //luaF_register_helper<F_PVOC_saveToBMP, flan::PVOC, flan::PVOC, const std::string &, Rect, Pixel, Pixel>( L, "saveToBMP" );
+    luaF_register_helper<F_PVOC_saveToBMP, flan::PVOC, flan::PVOC, std::string, Rect, Pixel, Pixel>( L, "saveToBMP" );
 
 
     // Contours
@@ -163,6 +155,9 @@ void luaF_register_PVOC( lua_State * L )
     luaF_register_helper<F_PVOC_retainNLoudestPartials, flan::PVOC, flan::PVOC, flan::Func1x1 >( L, "retainNLoudestPartials" );
     luaF_register_helper<F_PVOC_removeNLoudestPartials, flan::PVOC, flan::PVOC, flan::Func1x1 >( L, "removeNLoudestPartials" );
     luaF_register_helper<F_PVOC_resonate, flan::PVOC, flan::PVOC, flan::Time, flan::Func2x1>( L, "resonate" );
+
+    // Static
+    lua_pushcclosure( L, luaF_LTMP<F_PVOC_generate, PVOC, flan::Time, Func1x1, Func2x1>, 0 ); lua_setglobal( L, "generatePVOC" ); 
 
 	lua_pop( L, 2 );
     }

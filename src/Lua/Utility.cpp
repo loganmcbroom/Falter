@@ -40,6 +40,8 @@ template<> bool luaF_is<flan::Func1x1>( lua_State * L, int i ) { return luaF_isF
 template<> bool luaF_is<flan::Func2x1>( lua_State * L, int i ) { return luaF_isFunc<flan::Func2x1>( L, i ); }
 template<> bool luaF_is<flan::Func2x2>( lua_State * L, int i ) { return luaF_isFunc<flan::Func2x2>( L, i ); }
 
+template<> bool luaF_is<std::string>( lua_State * L, int i ) { return lua_isstring( L, i ); }
+
 
 
 // Check ==========================================================================================================================
@@ -73,6 +75,8 @@ template<> flan::Func1x1 luaF_check( lua_State * L, int i ) { return luaF_checkF
 template<> flan::Func2x1 luaF_check( lua_State * L, int i ) { return luaF_checkFunc<flan::Func2x1>( L, i ); }
 template<> flan::Func2x2 luaF_check( lua_State * L, int i ) { return luaF_checkFunc<flan::Func2x2>( L, i ); }
 
+template<> std::string luaF_check( lua_State * L, int i ) { return std::string( luaL_checkstring( L, i ) ); }
+
 
 
 // Push ===========================================================================================================================
@@ -101,3 +105,5 @@ template<> void luaF_push( lua_State * L, flan::PVOC u )    { luaF_pushUsertype<
 template<> void luaF_push( lua_State * L, flan::Func1x1 u ) { luaF_pushUsertype<flan::Func1x1>( L, u );  }
 template<> void luaF_push( lua_State * L, flan::Func2x1 u ) { luaF_pushUsertype<flan::Func2x1>( L, u );  }
 template<> void luaF_push( lua_State * L, flan::Func2x2 u ) { luaF_pushUsertype<flan::Func2x2>( L, u );  }
+
+template<> void luaF_push( lua_State * L, const std::string & u ) { lua_pushstring( L, u.c_str() ); }

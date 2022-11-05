@@ -1,8 +1,8 @@
-#include "AltarButton.h"
+#include "FalterButton.h"
 
 #include "FalterLookAndFeel.h"
 
-AltarButton::AltarButton( const String & _text, const Font * _font, size_t _fontHeight )
+FalterButton::FalterButton( const String & _text, const Font * _font, size_t _fontHeight )
 	: Button( _text )
 	, font(_font)
 	, circle( false )
@@ -17,7 +17,7 @@ AltarButton::AltarButton( const String & _text, const Font * _font, size_t _font
 	}
 
 
-void AltarButton::paintButton(Graphics &g, bool isMouseOverButton, bool isButtonDown)
+void FalterButton::paintButton(Graphics &g, bool isMouseOverButton, bool isButtonDown)
 	{
 	auto & lnf = FalterLookAndFeel::getLNF();
 
@@ -45,7 +45,7 @@ void AltarButton::paintButton(Graphics &g, bool isMouseOverButton, bool isButton
 	if( isEnabled() ) setMouseCursor( MouseCursor::PointingHandCursor );
 }
 
-void AltarButton::setFont( Font *f )
+void FalterButton::setFont( Font *f )
 	{
 	font = f;
 	}

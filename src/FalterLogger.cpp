@@ -1,8 +1,8 @@
-#include "AltarLogger.h"
+#include "FalterLogger.h"
 
 #include "FalterLookandFeel.h"
 
-AltarLogger::AltarLogger()
+FalterLogger::FalterLogger()
 	: TextEditor( )
 	, clearButton( "r", &FalterLookAndFeel::getLNF().fontWebdings, 20 )
 	{
@@ -20,12 +20,12 @@ AltarLogger::AltarLogger()
 	oldStreamBuffer = std::cout.rdbuf( this );
 	}
 
-AltarLogger::~AltarLogger() 
+FalterLogger::~FalterLogger() 
 	{
 	std::cout.rdbuf( oldStreamBuffer );
 	}
 
-void AltarLogger::logMessage( const String & message )
+void FalterLogger::logMessage( const String & message )
 	{
 	// insertTextAtCaret( Time::getCurrentTime().formatted( "(%I:%M:%S) " ) );
 	setCaretPosition( getText().length() );
@@ -42,25 +42,25 @@ void AltarLogger::logMessage( const String & message )
 		setText( getText().substring( getText().length() - maxLength / 2, false ) );
 	}
 
-void AltarLogger::paint( Graphics & g )
+void FalterLogger::paint( Graphics & g )
 	{
 	g.fillAll( FalterLookAndFeel::getLNF().dark );
 	//TextEditor::paint( g );
 	}
 
-void AltarLogger::resized()
+void FalterLogger::resized()
 	{
 	TextEditor::resized();
 	const int l = 28;
 	clearButton.setBounds( getWidth() - l - 4, 4, l, l );
 	}
 
-void AltarLogger::buttonClicked( Button * )
+void FalterLogger::buttonClicked( Button * )
 	{
 	TextEditor::clear();
 	}
 
-std::streamsize AltarLogger::xsputn( const char_type * s, std::streamsize n ) 
+std::streamsize FalterLogger::xsputn( const char_type * s, std::streamsize n ) 
 	{
 	MessageManagerLock mml;
 	logMessage( s );
@@ -69,4 +69,4 @@ std::streamsize AltarLogger::xsputn( const char_type * s, std::streamsize n )
 
 // I don't know what this does but the base class streambuf defaults to a "failed to overflow" return value
 // So if it isn't overloaded the cout redirect stops working
-std::streambuf::int_type AltarLogger::overflow( int_type ch ) {	return 0; }
+std::streambuf::int_type FalterLogger::overflow( int_type ch ) {	return 0; }

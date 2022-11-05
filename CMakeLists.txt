@@ -21,13 +21,13 @@ target_sources( Falter
         src/Main.cpp
         src/MainComponent.cpp
         src/FalterLookAndFeel.cpp
-        src/AltarButton.cpp
+        src/FalterButton.cpp
         src/FalterFileBrowser.cpp
-        src/AltarLogger.cpp
-        src/AltarClip.cpp
-        src/AltarThread.cpp
-        src/AltarList.cpp
-        src/AltarClipList.cpp
+        src/FalterLogger.cpp
+        src/FalterClip.cpp
+        src/FalterThread.cpp
+        src/FalterList.cpp
+        src/FalterClipList.cpp
         src/AltarThreadList.cpp
         src/Types.h
 
