@@ -25,7 +25,7 @@ template<typename T> std::vector<T> luaF_LTMP_check( lua_State * L, int i )
         return luaF_checkArrayOfType<T>( L, i );
     else 
         {
-        luaL_error( L, ( std::string( "Expected type: " ) + typeid( T ).name() ).c_str() );
+        luaL_error( L, ( std::string( "Expected type " ) + typeid( T ).name() ).c_str() );
         return {};
         }
     }
@@ -82,6 +82,7 @@ static int luaF_LTMP( lua_State* L )
     FalterThread * thread = static_cast<FalterThread *>( Thread::getCurrentThread() );
 
     std::vector<R> outputs;
+    outputs.reserve( maxArgLength );
     for( int i = 0; i < maxArgLength; ++i )
         outputs.push_back( Functor()( thread->getCanceller(),
             as[ i % as.size() ]
@@ -109,6 +110,7 @@ static int luaF_LTMP( lua_State* L )
     FalterThread * thread = static_cast<FalterThread *>( Thread::getCurrentThread() );
 
     std::vector<R> outputs;
+    outputs.reserve( maxArgLength );
     for( int i = 0; i < maxArgLength; ++i )
         outputs.push_back( Functor()( thread->getCanceller(),
             as[ i % as.size() ],
@@ -138,6 +140,7 @@ static int luaF_LTMP( lua_State* L )
     FalterThread * thread = static_cast<FalterThread *>( Thread::getCurrentThread() );
 
     std::vector<R> outputs;
+    outputs.reserve( maxArgLength );
     for( int i = 0; i < maxArgLength; ++i )
         outputs.push_back( Functor()( thread->getCanceller(),
             as[ i % as.size() ],
@@ -169,6 +172,7 @@ static int luaF_LTMP( lua_State* L )
     FalterThread * thread = static_cast<FalterThread *>( Thread::getCurrentThread() );
 
     std::vector<R> outputs;
+    outputs.reserve( maxArgLength );
     for( int i = 0; i < maxArgLength; ++i )
         outputs.push_back( Functor()( thread->getCanceller(),
             as[ i % as.size() ],
@@ -202,6 +206,7 @@ static int luaF_LTMP( lua_State* L )
     FalterThread * thread = static_cast<FalterThread *>( Thread::getCurrentThread() );
 
     std::vector<R> outputs;
+    outputs.reserve( maxArgLength );
     for( int i = 0; i < maxArgLength; ++i )
         outputs.push_back( Functor()( thread->getCanceller(),
             as[ i % as.size() ],
@@ -237,6 +242,7 @@ static int luaF_LTMP( lua_State* L )
     FalterThread * thread = static_cast<FalterThread *>( Thread::getCurrentThread() );
 
     std::vector<R> outputs;
+    outputs.reserve( maxArgLength );
     for( int i = 0; i < maxArgLength; ++i )
         outputs.push_back( Functor()( thread->getCanceller(),
             as[ i % as.size() ],
@@ -274,6 +280,7 @@ static int luaF_LTMP( lua_State* L )
     FalterThread * thread = static_cast<FalterThread *>( Thread::getCurrentThread() );
 
     std::vector<R> outputs;
+    outputs.reserve( maxArgLength );
     for( int i = 0; i < maxArgLength; ++i )
         outputs.push_back( Functor()( thread->getCanceller(),
             as[ i % as.size() ],
@@ -313,6 +320,7 @@ static int luaF_LTMP( lua_State* L )
     FalterThread * thread = static_cast<FalterThread *>( Thread::getCurrentThread() );
 
     std::vector<R> outputs;
+    outputs.reserve( maxArgLength );
     for( int i = 0; i < maxArgLength; ++i )
         outputs.push_back( Functor()( thread->getCanceller(),
             as[ i % as.size() ],

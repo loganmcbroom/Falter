@@ -16,6 +16,7 @@ todo:
     Put thread number on thread somewhere
     seems like canceller isn't working, or more that when running a long repitch the gui thread is frozen
     hardcoded path File("C:/Users/logan/Documents/Samples") in two places
+    At some point I found a window that said there was a memory leak, idk where but look into that
 
 Flan:
     Graph convertToPVOC
@@ -25,9 +26,8 @@ Flan:
     
 Lua:
     See if wavetable can be imported
-    Func methods
-    Graph usertype
     prism, requires a prismFunc wrapper
+    we need a way to check that lua functions passed in have the required signiture
 
 task:
-    Premade Interpolators in lua context
+    Func methods

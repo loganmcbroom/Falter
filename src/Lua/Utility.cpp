@@ -15,6 +15,7 @@ template<> bool luaF_is<float>( lua_State * L, int i ) { return lua_isnumber( L,
 template<> bool luaF_is<bool>( lua_State * L, int i ) { return lua_isboolean( L, i ); }
 template<> bool luaF_is<flan::Interval>( lua_State * L, int i ) 
     { 
+    if( i < 0 ) i = lua_gettop( L ) + 1 + i;
     if( ! lua_istable( L, i ) || lua_objlen( L, i ) < 2 ) return false;
     lua_rawgeti( L, i, 1 );
     lua_rawgeti( L, i, 2 );
@@ -24,6 +25,7 @@ template<> bool luaF_is<flan::Interval>( lua_State * L, int i )
     }
 template<> bool luaF_is<flan::Rect>( lua_State * L, int i ) 
     { 
+    if( i < 0 ) i = lua_gettop( L ) + 1 + i;
     if( ! lua_istable( L, i ) || lua_objlen( L, i ) < 4 ) return false;
     lua_rawgeti( L, i, 1 );
     lua_rawgeti( L, i, 2 );
@@ -41,6 +43,7 @@ template<> bool luaF_is<flan::Func2x1>( lua_State * L, int i ) { return luaF_isF
 template<> bool luaF_is<flan::Func2x2>( lua_State * L, int i ) { return luaF_isFunc<flan::Func2x2>( L, i ); }
 
 template<> bool luaF_is<std::string>( lua_State * L, int i ) { return lua_isstring( L, i ); }
+template<> bool luaF_is<std::pair<float,float>>( lua_State * L, int i ) { return luaF_is<flan::Interval>( L, i ); }
 
 
 
@@ -52,6 +55,7 @@ template<> float luaF_check( lua_State * L, int i ) { return luaL_checknumber( L
 template<> bool luaF_check( lua_State * L, int i ) { return lua_toboolean( L, i ); }
 template<> flan::Interval luaF_check( lua_State * L, int i ) 
     { 
+    if( i < 0 ) i = lua_gettop( L ) + 1 + i;
     lua_rawgeti( L, i, 1 );
     lua_rawgeti( L, i, 2 );
     flan::Interval interval( luaL_checknumber( L, -2 ), luaL_checknumber( L, -1 ) );
@@ -60,6 +64,7 @@ template<> flan::Interval luaF_check( lua_State * L, int i )
     }
 template<> flan::Rect luaF_check( lua_State * L, int i ) 
     { 
+    if( i < 0 ) i = lua_gettop( L ) + 1 + i;
     lua_rawgeti( L, i, 1 );
     lua_rawgeti( L, i, 2 );
     lua_rawgeti( L, i, 3 );
@@ -76,6 +81,11 @@ template<> flan::Func2x1 luaF_check( lua_State * L, int i ) { return luaF_checkF
 template<> flan::Func2x2 luaF_check( lua_State * L, int i ) { return luaF_checkFunc<flan::Func2x2>( L, i ); }
 
 template<> std::string luaF_check( lua_State * L, int i ) { return std::string( luaL_checkstring( L, i ) ); }
+template<> std::pair<float,float> luaF_check( lua_State * L, int i ) 
+    { 
+    flan::Interval interval = luaF_check<flan::Interval>( L, i );
+    return  { interval.x1, interval.x2 };
+    }
 
 
 
@@ -107,3 +117,4 @@ template<> void luaF_push( lua_State * L, flan::Func2x1 u ) { luaF_pushUsertype<
 template<> void luaF_push( lua_State * L, flan::Func2x2 u ) { luaF_pushUsertype<flan::Func2x2>( L, u );  }
 
 template<> void luaF_push( lua_State * L, const std::string & u ) { lua_pushstring( L, u.c_str() ); }
+template<> void luaF_push( lua_State * L, std::pair< float, float > z ) { luaF_push( L, flan::Interval( z.first, z.second ) ); }

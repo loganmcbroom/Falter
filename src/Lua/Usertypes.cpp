@@ -10,6 +10,7 @@ extern "C"
 #include "Audio.h"
 #include "PVOC.h"
 #include "Function.h"
+#include "Interpolators.h"
 
 template<> std::string luaF_getUsertypeName<flan::Audio>()     { return "Audio";       }
 template<> std::string luaF_getUsertypeName<AudioMod>()        { return "AudioMod";    }
@@ -28,6 +29,7 @@ void luaF_register_Usertypes( lua_State * L )
     luaF_register_Audio( L ); // Register Audio class into the Lua context
 	luaF_register_PVOC( L ); // Register PVOC class into the Lua context
 	luaF_register_function_types( L ); // Register all function types into the Lua context
+    luaF_register_Interpolators( L );
     }
 
     

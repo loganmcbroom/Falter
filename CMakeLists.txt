@@ -40,6 +40,7 @@ target_sources( Falter
         src/Lua/AudioMod.cpp
         src/Lua/PVOC.cpp
         src/Lua/Function.cpp
+        src/Lua/Interpolators.cpp
         )
 
 target_compile_features( Falter PRIVATE cxx_std_20 )

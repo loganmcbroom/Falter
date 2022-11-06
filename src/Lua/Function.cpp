@@ -70,7 +70,7 @@ T luaF_checkFunc( lua_State * L, int i )
         }
     else if( luaF_isUsertype<T>( L, i ) )
         {
-        return luaF_check<T>( L, i );
+        return luaF_checkUsertype<T>( L, i );
         }
     else luaL_typerror( L, i, name.c_str() );
     }

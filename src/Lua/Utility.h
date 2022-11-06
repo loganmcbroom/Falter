@@ -49,6 +49,7 @@ std::vector<T> luaF_checkArrayOfType( lua_State * L, int i )
         {
         lua_rawgeti( L, i, n );
         outputs.push_back( luaF_check<T>( L, -1 ) );
+        lua_pop( L, 1 );
         }
     return outputs;
     }
