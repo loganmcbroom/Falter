@@ -93,7 +93,7 @@ struct F_PVOC_resonate { flan::PVOC operator()( std::atomic<bool> & z, flan::PVO
     { return a.resonate( b, c, z ); } };
 
 // Static
-struct F_PVOC_generate { PVOC operator()( std::atomic<bool> & z, flan::Time a, Func1x1 b = 5, Func2x1 c = 1 )
+struct F_PVOC_generate { PVOC operator()( std::atomic<bool> & z, flan::Time a = 5, Func1x1 b = 220, Func2x1 c = []( float, float i ){ return 1.0f / (i+1); } )
     { return PVOC::generate( a, b, c, z ); } };
 
 
