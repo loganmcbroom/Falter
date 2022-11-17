@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <functional>
 
 extern "C"
 {
@@ -9,7 +10,10 @@ extern "C"
 #include "lauxlib.h"
 }
 
+#include "./FalterThread.h"
+
 #include "Usertypes.h"
+#include "function_traits.h"
 
 template<typename T> bool luaF_isArrayOfType( lua_State * L, int i );
 template<typename T> std::vector<T> luaF_checkArrayOfType( lua_State * L, int i );
@@ -23,6 +27,9 @@ template<typename T> concept is_vector = std::same_as<T, std::vector<typename T:
 template<is_vector T> bool luaF_is( lua_State * L, int i ) { return luaF_isArrayOfType<typename T::value_type>( L, i ); }
 template<is_vector T> T luaF_check( lua_State * L, int i ) { return luaF_checkArrayOfType<typename T::value_type>( L, i ); }
 template<is_vector T> void luaF_push( lua_State * L, T v ) { return luaF_pushArrayOfType<typename T::value_type>( L, v ); }
+
+
+// Array passing ===============================================================================================================================
 
 template<typename T>
 bool luaF_isArrayOfType( lua_State * L, int i )

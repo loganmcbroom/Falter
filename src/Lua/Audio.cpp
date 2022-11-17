@@ -117,6 +117,9 @@ struct F_Audio_join { flan::Audio operator()( std::atomic<bool> & z, AudioVec a,
 struct F_Audio_select { flan::Audio operator()( std::atomic<bool> & z, AudioVec a, Func1x1 b = 0, std::vector<float> c = std::vector<float>() )
     { return Audio::select( a, b, c, z ); } };
 
+struct F_Audio_synthesize { flan::Audio operator()( std::atomic<bool> & z, Func1x1 a, flan::Time b = 3, Func1x1 c = 220 )
+    { return Audio::synthesize( a, b, c, 48000, 16, z ); } };
+
 // Overloading  ====================================================================================================================
 
 static int luaF_Audio_add( lua_State * L )
@@ -140,9 +143,14 @@ static int luaF_Audio_concat( lua_State * L )
 void luaF_register_Audio( lua_State * L )
     {
     // Create Lua Audio type
-    lua_register( L, luaF_getUsertypeName<flan::Audio>().c_str(), luaF_Usertype_new<flan::Audio> );
+    lua_newtable( L );
+        lua_newtable( L );
+            lua_pushcfunction( L, luaF_Usertype_new<flan::Audio> ); lua_setfield( L, -2, "__call" );
+        lua_setmetatable( L, -2 );
+        lua_pushcclosure( L, luaF_LTMP<F_Audio_synthesize, 3>, 0 ); lua_setfield( L, -2, "synthesize" ); 
+    lua_setglobal( L, luaF_getUsertypeName<flan::Audio>().c_str() );
+
 	luaL_newmetatable( L, luaF_getUsertypeName<flan::Audio>().c_str() );
-	//lua_pushcfunction( L, temp_deleter ); lua_setfield( L, -2, "__gc" );
     lua_pushvalue( L, -1 ); lua_setfield( L, -2, "__index" ); // I need to look up why this works this way
     lua_pushcfunction( L, luaF_Audio_add ); lua_setfield( L, -2, "__add" );
     lua_pushcfunction( L, luaF_Audio_concat ); lua_setfield( L, -2, "__concat" ); 
@@ -150,58 +158,57 @@ void luaF_register_Audio( lua_State * L )
     // Create Lua AudioVec type
     lua_register( L, luaF_getUsertypeName<AudioVec>().c_str(), luaF_Usertype_vec_new<flan::Audio> );
 	luaL_newmetatable( L, luaF_getUsertypeName<AudioVec>().c_str() );
-    //lua_pushcfunction( L, temp_deleter ); lua_setfield( L, -2, "__gc" );
     lua_pushvalue( L, -1 ); lua_setfield( L, -2, "__index" );
 
     // | Audio Metatable | AudioVec Metatable
 
     // Conversion
     //luaF_register_helper<F_Audio_convertToGraph, flan::Graph, flan::Audio, Interval, Pixel, Pixel, float>( L, "convertToGraph" );
-    luaF_register_helper<F_Audio_saveToBMP, flan::Audio, flan::Audio, std::string, Interval, Pixel, Pixel>( L, "saveToBMP" );
-    luaF_register_helper<F_Audio_convertToPVOC, flan::PVOC, flan::Audio, Frame, Frame, Frame>( L, "convertToPVOC" );
-    luaF_register_helper<F_Audio_convertToPVOC, flan::PVOC, flan::Audio, Frame, Frame, Frame>( L, "__call" );
-    luaF_register_helper<F_Audio_convertToFunction, flan::Func1x1, flan::Audio, flan::Time>( L, "convertToFunction" );
-    luaF_register_helper<F_Audio_convertToLeftRight, flan::Audio, flan::Audio>( L, "convertToLeftRight" );
-    luaF_register_helper<F_Audio_convertToStereo, flan::Audio, flan::Audio>( L, "convertToStereo" );
-    luaF_register_helper<F_Audio_convertToMono, flan::Audio, flan::Audio>( L, "convertToMono" );
-    luaF_register_helper<F_Audio_convertToMidSide, flan::Audio, flan::Audio>( L, "convertToMidSide" );
+    luaF_register_helper<F_Audio_saveToBMP,               2>( L, "saveToBMP" );
+    luaF_register_helper<F_Audio_convertToPVOC,           1>( L, "convertToPVOC" );
+    luaF_register_helper<F_Audio_convertToPVOC,           1>( L, "__call" );
+    luaF_register_helper<F_Audio_convertToFunction,       1>( L, "convertToFunction" );
+    luaF_register_helper<F_Audio_convertToLeftRight,      1>( L, "convertToLeftRight" );
+    luaF_register_helper<F_Audio_convertToStereo,         1>( L, "convertToStereo" );
+    luaF_register_helper<F_Audio_convertToMono,           1>( L, "convertToMono" );
+    luaF_register_helper<F_Audio_convertToMidSide,        1>( L, "convertToMidSide" );
 
     // Info
-    luaF_register_helper<F_Audio_getTotalEnergy, float, flan::Audio>( L, "getTotalEnergy" );
-    luaF_register_helper<F_Audio_getLocalWavelength, float, flan::Audio, Channel, Frame, Frame>( L, "getLocalWavelength" );
-    luaF_register_helper<F_Audio_getLocalWavelengths, std::vector<float>, flan::Audio, Channel, Frame, Frame, Frame>( L, "getLocalWavelengths" );
-    luaF_register_helper<F_Audio_getAverageWavelength, float, flan::Audio, Channel, float, float, Frame, Frame, Frame, Frame>( L, "getAverageWavelength" );
-    luaF_register_helper<F_Audio_getLocalFrequency, float, flan::Audio, Channel, Frame, Frame>( L, "getLocalFrequency" );
-    luaF_register_helper<F_Audio_getLocalFrequencies, std::vector<Frequency>, flan::Audio, Channel, Frame, Frame, Frame, Frame>( L, "getLocalFrequencies" );
+    luaF_register_helper<F_Audio_getTotalEnergy,          1>( L, "getTotalEnergy" );
+    luaF_register_helper<F_Audio_getLocalWavelength,      3>( L, "getLocalWavelength" );
+    luaF_register_helper<F_Audio_getLocalWavelengths,     2>( L, "getLocalWavelengths" );
+    luaF_register_helper<F_Audio_getAverageWavelength,    2>( L, "getAverageWavelength" );
+    luaF_register_helper<F_Audio_getLocalFrequency,       2>( L, "getLocalFrequency" );
+    luaF_register_helper<F_Audio_getLocalFrequencies,     2>( L, "getLocalFrequencies" );
 
     // Processing
-    luaF_register_helper<F_Audio_invertPhase, flan::Audio, flan::Audio>( L, "invertPhase" );
-    luaF_register_helper<F_Audio_modifyVolume, flan::Audio, flan::Audio, flan::Func1x1>( L, "modifyVolume" );
-    luaF_register_helper<F_Audio_setVolume, flan::Audio, flan::Audio, flan::Func1x1>( L, "setVolume" );
-    luaF_register_helper<F_Audio_shift, flan::Audio, flan::Audio, flan::Time>( L, "shift" );
-    luaF_register_helper<F_Audio_waveshape, flan::Audio, flan::Audio, flan::Func1x1>( L, "waveshape" );
-    luaF_register_helper<F_Audio_pan, flan::Audio, flan::Audio, flan::Func1x1>( L, "pan" );
-    luaF_register_helper<F_Audio_widen, flan::Audio, flan::Audio, flan::Func1x1>( L, "widen" );
-    luaF_register_helper<F_Audio_reverse, flan::Audio, flan::Audio>( L, "reverse" );
-    luaF_register_helper<F_Audio_cut, flan::Audio, flan::Audio, flan::Time, flan::Time, flan::Time, flan::Time>( L, "cut" );
-    luaF_register_helper<F_Audio_cutFrames, flan::Audio, flan::Audio, Frame, Frame, Frame, Frame>( L, "cutFrames" );
-    luaF_register_helper<F_Audio_repitch, flan::Audio, flan::Audio, flan::Func1x1, flan::Time, uint32_t>( L, "repitch" );
-    luaF_register_helper<F_Audio_convolve, flan::Audio, flan::Audio, flan::Audio>( L, "convolve" );
-    luaF_register_helper<F_Audio_fade, flan::Audio, flan::Audio, flan::Time, flan::Time, flan::Func1x1>( L, "fade" );
-    luaF_register_helper<F_Audio_fadeFrames, flan::Audio, flan::Audio, Frame, Frame, flan::Func1x1>( L, "fadeFrames" );
+    luaF_register_helper<F_Audio_invertPhase,             1>( L, "invertPhase" );
+    luaF_register_helper<F_Audio_modifyVolume,            2>( L, "modifyVolume" );
+    luaF_register_helper<F_Audio_setVolume,               2>( L, "setVolume" );
+    luaF_register_helper<F_Audio_shift,                   2>( L, "shift" );
+    luaF_register_helper<F_Audio_waveshape,               2>( L, "waveshape" );
+    luaF_register_helper<F_Audio_pan,                     2>( L, "pan" );
+    luaF_register_helper<F_Audio_widen,                   2>( L, "widen" );
+    luaF_register_helper<F_Audio_reverse,                 1>( L, "reverse" );
+    luaF_register_helper<F_Audio_cut,                     3>( L, "cut" );
+    luaF_register_helper<F_Audio_cutFrames,               3>( L, "cutFrames" );
+    luaF_register_helper<F_Audio_repitch,                 2>( L, "repitch" );
+    luaF_register_helper<F_Audio_convolve,                2>( L, "convolve" );
+    luaF_register_helper<F_Audio_fade,                    1>( L, "fade" );
+    luaF_register_helper<F_Audio_fadeFrames,              1>( L, "fadeFrames" );
     // // Audio lowPass( flan::Func1x1 cutoff, uint32_t taps = 64, flan_CANCEL_ARG ) const;
-    luaF_register_helper<F_Audio_iterate, flan::Audio, flan::Audio, uint32_t, Audio::Mod, bool>( L, "iterate" );
-    luaF_register_helper<F_Audio_delay, flan::Audio, flan::Audio, flan::Time, flan::Func1x1, flan::Func1x1, Audio::Mod>( L, "delay" );
-    luaF_register_helper<F_Audio_texture, flan::Audio, flan::Audio, flan::Time, flan::Func1x1, flan::Func1x1, Audio::Mod, bool>( L, "texture" );
-    luaF_register_helper<F_Audio_textureSimple, flan::Audio, flan::Audio, flan::Time, flan::Func1x1, flan::Func1x1, flan::Func1x1, flan::Func1x1, flan::Func1x1, flan::Func1x1>( L, "textureSimple" );
-    luaF_register_helper<F_Audio_grainSelect, flan::Audio, flan::Audio, flan::Time, flan::Func1x1, flan::Func1x1, flan::Func1x1, flan::Func1x1, flan::Func1x1, Audio::Mod>( L, "grainSelect" );
-    luaF_register_helper<F_Audio_chop, AudioVec, flan::Audio, flan::Time, flan::Time>( L, "chop" );
-    luaF_register_helper<F_Audio_rearrange, flan::Audio, flan::Audio, flan::Time, flan::Time>( L, "rearrange" );
+    luaF_register_helper<F_Audio_iterate,                 2>( L, "iterate" );
+    luaF_register_helper<F_Audio_delay,                   3>( L, "delay" );
+    luaF_register_helper<F_Audio_texture,                 3>( L, "texture" );
+    luaF_register_helper<F_Audio_textureSimple,           7>( L, "textureSimple" );
+    luaF_register_helper<F_Audio_grainSelect,             5>( L, "grainSelect" );
+    luaF_register_helper<F_Audio_chop,                    2>( L, "chop" );
+    luaF_register_helper<F_Audio_rearrange,               2>( L, "rearrange" );
 
     // Static methods are set up as AudioVec methods
-    lua_pushcclosure( L, luaF_LTMP<F_Audio_mix, Audio, AudioVec, std::vector<Func1x1>, std::vector<float>>, 0 ); lua_setfield( L, -2, "mix" ); 
-    lua_pushcclosure( L, luaF_LTMP<F_Audio_join, Audio, AudioVec, float>, 0 ); lua_setfield( L, -2, "join" ); 
-    lua_pushcclosure( L, luaF_LTMP<F_Audio_select, Audio, AudioVec, Func1x1, std::vector<float>>, 0 ); lua_setfield( L, -2, "select" ); 
+    lua_pushcclosure( L, luaF_LTMP<F_Audio_mix, 1>, 0 ); lua_setfield( L, -2, "mix" ); 
+    lua_pushcclosure( L, luaF_LTMP<F_Audio_join, 1>, 0 ); lua_setfield( L, -2, "join" ); 
+    lua_pushcclosure( L, luaF_LTMP<F_Audio_select, 2>, 0 ); lua_setfield( L, -2, "select" ); 
 
 	lua_pop( L, 2 );
     }

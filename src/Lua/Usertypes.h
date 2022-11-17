@@ -14,13 +14,20 @@ extern "C"
 
 template<typename T> constexpr bool luaF_isUsertype() { return false; };
 template<> constexpr bool luaF_isUsertype<flan::Audio>()      { return true; };
-template<> constexpr bool luaF_isUsertype<AudioMod>()         { return true; };
-template<> constexpr bool luaF_isUsertype<AudioVec>()         { return true; };
 template<> constexpr bool luaF_isUsertype<flan::PVOC>()       { return true; };
-template<> constexpr bool luaF_isUsertype<PVOCVec>()          { return true; };
 template<> constexpr bool luaF_isUsertype<flan::Func1x1>()    { return true; };
 template<> constexpr bool luaF_isUsertype<flan::Func2x1>()    { return true; };
 template<> constexpr bool luaF_isUsertype<flan::Func2x2>()    { return true; };
+template<> constexpr bool luaF_isUsertype<flan::Wavetable>()  { return true; };
+
+template<> constexpr bool luaF_isUsertype<AudioVec>()         { return true; };
+template<> constexpr bool luaF_isUsertype<PVOCVec>()          { return true; };
+template<> constexpr bool luaF_isUsertype<Func1x1Vec>()       { return true; };
+template<> constexpr bool luaF_isUsertype<Func2x1Vec>()       { return true; };
+template<> constexpr bool luaF_isUsertype<Func2x2Vec>()       { return true; };
+template<> constexpr bool luaF_isUsertype<WavetableVec>()     { return true; };
+
+template<> constexpr bool luaF_isUsertype<AudioMod>()         { return true; };
 
 template<typename T> std::string luaF_getUsertypeName();
 

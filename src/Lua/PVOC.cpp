@@ -93,8 +93,8 @@ struct F_PVOC_resonate { flan::PVOC operator()( std::atomic<bool> & z, flan::PVO
     { return a.resonate( b, c, z ); } };
 
 // Static
-struct F_PVOC_generate { PVOC operator()( std::atomic<bool> & z, flan::Time a = 5, Func1x1 b = 220, Func2x1 c = []( float, float i ){ return 1.0f / (i+1); } )
-    { return PVOC::generate( a, b, c, z ); } };
+struct F_PVOC_synthesize { PVOC operator()( std::atomic<bool> & z, flan::Time a = 5, Func1x1 b = 220, Func2x1 c = []( float, float i ){ return 1.0f / (i+1); } )
+    { return PVOC::synthesize( a, b, c, z ); } };
 
 
 // Registration ==============================================================================================================
@@ -102,9 +102,13 @@ struct F_PVOC_generate { PVOC operator()( std::atomic<bool> & z, flan::Time a = 
 void luaF_register_PVOC( lua_State * L )
     {
     // Create LUA_FLAN_PVOC type
-    lua_register( L, luaF_getUsertypeName<flan::PVOC>().c_str(), luaF_Usertype_new<flan::PVOC> );
+    lua_newtable( L );
+        lua_newtable( L );
+            lua_pushcfunction( L, luaF_Usertype_new<flan::PVOC> ); lua_setfield( L, -2, "__call" );
+        lua_setmetatable( L, -2 );
+        lua_pushcclosure( L, luaF_LTMP<F_PVOC_synthesize, 3>, 0 ); lua_setfield( L, -2, "generate" ); 
+    lua_setglobal( L, luaF_getUsertypeName<flan::PVOC>().c_str() );
 	luaL_newmetatable( L, luaF_getUsertypeName<flan::PVOC>().c_str() );
-	//lua_pushcfunction( L, luaF_Usertype_delete<flan::PVOC> ); lua_setfield( L, -2, "__gc" );
     lua_pushvalue( L, -1 ); lua_setfield( L, -2, "__index" ); // I need to look up why this works this way 
 
     // Create LUA_FLAN_PVOC_VEC type
@@ -114,50 +118,35 @@ void luaF_register_PVOC( lua_State * L )
 
     // | PVOC Metatable | PVOCVec Metatable
 
-    // Conversions
-    luaF_register_helper<F_PVOC_convertToAudio, flan::Audio, flan::PVOC>( L, "convertToAudio" );
-    luaF_register_helper<F_PVOC_convertToAudio, flan::Audio, flan::PVOC>( L, "__call" );
+    luaF_register_helper<F_PVOC_convertToAudio,           1>( L, "convertToAudio" );
+    luaF_register_helper<F_PVOC_convertToAudio,           1>( L, "__call" );
     // luaF_register_helper<F_PVOC_convertToGraph, flan::Graph, flan::PVOC, Rect, Pixel, Pixel, float>( L, "convertToGraph" );
-    luaF_register_helper<F_PVOC_saveToBMP, flan::PVOC, flan::PVOC, std::string, Rect, Pixel, Pixel>( L, "saveToBMP" );
-
-
-    // Contours
+    luaF_register_helper<F_PVOC_saveToBMP,                2>( L, "saveToBMP" );
     // struct F_PVOC_prism { flan::PVOC operator()( std::atomic<bool> & z, flan::PVOC a, PrismFunc b, bool c = true )
     //     { return a.prism( b, c ) ); } };
-
-    // Utility
-    luaF_register_helper<F_PVOC_getFrame, flan::PVOC, flan::PVOC, flan::Time>( L, "getFrame" );
-
-    // Selection
-    luaF_register_helper<F_PVOC_select, flan::PVOC, flan::PVOC, flan::Time, flan::Func2x2, flan::Func1x1>( L, "select" );
+    luaF_register_helper<F_PVOC_getFrame,                 2>( L, "getFrame" );
+    luaF_register_helper<F_PVOC_select,                   3>( L, "select" );
     // struct F_PVOC_freeze { flan::PVOC operator()( std::atomic<bool> & z, flan::PVOC a, const std::vector< std::array< flan::Time, 2 > > &b )
-
-    // Resampling
-    luaF_register_helper<F_PVOC_modify_cpu, flan::PVOC, flan::PVOC, flan::Func2x2, flan::Func1x1>( L, "modify_cpu" );
-    luaF_register_helper<F_PVOC_modifyTime_cpu, flan::PVOC, flan::PVOC, flan::Func2x1, flan::Func1x1>( L, "modifyTime_cpu" );
-    luaF_register_helper<F_PVOC_modifyFrequency_cpu, flan::PVOC, flan::PVOC, flan::Func2x1, flan::Func1x1>( L, "modifyFrequency_cpu" );
-    luaF_register_helper<F_PVOC_modify, flan::PVOC, flan::PVOC, flan::Func2x2, flan::Func1x1>( L, "modify" );
-    luaF_register_helper<F_PVOC_modifyFrequency, flan::PVOC, flan::PVOC, flan::Func2x1, flan::Func1x1>( L, "modifyFrequency" );
-    luaF_register_helper<F_PVOC_modifyTime, flan::PVOC, flan::PVOC, flan::Func2x1, flan::Func1x1>( L, "modifyTime" );
-    luaF_register_helper<F_PVOC_repitch, flan::PVOC, flan::PVOC, flan::Func2x1, flan::Func1x1>( L, "repitch" );
-    luaF_register_helper<F_PVOC_stretch, flan::PVOC, flan::PVOC, flan::Func2x1, flan::Func1x1>( L, "stretch" );
-    luaF_register_helper<F_PVOC_stretch_spline, flan::PVOC, flan::PVOC, flan::Func1x1>( L, "stretch_spline" );
-    luaF_register_helper<F_PVOC_desample, flan::PVOC, flan::PVOC, flan::Func2x1, flan::Func1x1>( L, "desample" );
-    luaF_register_helper<F_PVOC_timeExtrapolate, flan::PVOC, flan::PVOC, flan::Time, flan::Time, flan::Time, flan::Func1x1>( L, "timeExtrapolate" );
-
-    // Extras
-    luaF_register_helper<F_PVOC_addOctaves, flan::PVOC, flan::PVOC, flan::Func2x1 >( L, "addOctaves" );
-    luaF_register_helper<F_PVOC_addHarmonics, flan::PVOC, flan::PVOC, flan::Func2x1 >( L, "addHarmonics" );
-    luaF_register_helper<F_PVOC_replaceAmplitudes, flan::PVOC, flan::PVOC, flan::PVOC, flan::Func2x1 >( L, "replaceAmplitudes" );
-    luaF_register_helper<F_PVOC_subtractAmplitudes, flan::PVOC, flan::PVOC, flan::PVOC, flan::Func2x1 >( L, "subtractAmplitudes" );
-    luaF_register_helper<F_PVOC_shape, flan::PVOC, flan::PVOC, flan::Func2x2 >( L, "shape" );
-    luaF_register_helper<F_PVOC_perturb, flan::PVOC, flan::PVOC, flan::Func2x1, flan::Func2x1 >( L, "perturb" );
-    luaF_register_helper<F_PVOC_retainNLoudestPartials, flan::PVOC, flan::PVOC, flan::Func1x1 >( L, "retainNLoudestPartials" );
-    luaF_register_helper<F_PVOC_removeNLoudestPartials, flan::PVOC, flan::PVOC, flan::Func1x1 >( L, "removeNLoudestPartials" );
-    luaF_register_helper<F_PVOC_resonate, flan::PVOC, flan::PVOC, flan::Time, flan::Func2x1>( L, "resonate" );
-
-    // Static
-    lua_pushcclosure( L, luaF_LTMP<F_PVOC_generate, PVOC, flan::Time, Func1x1, Func2x1>, 0 ); lua_setglobal( L, "generatePVOC" ); 
+    luaF_register_helper<F_PVOC_modify_cpu,               2>( L, "modify_cpu" );
+    luaF_register_helper<F_PVOC_modifyTime_cpu,           2>( L, "modifyTime_cpu" );
+    luaF_register_helper<F_PVOC_modifyFrequency_cpu,      2>( L, "modifyFrequency_cpu" );
+    luaF_register_helper<F_PVOC_modify,                   2>( L, "modify" );
+    luaF_register_helper<F_PVOC_modifyFrequency,          2>( L, "modifyFrequency" );
+    luaF_register_helper<F_PVOC_modifyTime,               2>( L, "modifyTime" );
+    luaF_register_helper<F_PVOC_repitch,                  2>( L, "repitch" );
+    luaF_register_helper<F_PVOC_stretch,                  2>( L, "stretch" );
+    luaF_register_helper<F_PVOC_stretch_spline,           2>( L, "stretch_spline" );
+    luaF_register_helper<F_PVOC_desample,                 2>( L, "desample" );
+    luaF_register_helper<F_PVOC_timeExtrapolate,          4>( L, "timeExtrapolate" );
+    luaF_register_helper<F_PVOC_addOctaves,               2>( L, "addOctaves" );
+    luaF_register_helper<F_PVOC_addHarmonics,             2>( L, "addHarmonics" );
+    luaF_register_helper<F_PVOC_replaceAmplitudes,        2>( L, "replaceAmplitudes" );
+    luaF_register_helper<F_PVOC_subtractAmplitudes,       2>( L, "subtractAmplitudes" );
+    luaF_register_helper<F_PVOC_shape,                    2>( L, "shape" );
+    luaF_register_helper<F_PVOC_perturb,                  3>( L, "perturb" );
+    luaF_register_helper<F_PVOC_retainNLoudestPartials,   2>( L, "retainNLoudestPartials" );
+    luaF_register_helper<F_PVOC_removeNLoudestPartials,   2>( L, "removeNLoudestPartials" );
+    luaF_register_helper<F_PVOC_resonate,                 3>( L, "resonate" );
 
 	lua_pop( L, 2 );
     }

@@ -148,15 +148,28 @@ void FalterThread::paint( Graphics & g )
 
 void FalterThread::run()
 	{
+	auto exit = [&]()
+		{
+		// Success or not these need to be called
+		const ScopedLock lock( mutex );
+		MessageManagerLock mml;
+		stopTimer();
+		threadFinished = true;
+		endTime = Time::getCurrentTime();
+		repaint();
+		};
+
 	if( threadShouldExit() )
 		{
 		log( "Exiting thread early due to startup error.\n" );
+		exit();
 		return;
 		}
 	
 	if( lua_gettop( L ) != 1 ) // There should only be the script
 		{
-		log( "Lua stack size was > 1 when starting a new thread, stack size was " + String( lua_gettop( L ) ) + ".\n" );
+		log( "Lua stack size was not 1 when starting a new thread, stack size was " + String( lua_gettop( L ) ) + ".\n" );
+		exit();
 		return;
 		}
 
@@ -191,13 +204,7 @@ void FalterThread::run()
 			}
 		}
 
-	// Success or not these need to be called
-	const ScopedLock lock( mutex );
-	MessageManagerLock mml;
-	stopTimer();
-	threadFinished = true;
-	endTime = Time::getCurrentTime();
-	repaint();
+	exit();
 	}
 
 void FalterThread::timerCallback()

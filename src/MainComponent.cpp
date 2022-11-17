@@ -6,6 +6,11 @@
 
 #include "FalterLogger.h"
 
+struct TestFunctor { void operator()( int a, int b = 2, int c = 3 )
+	{
+	std::cout << a << b << c << std::endl;
+	} };
+
 MainComponent::MainComponent()
 	: procButton( "P", 			&FalterLookAndFeel::getLNF().fontSymbol 	)
 	, scriptSelectButton( "3", 	&FalterLookAndFeel::getLNF().fontWingdings 	)

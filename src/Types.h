@@ -17,8 +17,14 @@ namespace flan
     class Graph;
     struct Interval;
     struct Rect;
+    class Wavetable;
     }
 
 using AudioMod = std::function< flan::Audio ( const flan::Audio &, flan::Time ) >;
-using AudioVec = std::vector<flan::Audio>;
-using PVOCVec = std::vector<flan::PVOC>;
+
+using AudioVec      = std::vector<flan::Audio>;
+using PVOCVec       = std::vector<flan::PVOC>;
+using Func1x1Vec    = std::vector<flan::Func1x1>;
+using Func2x1Vec    = std::vector<flan::Func2x1>;
+using Func2x2Vec    = std::vector<flan::Func2x2>;
+using WavetableVec  = std::vector<flan::Wavetable>;

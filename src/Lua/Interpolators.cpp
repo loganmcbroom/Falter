@@ -37,12 +37,7 @@ void luaF_register_Interpolators( lua_State * L )
     lua_setglobal( L, "Interpolators" );
         
     // Globals defined in flan/Interpolators
-    lua_pushcclosure( L, luaF_LTMP<F_Interpolation_interpolatePoints, flan::Func1x1, std::vector< std::pair< float, float > >, flan::Interpolator>, 0 ); 
-    lua_setglobal( L, "interpolatePoints" );
-
-    lua_pushcclosure( L, luaF_LTMP<F_Interpolation_interpolateIntervals, flan::Func1x1, float, std::vector<float>, flan::Interpolator>, 0 ); 
-    lua_setglobal( L, "interpolateIntervals" );
-
-    lua_pushcclosure( L, luaF_LTMP<F_Interpolation_spline, flan::Func1x1, std::vector< std::pair< float, float > >>, 0 ); 
-    lua_setglobal( L, "spline" );
+    lua_pushcclosure( L, luaF_LTMP<F_Interpolation_interpolatePoints,     1>, 0 ); lua_setglobal( L, "interpolatePoints" );
+    lua_pushcclosure( L, luaF_LTMP<F_Interpolation_interpolateIntervals,  2>, 0 ); lua_setglobal( L, "interpolateIntervals" );
+    lua_pushcclosure( L, luaF_LTMP<F_Interpolation_spline,                1>, 0 ); lua_setglobal( L, "spline" );
     }

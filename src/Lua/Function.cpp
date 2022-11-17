@@ -9,6 +9,7 @@ extern "C"
 
 #include "Usertypes.h"
 #include "Utility.h"
+#include "LTMP.h"
 
 using namespace flan;
 
@@ -47,7 +48,7 @@ template bool luaF_isFunc<flan::Func2x2>( lua_State * L, int i );
 
 // This gets a number, lua function, or already defined flan Func type and returns a flan Func
 template<typename T>
-T luaF_checkFunc( lua_State * L, int i )
+T luaF_checkFunc_base( lua_State * L, int i )
     {
     std::string name = luaF_getUsertypeName<T>();
     if( lua_isnumber( L, i ) )
@@ -56,7 +57,7 @@ T luaF_checkFunc( lua_State * L, int i )
         }
     else if( lua_isfunction( L, i ) ) // Lua function recieved, convert to userdata wrapped type
         {
-        lua_pushvalue( L, i ); // Copy the function, ref will pop it
+        lua_pushvalue( L, i ); // Copy the function, ref will pop it. Check functions don't pop.
         const int ref = luaL_ref( L, LUA_REGISTRYINDEX );
         return [L, ref]( FuncTyper<T>::In in ) -> FuncTyper<T>::Out
             {
@@ -75,9 +76,32 @@ T luaF_checkFunc( lua_State * L, int i )
     else luaL_typerror( L, i, name.c_str() );
     }
 
-template flan::Func1x1 luaF_checkFunc( lua_State * L, int i );
-template flan::Func2x1 luaF_checkFunc( lua_State * L, int i );
-template flan::Func2x2 luaF_checkFunc( lua_State * L, int i );
+template<> flan::Func1x1 luaF_checkFunc( lua_State * L, int i ) { return luaF_checkFunc_base<flan::Func1x1>( L, i ); }
+template<> flan::Func2x1 luaF_checkFunc( lua_State * L, int i ) // This specialization handles 1x1 being convertable to 2x1
+    {
+    if( luaF_isUsertype<Func1x1>( L, i ) )
+        return luaF_checkUsertype<Func1x1>( L, i );
+    else
+        return luaF_checkFunc_base<Func2x1>( L, i );
+    }
+template<> flan::Func2x2 luaF_checkFunc( lua_State * L, int i ) { return luaF_checkFunc_base<flan::Func2x2>( L, i ); }
+
+
+// Static functions ================================================================================================================
+
+struct F_Func1x1_ADSR { Func1x1 operator()( std::atomic<bool> &, float a = 0, 
+    float d = 1, float s = 0, float r = 1, float sLvl = 0, float aExp = 1, float dExp = 1, float rExp = 1 ) 
+    { return Func1x1::ADSR( a, d, s, r, sLvl, aExp, dExp, rExp ); } };
+
+template<typename T>
+struct F_Func_uniformDist { T operator()( std::atomic<bool> &, T a, T b = 0 )
+    { return T::uniformDistribution( a, b ); } };
+
+template<typename T>
+struct F_Func_normalDist { T operator()( std::atomic<bool> &, T a, T b = 0 )
+    { return T::normalDistribution( a, b ); } };
+
+
 
 // Metamethods ================================================================================================================
 
@@ -99,7 +123,7 @@ static int luaF_Func_call( lua_State * L )
     typename FuncTyper<T>::In in = luaF_F_check<typename FuncTyper<T>::In>( L, -1 );
 
     // Clear function and args
-    lua_settop( L, 0 );
+    lua_settop( L, 0 ); 
 
     // Call function and push to stack
     luaF_F_push( L, f( in ) );
@@ -110,20 +134,78 @@ static int luaF_Func_call( lua_State * L )
     return numOutputs;
     }
 
+template<typename T> static int luaF_Func_add( lua_State * L ) { luaF_push<T>( L, luaF_check<T>( L, 1 ) + luaF_check<T>( L, 2 ) ); return 1; }
+template<typename T> static int luaF_Func_sub( lua_State * L ) { luaF_push<T>( L, luaF_check<T>( L, 1 ) - luaF_check<T>( L, 2 ) ); return 1; }
+template<typename T> static int luaF_Func_mul( lua_State * L ) { luaF_push<T>( L, luaF_check<T>( L, 1 ) * luaF_check<T>( L, 2 ) ); return 1; }
+template<typename T> static int luaF_Func_div( lua_State * L ) { luaF_push<T>( L, luaF_check<T>( L, 1 ) / luaF_check<T>( L, 2 ) ); return 1; }
+template<typename T> static int luaF_Func_mod( lua_State * L ) { luaF_push<T>( L, luaF_check<T>( L, 1 ) % luaF_check<T>( L, 2 ) ); return 1; }
+template<typename T> static int luaF_Func_unm( lua_State * L ) { luaF_push<T>( L, -luaF_check<T>( L, 2 ) ); return 1; }
+
+
+// Methods ================================================================================================================
+
+struct F_Func1x1_saveAsBMP { Func1x1 operator()( std::atomic<bool> & z, Func1x1 a, const std::string & b = "Func1x1.bmp", 
+    Rect c = { -5, -5, 5, 5 }, Interval d = Interval::R, Pixel e = -1, Pixel f = -1 ) 
+    { return a.saveAsBMP( b, c, d, e, f, z ); } };
+
+struct F_Func1x1_periodize { Func1x1 operator()( std::atomic<bool> &, Func1x1 f, float p = 1.0f ) 
+    { return f.periodize( p ); } };
+
 
 // Registration ================================================================================================================
 template<typename T>
-static void registerFuncType( lua_State * L )
+static void luaF_register_function_type( lua_State * L )
     {
-    lua_register( L, luaF_getUsertypeName<T>().c_str(), luaF_Usertype_new<T> );
+    // Create the Func metatable
 	luaL_newmetatable( L, luaF_getUsertypeName<T>().c_str() );
     lua_pushcfunction( L, luaF_Func_call<T> ); lua_setfield( L, -2, "__call" );
-    lua_pop( L, 1 );
+    lua_pushcfunction( L, luaF_Func_add<T> ); lua_setfield( L, -2, "__add" );
+    lua_pushcfunction( L, luaF_Func_sub<T> ); lua_setfield( L, -2, "__sub" );
+    lua_pushcfunction( L, luaF_Func_mul<T> ); lua_setfield( L, -2, "__mul" );
+    lua_pushcfunction( L, luaF_Func_div<T> ); lua_setfield( L, -2, "__div" );
+    lua_pushcfunction( L, luaF_Func_mod<T> ); lua_setfield( L, -2, "__mod" );
+    lua_pushcfunction( L, luaF_Func_unm<T> ); lua_setfield( L, -2, "__unm" );
     }
 
 void luaF_register_function_types( lua_State* L )
     {
-    registerFuncType<flan::Func1x1>( L );
-    registerFuncType<flan::Func2x1>( L );
-    registerFuncType<flan::Func2x2>( L );
+    // Func1x1 ====================================================================================================================================================
+    luaF_register_function_type<flan::Func1x1>( L ); 
+        lua_pushcclosure( L, luaF_LTMP<F_Func1x1_saveAsBMP, 2>, 0 ); lua_setfield( L, -2, "saveAsBMP" );
+        lua_pushcclosure( L, luaF_LTMP<F_Func1x1_periodize, 1>, 0 ); lua_setfield( L, -2, "periodize" );
+    lua_pop( L, 1 );
+
+    // Add static methods to the Func1x1 table
+    lua_newtable( L );
+        lua_newtable( L );
+            lua_pushcfunction( L, luaF_Usertype_new<Func1x1> ); lua_setfield( L, -2, "__call" );
+        lua_setmetatable( L, -2 );
+        lua_pushcclosure( L, luaF_LTMP<F_Func1x1_ADSR, 5>, 0 ); lua_setfield( L, -2, "ADSR" );
+        lua_pushcclosure( L, luaF_LTMP<F_Func_uniformDist<Func1x1>, 2>, 0 ); lua_setfield( L, -2, "uniformDistribution" );
+        lua_pushcclosure( L, luaF_LTMP<F_Func_normalDist<Func1x1>, 2>, 0 ); lua_setfield( L, -2, "normalDistribution" );
+    lua_setglobal( L, luaF_getUsertypeName<Func1x1>().c_str() );
+   
+
+    // Func2x1 ====================================================================================================================================================
+    luaF_register_function_type<flan::Func2x1>( L );
+    lua_pop( L, 1 );
+
+    lua_newtable( L );
+        lua_newtable( L );
+            lua_pushcfunction( L, luaF_Usertype_new<Func2x1> ); lua_setfield( L, -2, "__call" );
+        lua_setmetatable( L, -2 );
+        lua_pushcclosure( L, luaF_LTMP<F_Func_uniformDist<Func2x1>, 2>, 0 ); lua_setfield( L, -2, "uniformDistribution" );
+        lua_pushcclosure( L, luaF_LTMP<F_Func_normalDist<Func2x1>, 2>, 0 ); lua_setfield( L, -2, "normalDistribution" );
+    lua_setglobal( L, luaF_getUsertypeName<Func2x1>().c_str() );
+
+
+    // Func2x2 ====================================================================================================================================================
+    luaF_register_function_type<flan::Func2x2>( L );
+    lua_pop( L, 1 );
+
+    lua_newtable( L );  
+        lua_newtable( L );
+            lua_pushcfunction( L, luaF_Usertype_new<Func2x2> ); lua_setfield( L, -2, "__call" );
+        lua_setmetatable( L, -2 );
+    lua_setglobal( L, luaF_getUsertypeName<Func2x2>().c_str() );
     }
