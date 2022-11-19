@@ -32,11 +32,11 @@ struct F_Wavetable_Function_Ctor { Wavetable operator()( std::atomic<bool> & z, 
 
 static int luaF_Wavetable_ctor_selector( lua_State * L )
     {
-    if( luaF_is<Audio>( L, 1 ) || luaF_is<AudioVec>( L, 1 ) )
+    if( luaF_is<Audio>( L, 2 ) || luaF_is<AudioVec>( L, 2 ) )
         return luaF_LTMP<F_Wavetable_Audio_Ctor, 1>( L );
-    else if( luaF_is<Func1x1>( L, 1 ) || luaF_is<Func1x1Vec>( L, 1 ) )
+    else if( luaF_is<Func1x1>( L, 2 ) || luaF_is<Func1x1Vec>( L, 2 ) )
         return luaF_LTMP<F_Wavetable_Function_Ctor, 2>( L );
-    else return luaL_error( L, "Wavetable couldn't be constructed with the given inputs." );
+    else return luaL_error( L, "Wavetable couldn't be constructed with the given arguments." );
     }
 
 struct F_Wavetable_synthesize { Audio operator()( std::atomic<bool> & z, Wavetable a, flan::Time b = 3, Func1x1 c = 220, Func1x1 d = 0, flan::Time e = 0.001f )

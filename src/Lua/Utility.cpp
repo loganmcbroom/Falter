@@ -36,6 +36,9 @@ template<> bool luaF_is<flan::Rect>( lua_State * L, int i )
     lua_pop( L, 4 );
     return result;
     }
+template<> bool luaF_is<std::pair<float,float>>( lua_State * L, int i ) { return luaF_is<flan::Interval>( L, i ); }
+template<> bool luaF_is<flan::vec2>( lua_State * L, int i ) { return luaF_is<flan::Interval>( L, i ); }
+
 template<> bool luaF_is<flan::Audio>( lua_State * L, int i ) { return luaF_isUsertype<flan::Audio>( L, i ); }
 template<> bool luaF_is<flan::PVOC>( lua_State * L, int i ) { return luaF_isUsertype<flan::PVOC>( L, i ); }
 template<> bool luaF_is<flan::Func1x1>( lua_State * L, int i ) { return luaF_isFunc<flan::Func1x1>( L, i ); }
@@ -46,7 +49,6 @@ template<> bool luaF_is<flan::Wavetable>( lua_State * L, int i ) { return luaF_i
 template<> bool luaF_is<AudioMod>( lua_State * L, int i ) { return luaF_isAudioMod( L, i ); }
 
 template<> bool luaF_is<std::string>( lua_State * L, int i ) { return lua_isstring( L, i ); }
-template<> bool luaF_is<std::pair<float,float>>( lua_State * L, int i ) { return luaF_is<flan::Interval>( L, i ); }
 
 
 
@@ -76,6 +78,17 @@ template<> flan::Rect luaF_check( lua_State * L, int i )
     lua_pop( L, 4 );
     return rect;
     }
+template<> std::pair<float,float> luaF_check( lua_State * L, int i ) 
+    { 
+    auto I = luaF_check<flan::Interval>( L, i );
+    return { I.x1, I.x2 };
+    }
+template<> flan::vec2 luaF_check( lua_State * L, int i ) 
+    {
+    auto I = luaF_check<flan::Interval>( L, i );
+    return { I.x1, I.x2 };
+    }
+
 template<> flan::Audio luaF_check( lua_State * L, int i ) { return luaF_checkUsertype<flan::Audio>( L, i ); }
 template<> flan::PVOC luaF_check( lua_State * L, int i ) { return luaF_checkUsertype<flan::PVOC>( L, i ); }
 template<> flan::Func1x1 luaF_check( lua_State * L, int i ) { return luaF_checkFunc<flan::Func1x1>( L, i ); }
@@ -86,13 +99,6 @@ template<> flan::Wavetable luaF_check( lua_State * L, int i ) { return luaF_chec
 template<> AudioMod luaF_check( lua_State * L, int i ) { return luaF_checkAudioMod( L, i ); }
 
 template<> std::string luaF_check( lua_State * L, int i ) { return std::string( luaL_checkstring( L, i ) ); }
-template<> std::pair<float,float> luaF_check( lua_State * L, int i ) 
-    { 
-    flan::Interval interval = luaF_check<flan::Interval>( L, i );
-    return  { interval.x1, interval.x2 };
-    }
-
-
 
 
 
@@ -116,6 +122,9 @@ template<> void luaF_push( lua_State * L, flan::Rect i )
     lua_pushnumber( L, i.y1() ); lua_rawseti( L, -1, 3 );
     lua_pushnumber( L, i.y2() ); lua_rawseti( L, -1, 4 );
     }
+template<> void luaF_push( lua_State * L, std::pair< float, float > z ) { luaF_push( L, flan::Interval( z.first, z.second ) ); }
+template<> void luaF_push( lua_State * L, flan::vec2 z ) { luaF_push( L, flan::Interval( z.x(), z.y() ) ); }
+
 template<> void luaF_push( lua_State * L, flan::Audio u )   { luaF_pushUsertype<flan::Audio>( L, u );   }
 template<> void luaF_push( lua_State * L, flan::PVOC u )    { luaF_pushUsertype<flan::PVOC>( L, u );    }
 template<> void luaF_push( lua_State * L, flan::Func1x1 u ) { luaF_pushUsertype<flan::Func1x1>( L, u );  }
@@ -126,4 +135,3 @@ template<> void luaF_push( lua_State * L, flan::Wavetable u ) { luaF_pushUsertyp
 template<> void luaF_push( lua_State * L, AudioMod u )      { luaF_pushUsertype<AudioMod>( L, u );      }
 
 template<> void luaF_push( lua_State * L, const std::string & u ) { lua_pushstring( L, u.c_str() ); }
-template<> void luaF_push( lua_State * L, std::pair< float, float > z ) { luaF_push( L, flan::Interval( z.first, z.second ) ); }

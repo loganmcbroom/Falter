@@ -35,6 +35,7 @@ template<typename T>
 bool luaF_isArrayOfType( lua_State * L, int i )
     {
     if( ! lua_istable( L, i ) ) return false;
+    if( lua_gettop( L ) == 0 ) return false;
     const int N = lua_objlen( L, i );
     for( int j = 1; j <= N; ++j )
         {

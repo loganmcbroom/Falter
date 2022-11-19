@@ -7,6 +7,7 @@ Off topic:
     song idea, something making fun of "top 10 x june 2022" articles
     can anything else interesting be done with the wavetable class?
     wavetable cancel points
+    do flan Func types actually need forwarding ctors?
 
 todo:
     Setting for sample folder
@@ -29,20 +30,9 @@ todo:
     audio synthesize is making a sine wave sound saw like, try in plain c++
     Lua:
         prism, requires a prismFunc wrapper
-        we need a way to check that lua functions passed in have the required signiture
         adding waveforms for audio synthesize might speed it up a good bit
             anything to keep from calling lua functions
-
-    from cppref, can be used instead of vector concept: 
-        // C++20 deduced class type placeholder, class template arguments are deduced at the call site
-        template<std::array arr>
-        void f();
-        f<std::array<double, 8>{}>();
+        
 
 task:
-    we shoud have a vec type for any flan type with methods
-    use ctor functors if needed for
-        -wavetable
-        pvoc
-        audio
-        functions
+     we need a way to check that lua functions passed in have the required signiture

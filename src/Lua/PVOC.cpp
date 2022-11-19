@@ -26,6 +26,18 @@ static flan::Func2x1 Func2x1_Arith_Ident = []( float t, float i ){ return i == 1
 
 // Methods ======================================================================================================================
 
+struct F_PVOC_string_ctor { PVOC operator()( std::atomic<bool> &, const std::string & s )
+    { return PVOC( s ); } };
+static int luaF_PVOC_ctor_selector( lua_State * L )
+    {
+    // arg 1 is the Audio global table
+    if( lua_gettop( L ) < 2 ) // Default ctor
+        return luaF_Usertype_new<PVOC>( L );
+    else if( luaF_is<std::string>( L, 2 ) || luaF_isArrayOfType<std::string>( L, 2 ) )
+        return luaF_LTMP<F_PVOC_string_ctor, 1>( L );
+    else return luaL_error( L, "PVOC couldn't be constructed from the given arguments." );
+    }
+
 // Conversions
 struct F_PVOC_convertToAudio { flan::Audio operator()( std::atomic<bool> & z, flan::PVOC a )
     { return a.convertToAudio( nullptr, z ); } };
@@ -104,7 +116,7 @@ void luaF_register_PVOC( lua_State * L )
     // Create LUA_FLAN_PVOC type
     lua_newtable( L );
         lua_newtable( L );
-            lua_pushcfunction( L, luaF_Usertype_new<flan::PVOC> ); lua_setfield( L, -2, "__call" );
+            lua_pushcfunction( L, luaF_PVOC_ctor_selector ); lua_setfield( L, -2, "__call" );
         lua_setmetatable( L, -2 );
         lua_pushcclosure( L, luaF_LTMP<F_PVOC_synthesize, 3>, 0 ); lua_setfield( L, -2, "generate" ); 
     lua_setglobal( L, luaF_getUsertypeName<flan::PVOC>().c_str() );
