@@ -14,27 +14,10 @@ extern "C"
 using namespace flan;
 
 // Input/Output type handlers
-template<typename T> struct FuncTyper { typedef void In; typedef void Out; static const int numInputs = 0; static const int numOutputs = 0; };
-template<> struct FuncTyper<Func1x1> { typedef float In; typedef float Out; static const int numInputs = 1; static const int numOutputs = 1; };
-template<> struct FuncTyper<Func2x1> { typedef vec2 In;  typedef float Out; static const int numInputs = 2; static const int numOutputs = 1; };
-template<> struct FuncTyper<Func2x2> { typedef vec2 In;  typedef vec2 Out;  static const int numInputs = 2; static const int numOutputs = 2; };
-
-// These handle the fact that lua functions being cast to some flan Funcs take and return 1 or 2 args
-template<typename T> T luaF_F_check( lua_State * L, int i ) {}
-template<> float luaF_F_check( lua_State * L, int i ) { return luaL_checknumber( L, i ); }
-template<> vec2 luaF_F_check( lua_State * L, int i ) 
-    { 
-    if( i > 0 )
-        return vec2( luaL_checknumber( L, i ), luaL_checknumber( L, i + 1 ) ); 
-    else
-        return vec2( luaL_checknumber( L, i - 1 ), luaL_checknumber( L, i ) ); 
-    }
-
-template<typename T> void luaF_F_push( lua_State * L, T ) {}
-template<> void luaF_F_push( lua_State * L, float x ) { lua_pushnumber( L, x ); }
-template<> void luaF_F_push( lua_State * L, vec2 z ) { lua_pushnumber( L, z.x() ); lua_pushnumber( L, z.y() ); }
-
-
+template<typename T> struct FuncTyper { typedef void In; typedef void Out;  };
+template<> struct FuncTyper<Func1x1> { typedef float In; typedef float Out;  };
+template<> struct FuncTyper<Func2x1> { typedef vec2 In;  typedef float Out; };
+template<> struct FuncTyper<Func2x2> { typedef vec2 In;  typedef vec2 Out;  };
 
 // Interface ================================================================================================================
 template<> bool luaF_isFunc<Func1x1>( lua_State * L, int i )
@@ -56,20 +39,18 @@ T luaF_checkFunc_base( lua_State * L, int i )
     {
     using O = FuncTyper<T>::Out;
 
-    const std::string name = luaF_getUsertypeName<T>();
-
     if( luaF_is<O>( L, i ) )
         return luaF_check<O>( L, i );
     else if( lua_isfunction( L, i ) ) // Lua function recieved, convert to userdata wrapped type
         {
-        lua_pushvalue( L, i ); // Copy the function, ref will pop it. Check functions don't pop.
+        lua_pushvalue( L, i ); // Copy the function, ref will pop it. Check functions like this one shouldn't pop.
         const int ref = luaL_ref( L, LUA_REGISTRYINDEX );
         return [L, ref]( FuncTyper<T>::In in ) -> FuncTyper<T>::Out
             {
             lua_rawgeti( L, LUA_REGISTRYINDEX, ref );
-            luaF_F_push( L, in );
-            lua_call( L, FuncTyper<T>::numInputs, FuncTyper<T>::numOutputs );
-            const auto out = luaF_F_check<FuncTyper<T>::Out>( L, -1 );
+            luaF_push( L, in );
+            lua_call( L, 1, 1 );
+            const auto out = luaF_check<FuncTyper<T>::Out>( L, -1 );
             lua_pop( L, 1 );
             return out;
             };
@@ -80,7 +61,7 @@ T luaF_checkFunc_base( lua_State * L, int i )
         }
     else 
         {
-        luaL_typerror( L, i, name.c_str() );
+        luaL_typerror( L, i, luaF_getUsertypeName<T>().c_str() );
         return T();
         }
     }
@@ -119,28 +100,28 @@ template<typename T>
 static int luaF_Func_call( lua_State * L )
     {
     const std::string name = luaF_getUsertypeName<T>();
-    const int numInputs = FuncTyper<T>::numInputs;
-    const int numOutputs = FuncTyper<T>::numOutputs;
 
-    if( lua_gettop( L ) != 1 + numInputs ) 
-        return luaL_error( L, ( name + " recieved the wrong number of arguments: " + std::to_string( lua_gettop( L ) - 1 ) ).c_str() );
+    if( lua_gettop( L ) != 1 + 1 ) 
+        return luaL_error( L, ( name + " recieved the wrong number of arguments (should be one array with 2 elements): " 
+            + std::to_string( lua_gettop( L ) - 1 ) ).c_str() );
 
     // Get function
     T f = luaF_check<T>( L, 1 );
 
     // Get args
-    typename FuncTyper<T>::In in = luaF_F_check<typename FuncTyper<T>::In>( L, -1 );
+    auto in = luaF_check<typename FuncTyper<T>::In>( L, -1 );
 
     // Clear function and args
     lua_settop( L, 0 ); 
 
     // Call function and push to stack
-    luaF_F_push( L, f( in ) );
+    luaF_push( L, f( in ) );
 
-    if( lua_gettop( L ) != numOutputs ) 
-        return luaL_error( L, ( name + " returned the wrong number of values: " + std::to_string( lua_gettop( L ) ) ).c_str() );
+    if( lua_gettop( L ) != 1 ) 
+        return luaL_error( L, ( name + " returned the wrong number of values (should be one array with 2 elements): " 
+            + std::to_string( lua_gettop( L ) ) ).c_str() );
 
-    return numOutputs;
+    return 1;
     }
 
 template<typename T> static int luaF_Func_add( lua_State * L ) { luaF_push<T>( L, luaF_check<T>( L, 1 ) + luaF_check<T>( L, 2 ) ); return 1; }
@@ -170,7 +151,7 @@ static int luaF_Func_ctor_selector( lua_State * L )
     else return luaL_error( L, "Function couldn't be constructed from the given arguments." );
     }
 
-struct F_Func1x1_saveAsBMP { Func1x1 operator()( std::atomic<bool> & z, Func1x1 a, const std::string & b = "Func1x1.bmp", 
+struct F_Func1x1_saveAsBMP { Func1x1 operator()( std::atomic<bool> & z, Func1x1 a, const std::string & b, 
     Rect c = { -5, -5, 5, 5 }, Interval d = Interval::R, Pixel e = -1, Pixel f = -1 ) 
     { return a.saveAsBMP( b, c, d, e, f, z ); } };
 

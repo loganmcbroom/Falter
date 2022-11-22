@@ -18,9 +18,11 @@ namespace flan
     struct Interval;
     struct Rect;
     class Wavetable;
+    struct MF;
     }
 
 using AudioMod = std::function< flan::Audio ( const flan::Audio &, flan::Time ) >;
+using PrismFunc = std::function<flan::MF ( int note, flan::Time, int harmonic, flan::Frequency contourFreq, const std::vector<flan::Magnitude> & harmonicMagnitudes )>;
 
 using AudioVec      = std::vector<flan::Audio>;
 using PVOCVec       = std::vector<flan::PVOC>;

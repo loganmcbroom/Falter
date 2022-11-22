@@ -2,6 +2,7 @@ Off topic:
     Graph convertToPVOC
     filter package
     like one in twenty times converting to pvoc and back breaks
+        similar bug happened in prism, probably some kind of uninitialized gpu memory 
     https://dsp.stackexchange.com/questions/41696/calculating-the-inverse-filter-for-the-exponential-sine-sweep-method/41700#41700
     song idea, cut mid video sponsered ads out of youtube videos
     song idea, something making fun of "top 10 x june 2022" articles
@@ -28,11 +29,8 @@ todo:
     hardcoded path File("C:/Users/logan/Documents/Samples") in two places
     At some point I found a window that said there was a memory leak, idk where but look into that  
     audio synthesize is making a sine wave sound saw like, try in plain c++
-    Lua:
-        prism, requires a prismFunc wrapper
-        adding waveforms for audio synthesize might speed it up a good bit
-            anything to keep from calling lua functions
+    static audio methods should also be registered as Audio.mix, etc., for consistency
         
 
-task:
-     we need a way to check that lua functions passed in have the required signiture
+task: 
+    We should adhere to taking 2 element arrays instead of passing and returning two args with Func types, unless we can detect if the function takes two

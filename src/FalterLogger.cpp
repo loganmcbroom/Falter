@@ -69,4 +69,4 @@ std::streamsize FalterLogger::xsputn( const char_type * s, std::streamsize n )
 
 // I don't know what this does but the base class streambuf defaults to a "failed to overflow" return value
 // So if it isn't overloaded the cout redirect stops working
-std::streambuf::int_type FalterLogger::overflow( int_type ch ) {	return 0; }
+std::streambuf::int_type FalterLogger::overflow( int_type ch ) { return 0; }

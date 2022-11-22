@@ -37,7 +37,7 @@ target_sources( Falter
         src/Lua/LTMP.h
         src/Lua/LTMP.cpp
         src/Lua/Audio.cpp
-        src/Lua/AudioMod.cpp
+        src/Lua/ExtraCheckFuncs.cpp
         src/Lua/PVOC.cpp
         src/Lua/Function.cpp
         src/Lua/Interpolators.cpp
