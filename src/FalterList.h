@@ -4,7 +4,6 @@
 
 class FalterButton;
 
-template < typename T >
 class FalterList  : public Component
 				 , public ScrollBar::Listener
 				 , public Button::Listener
@@ -12,19 +11,17 @@ class FalterList  : public Component
 public:
 	FalterList();
 	~FalterList();
-
-	virtual int getItemHeight() = 0;
 	
 	int getNumItems() { return int( items.size() ); };
-	std::shared_ptr<T> addItem( T * item );
-	std::shared_ptr<T> insertItem( T * item, size_t index );
-	int getIndex( T * item );
+	std::shared_ptr<Component> addItem( Component * item );
+	std::shared_ptr<Component> insertItem( Component * item, size_t index );
+	int getIndex( Component * item );
 	void erase( int index );
-	void erase( T * item );
+	void erase( Component * item );
 	void clear();
 	void swap( int a, int b );
-	std::shared_ptr<T> getItem( int index );
-	std::shared_ptr<T> getItem( Component * c );
+	std::shared_ptr<Component> getItem( int index );
+	std::shared_ptr<Component> getItem( Component * c );
 
 protected:
 	void buttonClicked( Button * b ) override;
@@ -37,9 +34,11 @@ private:
 	void mouseWheelMove(const MouseEvent & event, const MouseWheelDetails & wheel ) override;
 	
 	
-	std::vector< std::pair< std::shared_ptr<T>, std::unique_ptr<FalterButton> > > items;
+	std::vector< std::pair< std::shared_ptr<Component>, std::unique_ptr<FalterButton> > > items;
 
 	ScrollBar scroll;
 
 	std::unique_ptr<FalterButton> clearButton;
+
+	static const size_t itemHeight = 44;
 	};

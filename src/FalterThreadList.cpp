@@ -16,7 +16,7 @@ FalterThreadList::~FalterThreadList()
 
 void FalterThreadList::addThread( const String & script, std::function< void ( AudioVec & ) > & callback, const AudioVec & files )
 	{
-	static int n = 0;
+	static int n = 0; // Used for thread names
 	++n;
 	Time t = Time::getCurrentTime();
 	addItem( new FalterThread( 

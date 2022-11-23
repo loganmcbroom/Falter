@@ -76,6 +76,7 @@ public:
            #else
             setResizable (true, true);
             centreWithSize (getWidth(), getHeight());
+            setFullScreen( true );
            #endif
 
             setVisible (true);

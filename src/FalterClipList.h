@@ -4,14 +4,15 @@
 #include "FalterList.h"
 #include "FalterClip.h"
 
-class FalterClipList : public FalterList<FalterClip>
+class FalterPlayer;
+
+class FalterClipList : public FalterList
 					, public DragAndDropTarget
 	{
 public:
-	FalterClipList( AudioFormatManager &_formatManager, AudioTransportSource &_transportSource );
+	FalterClipList( FalterPlayer & player );
 	~FalterClipList();
 
-	int getItemHeight() override;
 	void erase( FalterClip * child );
 	void erase( unsigned int pos );
 	void clear();
@@ -28,8 +29,7 @@ private:
 	///bool shouldDrawDragImageWhenOver() override;
 
 
-	AudioTransportSource &transportSource;
-	AudioFormatManager &formatManager;
+	FalterPlayer & player;
 	AudioThumbnailCache thumbnailCache;
 	};
 

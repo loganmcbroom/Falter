@@ -8,11 +8,10 @@
 #include "FalterThreadList.h"
 #include "FalterLookAndFeel.h"
 class FalterLogger;
+class FalterPlayer;
 
-#include "FalterLookandFeel.h"
-
-class MainComponent : public AudioAppComponent
-                    , public ChangeListener
+class MainComponent : public Component
+					, public ChangeListener
                     , public Button::Listener
                     , public FileDragAndDropTarget
                     , public DragAndDropContainer
@@ -22,9 +21,6 @@ public:
     MainComponent();
     ~MainComponent();
 
-    void prepareToPlay( int samplesPerBlockExpected, double sampleRate ) override;
-    void getNextAudioBlock( const AudioSourceChannelInfo& bufferToFill ) override;
-    void releaseResources() override;
     void paint (Graphics& g) override;
     void resized() override;
 	void changeListenerCallback( ChangeBroadcaster* source ) override;
@@ -50,9 +46,8 @@ private:
 	FalterButton scriptSelectButton;
 	
 	Label scriptLabel;
-	
-	AudioFormatManager formatManager;
-	AudioTransportSource transportSource;
+
+	std::unique_ptr<FalterPlayer> player;
 
 	FalterFileBrowser sampleBrowser;
 	FalterClipList inClips, outClips;

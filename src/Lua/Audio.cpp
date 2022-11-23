@@ -129,8 +129,8 @@ struct F_Audio_join { flan::Audio operator()( std::atomic<bool> & z, AudioVec a,
 struct F_Audio_select { flan::Audio operator()( std::atomic<bool> & z, AudioVec a, Func1x1 b = 0, std::vector<float> c = std::vector<float>() )
     { return Audio::select( a, b, c, z ); } };
 
-struct F_Audio_synthesize { flan::Audio operator()( std::atomic<bool> & z, Func1x1 a, flan::Time b = 3, Func1x1 c = 220 )
-    { return Audio::synthesize( a, b, c, 48000, 16, z ); } };
+struct F_Audio_synthesize { flan::Audio operator()( std::atomic<bool> & z, Func1x1 a, flan::Time b, Func1x1 c, int d = 48000, int e = 16 )
+    { return Audio::synthesize( a, b, c, d, e, z ); } };
 
 // Overloading  ====================================================================================================================
 
@@ -160,7 +160,10 @@ void luaF_register_Audio( lua_State * L )
         lua_newtable( L ); 
             lua_pushcfunction( L, luaF_Audio_ctor_selector ); lua_setfield( L, -2, "__call" );
         lua_setmetatable( L, -2 );
-        lua_pushcclosure( L, luaF_LTMP<F_Audio_synthesize, 3>, 0 ); lua_setfield( L, -2, "synthesize" ); 
+        lua_pushcclosure( L, luaF_LTMP<F_Audio_mix,         1>, 0 ); lua_setfield( L, -2, "mix" ); 
+        lua_pushcclosure( L, luaF_LTMP<F_Audio_join,        1>, 0 ); lua_setfield( L, -2, "join" ); 
+        lua_pushcclosure( L, luaF_LTMP<F_Audio_select,      2>, 0 ); lua_setfield( L, -2, "select" ); 
+        lua_pushcclosure( L, luaF_LTMP<F_Audio_synthesize,  3>, 0 ); lua_setfield( L, -2, "synthesize" ); 
     lua_setglobal( L, luaF_getUsertypeName<flan::Audio>().c_str() );
 
 	luaL_newmetatable( L, luaF_getUsertypeName<flan::Audio>().c_str() );
@@ -216,7 +219,7 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_chop,                    2>( L, "chop" );
             luaF_register_helper<F_Audio_rearrange,               2>( L, "rearrange" );
 
-            // Static methods are set up as AudioVec methods
+            // Static methods taking vector<Audio> are also added as AudioVec methods for convenience
             lua_pushcclosure( L, luaF_LTMP<F_Audio_mix, 1>, 0 ); lua_setfield( L, -2, "mix" ); 
             lua_pushcclosure( L, luaF_LTMP<F_Audio_join, 1>, 0 ); lua_setfield( L, -2, "join" ); 
             lua_pushcclosure( L, luaF_LTMP<F_Audio_select, 2>, 0 ); lua_setfield( L, -2, "select" ); 

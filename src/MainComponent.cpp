@@ -5,6 +5,7 @@
 #include <flan/Audio.h>
 
 #include "FalterLogger.h"
+#include "FalterPlayer.h"
 
 struct TestFunctor { void operator()( int a, int b = 2, int c = 3 )
 	{
@@ -15,17 +16,14 @@ MainComponent::MainComponent()
 	: procButton( "P", 			&FalterLookAndFeel::getLNF().fontSymbol 	)
 	, scriptSelectButton( "3", 	&FalterLookAndFeel::getLNF().fontWingdings 	)
 	, scriptLabel( "" )
-	, formatManager()
-	, transportSource()
+	, player( new FalterPlayer )
 	, sampleBrowser()
-	, inClips( formatManager, transportSource )
-	, outClips( formatManager, transportSource )
-	, log()
+	, inClips( *player.get() )
+	, outClips( *player.get() )
+	, log( new FalterLogger )
 	, logHeight( FalterLookAndFeel::getLNF().unit * 5 + FalterLookAndFeel::getLNF().margin * 4 )
 	{
 	setLookAndFeel( &FalterLookAndFeel::getLNF() );
-
-	log.reset( new FalterLogger() );
 
 	Logger::setCurrentLogger( log.get() );
 	addAndMakeVisible( *log 				);
@@ -46,10 +44,6 @@ MainComponent::MainComponent()
 
 	setSize( 1000, 700 );
 
-	formatManager.registerBasicFormats();
-
-	setAudioChannels( 0, 2 );
-
 	// if( ! File::getCurrentWorkingDirectory().getChildFile( "Settings.lua" ).exists() )
 	// 	{
 	// 	FileChooser chooser( "Select your _cdprogs directory (it should be in cdprX/_cdp)" );
@@ -69,34 +63,9 @@ MainComponent::MainComponent()
 
 MainComponent::~MainComponent()
 	{
-    shutdownAudio();
+	player->stop();
 	Logger::setCurrentLogger( nullptr );
 	setLookAndFeel( nullptr );
-	}
-
-
-//Called when the audio device is started or when its settings are changed
-void MainComponent::prepareToPlay( int samplesPerBlockExpected, double sampleRate )
-	{
-	transportSource.prepareToPlay( samplesPerBlockExpected, sampleRate );
-	}
-
-//This function is handed an audio buffer to fill as is needed for output
-void MainComponent::getNextAudioBlock( const AudioSourceChannelInfo& bufferToFill )
-	{
-	if( FalterClip::active == nullptr )
-		{
-		bufferToFill.clearActiveBufferRegion();
-		return;
-		}
-
-	transportSource.getNextAudioBlock( bufferToFill );
-	}
-
-//Called when the audio device stops or when it is restarted
-void MainComponent::releaseResources()
-	{
-	transportSource.releaseResources();
 	}
 
 //Paint
@@ -189,7 +158,7 @@ void MainComponent::procButtonClicked()
 
 	AudioVec inAudio;
 	for( int i = 0; i < inClips.getNumItems(); ++i )
-		inAudio.emplace_back( inClips.getItem( i )->getAudio() );
+		inAudio.emplace_back( dynamic_pointer_cast<FalterClip>( inClips.getItem( i ) )->getAudio() );
 		
 	threads.addThread( scriptLabel.getText(), retrieveFiles, inAudio );
 	}

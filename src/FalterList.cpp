@@ -8,8 +8,7 @@
 
 using namespace std;
 
-template <typename T>
-FalterList<T>::FalterList()
+FalterList::FalterList()
 	: Component()
 	, scroll( true )
 	, clearButton( new FalterButton("r", &FalterLookAndFeel::getLNF().fontWebdings, int( CLEAR_HEIGHT * .67f ) ) )
@@ -23,19 +22,16 @@ FalterList<T>::FalterList()
 	clearButton->addListener( this );
 	}
 
-template <class T>
-FalterList<T>::~FalterList()
+FalterList::~FalterList()
 	{
 	}
 
-template<typename T>
-shared_ptr<T> FalterList<T>::addItem( T * item )
+shared_ptr<Component> FalterList::addItem( Component * item )
 	{
 	return insertItem( item, items.size() );
 	}
 
-template<typename T>
-shared_ptr<T> FalterList<T>::insertItem( T * item, size_t index )
+shared_ptr<Component> FalterList::insertItem( Component * item, size_t index )
 	{
 	if( index < 0 ) index = 0;
 	FalterButton * button = new FalterButton( "r", &FalterLookAndFeel::getLNF().fontWebdings, int( ERASE_WIDTH / 2.0f ) );
@@ -44,7 +40,7 @@ shared_ptr<T> FalterList<T>::insertItem( T * item, size_t index )
 	addAndMakeVisible( button );
 	button->addListener( this );
 
-	scroll.setRangeLimits( 0, float( getItemHeight() ) * float( items.size() ) + CLEAR_HEIGHT, 
+	scroll.setRangeLimits( 0, float( itemHeight ) * float( items.size() ) + CLEAR_HEIGHT, 
 		NotificationType::dontSendNotification );
 	resized();
 
@@ -52,8 +48,7 @@ shared_ptr<T> FalterList<T>::insertItem( T * item, size_t index )
 	return items[index].first;
 }
 
-template<typename T>
-int FalterList<T>::getIndex( T * clip )
+int FalterList::getIndex( Component * clip )
 	{
 	for( int i = 0; i < getNumItems(); ++i )
 		{
@@ -65,60 +60,52 @@ int FalterList<T>::getIndex( T * clip )
 	return -1;
 	}
 
-template<typename T>
-void FalterList<T>::erase( int index )
+void FalterList::erase( int index )
 	{
 	items.erase( items.begin() + index );
-	scroll.setRangeLimits( 0, float( getItemHeight() ) * float( items.size() ) + CLEAR_HEIGHT, NotificationType::dontSendNotification );
+	scroll.setRangeLimits( 0, float( itemHeight ) * float( items.size() ) + CLEAR_HEIGHT, NotificationType::dontSendNotification );
 	resized();
 	}
 
-template<typename T>
-void FalterList<T>::erase( T * item )
+void FalterList::erase( Component * item )
 	{
 	erase( getIndex( item ) );
 	}
 
-template<typename T>
-void FalterList<T>::clear()
+void FalterList::clear()
 	{
 	items.clear();
 	}
 
-template<typename T>
-void FalterList<T>::swap( int a, int b )
+void FalterList::swap( int a, int b )
 	{
 	iter_swap( items.begin() + a, items.begin() + b );
 	resized();
 	}
 
-template<typename T>
-shared_ptr<T> FalterList<T>::getItem( int index )
+shared_ptr<Component> FalterList::getItem( int index )
 	{
 	return items[index].first; 
 	}
 
-template<typename T>
-shared_ptr<T> FalterList<T>::getItem( Component * c )
+shared_ptr<Component> FalterList::getItem( Component * c )
 {
-	return getItem( getIndex( static_cast< T * >( c ) ) );
+	return getItem( getIndex( c ) );
 }
 
 
 // Private -----------------------------------------------------------
 
 // Paint
-template<typename T>
-void FalterList<T>::paint( Graphics & g )
+void FalterList::paint( Graphics & g )
 	{
 	g.fillAll( FalterLookAndFeel::getLNF().dark );
 	}
 
 // Resized
-template <class T>
-void FalterList<T>::resized()
+void FalterList::resized()
 	{ 
-	bool scrollVisible = float( getItemHeight() ) * float( getNumItems() ) > getHeight();
+	bool scrollVisible = float( itemHeight ) * float( getNumItems() ) > getHeight();
 	scroll.setCurrentRange( scroll.getCurrentRangeStart(), getHeight(), NotificationType::dontSendNotification );
 
 	positionItems( scrollVisible );
@@ -129,16 +116,15 @@ void FalterList<T>::resized()
 	}
 
 // Repositions all the items based on relevant info
-template <class T>
-void FalterList<T>::positionItems( bool scrollVisible )
+void FalterList::positionItems( bool scrollVisible )
 	{
 	for( int i = 0; i < items.size(); ++i )
 		{
 		juce::Rectangle<int> rect( 
 			0, 
-			i * getItemHeight() - int( scroll.getCurrentRangeStart() ) + CLEAR_HEIGHT, 
+			i * itemHeight - int( scroll.getCurrentRangeStart() ) + CLEAR_HEIGHT, 
 			getWidth() - ( scrollVisible? 8 : 0 ), 
-			getItemHeight() 
+			itemHeight 
 			);
 		items[i].first-> setBounds( rect.withLeft ( ERASE_WIDTH ).reduced( 2 ) );
 		items[i].second->setBounds( rect.withRight( ERASE_WIDTH ).reduced( 2 ) );
@@ -146,27 +132,22 @@ void FalterList<T>::positionItems( bool scrollVisible )
 	}
 
 // Callback for the scroll object having changed
-template<typename T>
-void FalterList<T>::scrollBarMoved( ScrollBar *, double )
+void FalterList::scrollBarMoved( ScrollBar *, double )
 	{
 	positionItems( true );
 	}
 
 // Callback for scrolling with mouse
-template<typename T>
-void FalterList<T>::mouseWheelMove( const MouseEvent &, const MouseWheelDetails & wheel )
+void FalterList::mouseWheelMove( const MouseEvent &, const MouseWheelDetails & wheel )
 	{
-	scroll.setCurrentRangeStart( scroll.getCurrentRangeStart() - wheel.deltaY * getItemHeight() * 4 );
+	scroll.setCurrentRangeStart( scroll.getCurrentRangeStart() - wheel.deltaY * itemHeight * 4 );
 	}
 
 //
-template<typename T>
-void FalterList<T>::buttonClicked( Button * b )
+void FalterList::buttonClicked( Button * b )
 	{
 	if( b == clearButton.get() )
-		{
 		clear();
-		}
 	else //One of the erase buttons was pressed
 		{
 		for( int i = 0; i < getNumItems(); ++i )
@@ -180,8 +161,4 @@ void FalterList<T>::buttonClicked( Button * b )
 		}
 	}
 
-//Instantiate templates
-#include "FalterClip.h"
-template class FalterList<FalterClip>;
-#include "FalterThread.h"
-template class FalterList<FalterThread>;
+

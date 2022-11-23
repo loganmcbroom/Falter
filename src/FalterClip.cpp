@@ -6,9 +6,7 @@
 
 #include "FalterClipList.h"
 #include "FalterLookandFeel.h"
-
-FalterClip * FalterClip::active = nullptr;
-
+#include "FalterPlayer.h"
 
 static std::vector<const float *> getFlanChanPointers( flan::Audio a )
 	{
@@ -21,18 +19,16 @@ static std::vector<const float *> getFlanChanPointers( flan::Audio a )
 	}
 
 FalterClip::FalterClip( flan::Audio _audio
-			, AudioFormatManager &_formatManager
+			, FalterPlayer & _player
 			, AudioThumbnailCache &_thumbnailCache
-			, AudioTransportSource &_transportSource
 			) 
 	: Button( "Temp Name" )
-	, transportSource( _transportSource )
-	, formatManager( _formatManager )
+	, player( _player )
 	, audio( _audio )
 	, flanAudioChanPointers( getFlanChanPointers( audio ) )
 	, juceAudio( (float * const *) &flanAudioChanPointers[0], audio.getNumChannels(), audio.getNumFrames() )
 	, audioSource( juceAudio, false )
-	, thumbnail( 512, _formatManager, _thumbnailCache )
+	, thumbnail( 512, player.getFormatManager(), _thumbnailCache )
 	, busButton  ( "4", &FalterLookAndFeel::getLNF().fontWebdings, 18 ) 
 	, saveButton ( "<", &FalterLookAndFeel::getLNF().fontWingdings, 18 )
 	{
@@ -59,7 +55,6 @@ FalterClip::FalterClip( flan::Audio _audio
 
 FalterClip::~FalterClip()
 	{
-	if( this == active ) stopPressed();
 	}
 
 void FalterClip::resized()
@@ -114,39 +109,44 @@ void FalterClip::paintButton(Graphics &g, bool isMouseOverButton, bool )
 		}
 	}
 
-void FalterClip::changeListenerCallback( ChangeBroadcaster* source )
+void FalterClip::changeListenerCallback( ChangeBroadcaster * source )
 	{
-	if( source == &transportSource ) stopPressed();
-	else if( source == &thumbnail ) repaint();
+	if( source == &player.getTransportSource() && player.getTransportSource().hasStreamFinished() ) 
+		{
+		stopPressed();
+		}
+	else if( source == &thumbnail ) 
+		repaint();
 	}
 
 void FalterClip::playPressed()
 	{
-	if( active != nullptr ) active->stopPressed();
-
-	setToggleState( true, NotificationType::dontSendNotification );
-	startTimer( 33 );
-	active = this;
-	
-	busButton.setButtonText( "n" );
-	busButton.font = &FalterLookAndFeel::getLNF().fontWingdings;
-
-	transportSource.setSource( &audioSource, 0, nullptr, audio.getSampleRate(), audio.getNumChannels() );
-	transportSource.start();
-	transportSource.addChangeListener( this );
+	setToggle( true );
+	player.playAudio( this );
 	}
 
 void FalterClip::stopPressed()
 	{
-	stopTimer();
-	transportSource.setSource( nullptr );
-	setToggleState( false, NotificationType::dontSendNotification );
-	busButton.setButtonText( "4" );
-	busButton.font = &FalterLookAndFeel::getLNF().fontWebdings;
-	transportSource.removeChangeListener( this );
-	active = nullptr;
-	transportSource.stop();
-	currentPosition.setRectangle( juce::Rectangle< float >(0,0,0,0) );
+	setToggle( false );
+	player.stop();
+	}
+
+void FalterClip::setToggle( bool playMode )
+	{
+	setToggleState( playMode, NotificationType::dontSendNotification );
+	if( playMode )
+		{
+		startTimer( 33 );
+		busButton.setButtonText( "n" );
+		busButton.font = &FalterLookAndFeel::getLNF().fontWingdings;
+		}
+	else
+		{
+		stopTimer();
+		busButton.setButtonText( "4" );
+		busButton.font = &FalterLookAndFeel::getLNF().fontWebdings;
+		currentPosition.setRectangle( juce::Rectangle< float >(0,0,0,0) );
+		}
 	}
 
 void FalterClip::buttonClicked( Button * button )
@@ -173,10 +173,12 @@ void FalterClip::buttonClicked( Button * button )
 
 void FalterClip::timerCallback()
 	{
+	auto & source = player.getTransportSource();
+
 	// The weird computation handles some buttons being stuck on top of the component
 	const float s = getHeight() / 2.0f;
 	const float e = getWidth();
-	const float r = transportSource.getCurrentPosition() / audio.getLength();
+	const float r = source.getCurrentPosition() / audio.getLength();
 	const float initialX = s + ( e - s ) * r;
 	
 	// Draw white line to show current playback position

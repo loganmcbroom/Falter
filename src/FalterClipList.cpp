@@ -3,14 +3,13 @@
 #include <algorithm>
 #include <cassert>
 
+#include "FalterPlayer.h"
+
 #define MAX_CLIPS 128
 
-using namespace std;
-
 //Constructor
-FalterClipList::FalterClipList( AudioFormatManager &_formatManager, AudioTransportSource &_transportSource )
-	: transportSource( _transportSource )
-	, formatManager( _formatManager )
+FalterClipList::FalterClipList( FalterPlayer & _player )
+	: player( _player )
 	, thumbnailCache( MAX_CLIPS )
 	{
 	}
@@ -20,31 +19,21 @@ FalterClipList::~FalterClipList()
 	{
 	for( int i = 0; i < getNumItems(); ++i )
 		{
-		getItem( i )->getThumbnail().setSource( nullptr );
+		dynamic_pointer_cast<FalterClip>( getItem( i ) )->getThumbnail().setSource( nullptr );
 		}
 	}
 
-//Just how big is each clip?
-int FalterClipList::getItemHeight()
-	{
-	return 50;
-	}
-
-//Erase given item from the list
 void FalterClipList::erase( FalterClip * item )
 	{
 	FalterClipList::erase( getIndex( item ) );
 	}
 
-//Erase the item at the given index from the list
 void FalterClipList::erase( unsigned int index )
 	{	
-
-	thumbnailCache.removeThumb( getItem( index )->getThumbnail().getHashCode() );
+	thumbnailCache.removeThumb( dynamic_pointer_cast<FalterClip>( getItem( index ) )->getThumbnail().getHashCode() );
 	FalterList::erase( index );
 	}
 
-//Erase all items
 void FalterClipList::clear()
 	{
 	FalterList::clear();
@@ -56,10 +45,9 @@ void FalterClipList::addClipFromAudio( flan::Audio a )
 	insertClipFromAudio( a, getNumItems() );
 	}
 
-//
 void FalterClipList::insertClipFromAudio( flan::Audio a, size_t index )
 	{
-	insertItem( new FalterClip( a, formatManager, thumbnailCache, transportSource ), index );
+	insertItem( new FalterClip( a, player, thumbnailCache ), index );
 	}
 
 bool FalterClipList::isInterestedInDragSource( const SourceDetails & dragSourceDetails )

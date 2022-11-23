@@ -22,15 +22,9 @@ todo:
     package flan dox with program
     watch script to compute on save https://github.com/apetrone/simplefilewatcher
     script and sample folder select should start in a better folder
-    Clip is being given title "Temp Name"
-    stop button isn't changing back when audio finishes playing
-    Put thread number on thread somewhere
     seems like canceller isn't working, or more that when running a long repitch the gui thread is frozen
+    Clip is being given title "Temp Name"
     hardcoded path File("C:/Users/logan/Documents/Samples") in two places
-    At some point I found a window that said there was a memory leak, idk where but look into that  
-    audio synthesize is making a sine wave sound saw like, try in plain c++
-    static audio methods should also be registered as Audio.mix, etc., for consistency
+    Put thread number on thread somewhere
         
-
-task: 
-    We should adhere to taking 2 element arrays instead of passing and returning two args with Func types, unless we can detect if the function takes two
+task:

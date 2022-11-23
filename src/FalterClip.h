@@ -9,21 +9,21 @@
 #include "FalterButton.h"
 
 class FalterClipList;
-namespace flan { class Audio; }
+class FalterPlayer;
 
 class FalterClip : public Button // Button allows hover color
 				, public ChangeListener
 				, public Button::Listener
 				, public Timer
 {
-	friend class FalterClipList;
+friend class FalterClipList;
+friend class FalterPlayer;
+
 public:
 	FalterClip( flan::Audio audio
-			 , AudioFormatManager & formatManager
+			 , FalterPlayer & player
 			 , AudioThumbnailCache & thumbnailCache
-			 , AudioTransportSource & transportSource
 			 );
-
 	~FalterClip();
 
 	AudioThumbnail & getThumbnail();
@@ -32,19 +32,17 @@ public:
 
 	void playPressed();
 	void stopPressed();
-
-	static FalterClip * active;
+	void setToggle( bool );
 
 private:  
-	void timerCallback();
+	void timerCallback() override;
 	void changeListenerCallback( ChangeBroadcaster * source ) override;
 	void paintButton(Graphics &g, bool isMouseOverButton, bool isButtonDown) override;
 	void buttonClicked( Button *button ) override;
 	void resized() override;
 	void mouseDrag( const MouseEvent & event ) override;
 
-	AudioTransportSource & transportSource;
-	AudioFormatManager & formatManager; 
+	FalterPlayer & player;
 	
 	flan::Audio audio;
 	std::vector<const float *> flanAudioChanPointers; // Needed to wrap flan buffer in Juce object

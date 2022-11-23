@@ -29,6 +29,7 @@ target_sources( Falter
         src/FalterList.cpp
         src/FalterClipList.cpp
         src/FalterThreadList.cpp
+        src/FalterPlayer.cpp
         src/Types.h
 
         src/Lua/Utility.cpp
