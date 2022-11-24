@@ -23,6 +23,7 @@ public:
 	FalterClip( flan::Audio audio
 			 , FalterPlayer & player
 			 , AudioThumbnailCache & thumbnailCache
+			 , const String & name = "-"
 			 );
 	~FalterClip();
 

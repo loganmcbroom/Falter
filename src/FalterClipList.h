@@ -17,8 +17,8 @@ public:
 	void erase( unsigned int pos );
 	void clear();
 
-	void addClipFromAudio( flan::Audio );
-	void insertClipFromAudio( flan::Audio file, size_t index );
+	void addClipFromAudio( flan::Audio, const String & name = "-" );
+	void insertClipFromAudio( flan::Audio file, size_t index, const String & name = "-" );
 
 private:
 	bool isInterestedInDragSource( const SourceDetails & dragSourceDetails ) override;

@@ -137,7 +137,7 @@ void MainComponent::buttonClicked( Button* button )
 void MainComponent::importFile( File file )
 	{
 	auto audio = flan::Audio( file.getFullPathName().toStdString() );
-	inClips.addClipFromAudio( audio );
+	inClips.addClipFromAudio( audio, file.getFileName() );
 	procButton.setEnabled( true );
 	}
 
@@ -149,11 +149,11 @@ void MainComponent::procButtonClicked()
 		return;
 		}
 
-	std::function< void( AudioVec & ) > retrieveFiles = [&]( AudioVec & as )
+	auto retrieveFiles = [&]( AudioVec & as, const String & threadName )
 		{
 		for( auto & a : as )
 			if( ! a.isNull() )
-				outClips.addClipFromAudio( a );
+				outClips.addClipFromAudio( a, String( "Output of: " ) + threadName );
 		};
 
 	AudioVec inAudio;

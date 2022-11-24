@@ -10,6 +10,8 @@
 
 #include "FalterLogger.h"
 
+using FalterThreadCallback = std::function< void( AudioVec &, const String & ) >;
+
 struct FalterThreadListener : public Thread::Listener
 {
 	FalterThreadListener() : canceller( false ) {}
@@ -23,9 +25,9 @@ class FalterThread : public Thread
 {
 public:
 	FalterThread( 
-		const String & name, 
+		int threadID,
 		const String & script, 
-		std::function< void( AudioVec & ) > & callback,
+		const FalterThreadCallback & callback,
 		const AudioVec & files = AudioVec() );
 	~FalterThread();
 
@@ -40,7 +42,8 @@ private:
 	String getStartTimeString() const;
 	String getElapsedTimeString() const;
 
-	std::function<void( AudioVec & )> callback;
+	int ID;
+	FalterThreadCallback callback;
 	const String script;
 	lua_State * L;
 	juce::Time startTime;
@@ -50,7 +53,6 @@ private:
 	bool threadFinished;
 	bool threadSuccess;
 	bool allProcessesSetUp;
-
 	FalterThreadListener listener;
 
 	static CriticalSection mutex;

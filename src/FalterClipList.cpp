@@ -40,14 +40,14 @@ void FalterClipList::clear()
 	thumbnailCache.clear();
 	}
 
-void FalterClipList::addClipFromAudio( flan::Audio a )
+void FalterClipList::addClipFromAudio( flan::Audio a, const String & name )
 	{
-	insertClipFromAudio( a, getNumItems() );
+	insertClipFromAudio( a, getNumItems(), name );
 	}
 
-void FalterClipList::insertClipFromAudio( flan::Audio a, size_t index )
+void FalterClipList::insertClipFromAudio( flan::Audio a, size_t index, const String & name )
 	{
-	insertItem( new FalterClip( a, player, thumbnailCache ), index );
+	insertItem( new FalterClip( a, player, thumbnailCache, name ), index );
 	}
 
 bool FalterClipList::isInterestedInDragSource( const SourceDetails & dragSourceDetails )

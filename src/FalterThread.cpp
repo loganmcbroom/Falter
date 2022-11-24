@@ -38,11 +38,12 @@ static const struct luaL_Reg printlib [] =
 CriticalSection FalterThread::mutex;
 
 FalterThread::FalterThread( 
-	const String & name, 
+	int threadID, 
 	const String & _script, 
-	std::function< void( AudioVec & ) > & _callback, 
+	const FalterThreadCallback & _callback, 
 	const AudioVec & inputs )
-	: Thread( name )
+	: Thread( String( threadID ) + " " + _script )
+	, ID( threadID )
 	, callback( _callback )
 	, script( _script )
 	, L( lua_open() )
@@ -140,9 +141,9 @@ void FalterThread::paint( Graphics & g )
 	const auto bound = getLocalBounds().reduced( 6 );
 	g.setFont( lnf.fontMonospace );
 	g.setColour( threadFinished? threadSuccess? lnf.accent2 : lnf.accent1 :lnf.light );
-	g.drawText( "Start:", bound, Justification::topLeft );
+	g.drawText( script, bound, Justification::topLeft );
+	g.drawText( String( "ID: " ) + String( ID ), bound, Justification::bottomLeft );
 	g.drawText( getStartTimeString(), bound, Justification::topRight );
-	g.drawText( "Elapsed:", bound, Justification::bottomLeft );
 	g.drawText( getElapsedTimeString(), bound, Justification::bottomRight );
 	}
 
@@ -192,7 +193,7 @@ void FalterThread::run()
 			}
 		const ScopedLock lock( mutex );
 		MessageManagerLock mml;
-		callback( outputs );
+		callback( outputs, getThreadName() );
 		}
 	else
 		{
@@ -212,9 +213,16 @@ void FalterThread::timerCallback()
 	repaint();
 	}
 
+static String forceCorrectMS( int ms )
+	{
+		 if( ms < 10  ) return String( "00" ) + String( ms );
+	else if( ms < 100 ) return String( "0"  ) + String( ms );
+	else				return String( ""   ) + String( ms );
+	}
+
 String FalterThread::getStartTimeString() const
 	{
-	return startTime.formatted( "%H:%M:%S." ) + String( startTime.getMilliseconds() );
+	return startTime.formatted( "%M:%S." ) + forceCorrectMS( startTime.getMilliseconds() );
 	}
 
 String FalterThread::getElapsedTimeString() const
@@ -222,5 +230,5 @@ String FalterThread::getElapsedTimeString() const
 	const uint64_t startTimeMS = startTime.toMilliseconds();
 	const uint64_t endTimeMS = threadFinished? endTime.toMilliseconds() : Time::currentTimeMillis();
 	const uint64_t elapsedMS = endTimeMS - startTimeMS;
-	return juce::Time( elapsedMS ).formatted( "%M:%S." ) + String( elapsedMS % 1000 );
+	return juce::Time( elapsedMS ).formatted( "%M:%S." ) + forceCorrectMS( elapsedMS % 1000 );
 	}

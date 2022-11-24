@@ -9,7 +9,7 @@ public:
 	FalterThreadList();
 	~FalterThreadList();
 
-	void addThread( const String & script, std::function< void( AudioVec & ) > & callback, const AudioVec & files );
+	void addThread( const String & script, const FalterThreadCallback & callback, const AudioVec & files );
 
 private:
 };

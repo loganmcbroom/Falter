@@ -21,8 +21,9 @@ static std::vector<const float *> getFlanChanPointers( flan::Audio a )
 FalterClip::FalterClip( flan::Audio _audio
 			, FalterPlayer & _player
 			, AudioThumbnailCache &_thumbnailCache
+			, const String & name
 			) 
-	: Button( "Temp Name" )
+	: Button( name )
 	, player( _player )
 	, audio( _audio )
 	, flanAudioChanPointers( getFlanChanPointers( audio ) )

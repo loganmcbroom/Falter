@@ -57,7 +57,8 @@ void FalterPlayer::playAudio( FalterClip * clip )
 
 void FalterPlayer::stop()
 	{
-	transportSource->removeChangeListener( activeClip );
+	if( activeClip )
+		transportSource->removeChangeListener( activeClip );
 	transportSource->stop();
 	transportSource->setSource( nullptr );
 	activeClip = nullptr;
