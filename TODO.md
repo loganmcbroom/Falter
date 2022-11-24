@@ -23,8 +23,8 @@ todo:
     watch script to compute on save https://github.com/apetrone/simplefilewatcher
     script and sample folder select should start in a better folder
     seems like canceller isn't working, or more that when running a long repitch the gui thread is frozen
-    Clip is being given title "Temp Name"
     hardcoded path File("C:/Users/logan/Documents/Samples") in two places
-    Put thread number on thread somewhere
+    exception  when closing program while audio is playing
+        probably player dtor
         
 task:
