@@ -1,6 +1,7 @@
 #include "FalterFileBrowser.h"
 
 #include "FalterLookandFeel.h"
+#include "Settings.h"
 
 FalterFileBrowser::FalterFileBrowser()
     : FileBrowserComponent(
@@ -11,7 +12,7 @@ FalterFileBrowser::FalterFileBrowser()
 		FileBrowserComponent::useTreeView | 
 		FileBrowserComponent::filenameBoxIsReadOnly | 
 		FileBrowserComponent::warnAboutOverwriting,
-		File("C:/Users/logan/Documents/Samples"), 
+		Settings::getFileLoadDir(), 
         nullptr, 
         nullptr ) 
     , filter( "*.wav;*.aiff", "", "Audio files" )

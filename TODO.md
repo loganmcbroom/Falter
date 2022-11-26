@@ -11,20 +11,13 @@ Off topic:
     do flan Func types actually need forwarding ctors?
 
 todo:
-    Setting for sample folder
-    Save script to settings when selected
+    load audio async for more responsive clip import?
     a way to record in new audio
-    load audio async for more responsive clip import
+    package flan dox with program
+    watch script to compute on save https://github.com/apetrone/simplefilewatcher
+        
+task:
     file browser drag and drop
         Allow dragging from clips to browser
         Allow dragging from browser to clips
         Allow dragging from clips to other clips
-    package flan dox with program
-    watch script to compute on save https://github.com/apetrone/simplefilewatcher
-    script and sample folder select should start in a better folder
-    seems like canceller isn't working, or more that when running a long repitch the gui thread is frozen
-    hardcoded path File("C:/Users/logan/Documents/Samples") in two places
-    exception  when closing program while audio is playing
-        probably player dtor
-        
-task:

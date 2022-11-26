@@ -7,6 +7,7 @@
 #include "FalterClipList.h"
 #include "FalterLookandFeel.h"
 #include "FalterPlayer.h"
+#include "Settings.h"
 
 static std::vector<const float *> getFlanChanPointers( flan::Audio a )
 	{
@@ -56,6 +57,7 @@ FalterClip::FalterClip( flan::Audio _audio
 
 FalterClip::~FalterClip()
 	{
+	player.deactivateClip( this );
 	}
 
 void FalterClip::resized()
@@ -160,7 +162,7 @@ void FalterClip::buttonClicked( Button * button )
 
 	else if( button == &saveButton )
 		{
-		FileChooser chooser( "Save file as", File("C:/Users/logan/Documents/Samples"), ".wav" );
+		FileChooser chooser( "Save file as", Settings::getFileLoadDir(), ".wav" );
 
 		if( chooser.browseForFileToSave( true ) )
 			{

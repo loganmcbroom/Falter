@@ -75,7 +75,7 @@ template<typename T> void luaF_LTMP_push( lua_State* L, const std::vector<T> & o
 template<typename Functor, size_t numArgs, size_t I = 0> 
 constexpr auto luaF_wrapFunctor_checkArgs( lua_State * L ) 
     {
-    if constexpr ( I == numArgs )
+    if constexpr( I == numArgs )
         return std::tuple();
     else  
         {
@@ -92,7 +92,7 @@ constexpr auto luaF_wrapFunctor_checkArgs( lua_State * L )
 template<typename Tup, size_t I = 0>
 static size_t getMinSize_tuple( const Tup & t )
     {
-    if constexpr ( I == std::tuple_size_v<Tup> )
+    if constexpr( I == std::tuple_size_v<Tup> )
         return std::numeric_limits<size_t>::max();
     else
         return std::min( std::get<I>( t ).size(), getMinSize_tuple<Tup, I + 1>( t ) );
@@ -101,7 +101,7 @@ static size_t getMinSize_tuple( const Tup & t )
 template<typename Tup, size_t I = 0>
 static size_t getMaxSize_tuple( const Tup & t )
     {
-    if constexpr ( I == std::tuple_size_v<Tup> )
+    if constexpr( I == std::tuple_size_v<Tup> )
         return std::numeric_limits<size_t>::min();
     else
         return std::max( std::get<I>( t ).size(), getMaxSize_tuple<Tup, I + 1>( t ) );
@@ -112,7 +112,7 @@ auto luaF_LTMP_getCurrentTuple( Tup t, int i )
     {
     constexpr size_t numArgs = std::tuple_size_v<Tup>;
 
-    if constexpr ( I == numArgs ) // If we have no more args to get
+    if constexpr( I == numArgs ) // If we have no more args to get
         return std::tuple();
     else  
         {
@@ -143,12 +143,13 @@ static int luaF_LTMP_dispatched( lua_State* L )
 
     using R = liph::function_return_type<Functor>;
 
-    if constexpr ( std::is_void_v<R> )
+    if constexpr( std::is_void_v<R> )
         {
         for( int i = 0; i < maxArgLength; ++i )
             {
             auto currentTuple = luaF_LTMP_getCurrentTuple( vecTuple, i );
             std::apply( cancelledFunctor, currentTuple );
+            if( canceller ) luaL_error( L, "Couldn't complete script, thread was cancelled" );
             }
         return 0;
         }
@@ -160,6 +161,7 @@ static int luaF_LTMP_dispatched( lua_State* L )
             {
             auto currentTuple = luaF_LTMP_getCurrentTuple( vecTuple, i );
             outputs.push_back( std::apply( cancelledFunctor, currentTuple ) );
+            if( canceller ) luaL_error( L, "Couldn't complete script, thread was cancelled" );
             }
         luaF_LTMP_push( L, outputs );
         return 1;
@@ -178,7 +180,7 @@ static int luaF_LTMP( lua_State* L )
         if( i == I ) return luaF_LTMP_dispatched<AlgoFunctor, I>( L );
         else return luaF_LTMP<AlgoFunctor, numNonDefaults, I - 1>( L );
         }
-    else if constexpr ( I == numNonDefaults )
+    else if constexpr( I == numNonDefaults )
         {
         if( i == I ) return luaF_LTMP_dispatched<AlgoFunctor, I>( L );
         else luaL_error( L, "Too few arguments passed to flan function." );

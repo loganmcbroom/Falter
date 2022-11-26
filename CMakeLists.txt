@@ -31,6 +31,7 @@ target_sources( Falter
         src/FalterThreadList.cpp
         src/FalterPlayer.cpp
         src/Types.h
+        src/Settings.cpp
 
         src/Lua/Utility.cpp
         src/Lua/Usertypes.h

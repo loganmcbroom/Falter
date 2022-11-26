@@ -6,11 +6,14 @@
 
 #include "FalterLogger.h"
 #include "FalterPlayer.h"
+#include "Settings.h"
 
-struct TestFunctor { void operator()( int a, int b = 2, int c = 3 )
+static FalterLogger * loggerFactory()
 	{
-	std::cout << a << b << c << std::endl;
-	} };
+	auto * log = new FalterLogger;
+	Logger::setCurrentLogger( log );
+	return log;
+	}
 
 MainComponent::MainComponent()
 	: procButton( "P", 			&FalterLookAndFeel::getLNF().fontSymbol 	)
@@ -20,12 +23,12 @@ MainComponent::MainComponent()
 	, sampleBrowser()
 	, inClips( *player.get() )
 	, outClips( *player.get() )
-	, log( new FalterLogger )
+	, log( loggerFactory() )
+	, settings( new Settings )
 	, logHeight( FalterLookAndFeel::getLNF().unit * 5 + FalterLookAndFeel::getLNF().margin * 4 )
 	{
 	setLookAndFeel( &FalterLookAndFeel::getLNF() );
 
-	Logger::setCurrentLogger( log.get() );
 	addAndMakeVisible( *log 				);
 	addAndMakeVisible( &procButton 			);
 	addAndMakeVisible( &scriptSelectButton 	);
@@ -40,23 +43,9 @@ MainComponent::MainComponent()
 	sampleBrowser		.addListener( this );
 
 	scriptLabel.setFont( FalterLookAndFeel::getLNF().fontMonospace );
-	scriptLabel.setText( "Falter.lua", dontSendNotification );
+	scriptLabel.setText( Settings::getScriptFile().getFullPathName(), dontSendNotification );
 
 	setSize( 1000, 700 );
-
-	// if( ! File::getCurrentWorkingDirectory().getChildFile( "Settings.lua" ).exists() )
-	// 	{
-	// 	FileChooser chooser( "Select your _cdprogs directory (it should be in cdprX/_cdp)" );
-	// 	if( ! chooser.browseForDirectory() 
-	// 	 || ! chooser.getResult().exists()
-	// 	 || ! chooser.getResult().getChildFile( "modify.exe" ).exists() )
-	// 		Logger::writeToLog( "Things won't work until you pick the correct _cdprogs directory\n" );
-	// 	else
-	// 		{
-	// 		std::ofstream settingsFile( "Settings.lua" ); 
-	// 		settingsFile << "cdpDir = \"" << chooser.getResult().getFullPathName().replace( "\\", "/" ) << "\"";
-	// 		}
-	// 	}
 
 	Logger::writeToLog( "Falter Initialized\n" );
 	}
@@ -68,13 +57,11 @@ MainComponent::~MainComponent()
 	setLookAndFeel( nullptr );
 	}
 
-//Paint
 void MainComponent::paint( Graphics& g )
 	{
     g.fillAll( FalterLookAndFeel::getLNF().shadow );
 	}
 
-//Resized
 void MainComponent::resized()
 	{
 	const int m = FalterLookAndFeel::getLNF().margin;
@@ -121,19 +108,12 @@ void MainComponent::resized()
 	log->setBounds( errorRect );
 	}
 
-/// What is this for?
-void MainComponent::changeListenerCallback( ChangeBroadcaster * )
-	{
-	}
-
-//Called when a button is pressed and delegates functionality to specific functions
 void MainComponent::buttonClicked( Button* button )
 	{
 		 if( button == &procButton	) 			{ procButtonClicked(); }
 	else if( button == &scriptSelectButton	) 	{ scriptSelectButtonClicked(); }
 	}
 
-// Adds given file to the input cliplist
 void MainComponent::importFile( File file )
 	{
 	auto audio = flan::Audio( file.getFullPathName().toStdString() );
@@ -143,7 +123,7 @@ void MainComponent::importFile( File file )
 
 void MainComponent::procButtonClicked() 
 	{
-	if( ! File( File::getCurrentWorkingDirectory().getFullPathName() + "/" + scriptLabel.getText() ).exists() )
+	if( ! File( scriptLabel.getText() ).exists() )
 		{
 		Logger::writeToLog( "The provided script does not exist: " + scriptLabel.getText() );
 		return;
@@ -165,21 +145,23 @@ void MainComponent::procButtonClicked()
 
 void MainComponent::scriptSelectButtonClicked()
 	{
-	FileChooser chooser( "Select a file to play", File(), "*.wav;*.pvoc" ); 
+	FileChooser chooser( "Select a lua script to run", Settings::getScriptFile(), "*.lua;*.txt" ); 
 
 	if( chooser.browseForFileToOpen() )
-		importFile( chooser.getResult() );
+		{
+		File result = chooser.getResult();
+		Settings::setScriptFile( result );
+		scriptLabel.setText( result.getFullPathName(), NotificationType::dontSendNotification );
+		}
 	}
 
-
-//Called when files were dropped only the program from
 void MainComponent::filesDropped( const StringArray & files, int, int )
 	{
-	for ( auto &&file : files )
+	for ( auto && file : files )
 		{ 
 		importFile( File( file ) );
 		}
-	fileDragExit(files);
+	fileDragExit( files );
 	}
 
 bool MainComponent::isInterestedInFileDrag( const StringArray & ) { return true; }
@@ -188,7 +170,22 @@ void MainComponent::fileDragEnter( const StringArray &, int, int ) { scriptSelec
 
 void MainComponent::fileDragExit( const StringArray & ) { scriptSelectButton.setButtonText( "0" ); }
 
+void MainComponent::selectionChanged()
+	{
+	}
+
+void MainComponent::fileClicked( const File &, const MouseEvent & )
+	{
+	}
+
 void MainComponent::fileDoubleClicked( const File & file ) 
 	{
 	importFile( file );
 	}
+
+void MainComponent::browserRootChanged( const File & dir )
+	{
+	settings->setFileLoadDir( dir );
+	}
+
+

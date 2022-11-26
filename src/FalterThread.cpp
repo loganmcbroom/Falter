@@ -42,7 +42,7 @@ FalterThread::FalterThread(
 	const String & _script, 
 	const FalterThreadCallback & _callback, 
 	const AudioVec & inputs )
-	: Thread( String( threadID ) + " " + _script )
+	: Thread( String( threadID ) + " " + File( _script ).getFileName() )
 	, ID( threadID )
 	, callback( _callback )
 	, script( _script )
@@ -76,13 +76,6 @@ FalterThread::FalterThread(
 	lua_getglobal( L, "_G" );
 	luaL_register( L, NULL, printlib );
 	lua_pop( L, 1 );
-
-	// Get stuff out of settings file first
-	// if( luaL_loadfile( L, ( File::getCurrentWorkingDirectory().getFullPathName() + "/Settings.lua" ).toRawUTF8() ) || lua_pcall( L, 0, 0, 0 ) ) 
-	// 	err( lua_tostring(L, -1) );
-	// lua_getglobal( L, "cdpDir" );
-	// if( ! lua_isstring( L, -1 ) )
-	// 	err( lua_tostring(L, -1) );
 	
 	lua_settop( L, 0 ); //Clear the stack
 	luaF_register_Usertypes( L );
@@ -113,7 +106,10 @@ FalterThread::FalterThread(
 FalterThread::~FalterThread()
 	{
 	if( isThreadRunning() )
+		{
 		stopThread( -1 );
+		log( "Error: script couldn't be completed, thread was ended early." );
+		}
 
 	lua_close( L );
 	}
@@ -141,7 +137,7 @@ void FalterThread::paint( Graphics & g )
 	const auto bound = getLocalBounds().reduced( 6 );
 	g.setFont( lnf.fontMonospace );
 	g.setColour( threadFinished? threadSuccess? lnf.accent2 : lnf.accent1 :lnf.light );
-	g.drawText( script, bound, Justification::topLeft );
+	g.drawText( getThreadName(), bound, Justification::topLeft );
 	g.drawText( String( "ID: " ) + String( ID ), bound, Justification::bottomLeft );
 	g.drawText( getStartTimeString(), bound, Justification::topRight );
 	g.drawText( getElapsedTimeString(), bound, Justification::bottomRight );
@@ -204,8 +200,8 @@ void FalterThread::run()
 			log( String( "[PROCESSING FAILED] Time elapsed: " ) + getElapsedTimeString() + "\n" );
 			}
 		}
-
-	exit();
+	
+	exit(); // Lambda defined above
 	}
 
 void FalterThread::timerCallback()

@@ -9,22 +9,21 @@
 #include "FalterLookAndFeel.h"
 class FalterLogger;
 class FalterPlayer;
+class Settings;
 
 class MainComponent : public Component
-					, public ChangeListener
                     , public Button::Listener
+					, public FileBrowserListener
                     , public FileDragAndDropTarget
                     , public DragAndDropContainer
-					, public FileBrowserListener
 {
 public:
     MainComponent();
     ~MainComponent();
 
-    void paint (Graphics& g) override;
+    void paint( Graphics & g ) override;
     void resized() override;
-	void changeListenerCallback( ChangeBroadcaster* source ) override;
-	void buttonClicked( Button* button ) override;
+	void buttonClicked( Button * button ) override;
 
 private:
     void importFile( File file );
@@ -37,23 +36,25 @@ private:
 	void fileDragEnter( const StringArray &, int, int ) override;
 	void fileDragExit( const StringArray & ) override;
 
-	void selectionChanged() override {}
-	void fileClicked( const File & file, const MouseEvent & e ) override {}
+	// FileBrowserListener interface
+	void selectionChanged() override;
+	void fileClicked( const File &, const MouseEvent & ) override;
 	void fileDoubleClicked( const File & file ) override;
-	void browserRootChanged( const File & newRoot ) override {}
+	void browserRootChanged( const File & ) override;
 
+	std::unique_ptr<FalterLogger> log;
+	std::unique_ptr<Settings> settings;
+	std::unique_ptr<FalterPlayer> player;
+	
 	FalterButton procButton;
 	FalterButton scriptSelectButton;
 	
 	Label scriptLabel;
 
-	std::unique_ptr<FalterPlayer> player;
-
 	FalterFileBrowser sampleBrowser;
 	FalterClipList inClips, outClips;
 	FalterThreadList threads;
 
-	std::unique_ptr<FalterLogger> log; // Using ptr because logger needs lnf access which doesn't exist until after we set it in ctor
 	const int logHeight;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)

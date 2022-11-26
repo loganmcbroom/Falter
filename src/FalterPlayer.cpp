@@ -63,3 +63,11 @@ void FalterPlayer::stop()
 	transportSource->setSource( nullptr );
 	activeClip = nullptr;
 	}
+
+void FalterPlayer::deactivateClip( const FalterClip * clip )
+	{
+	if( clip == activeClip )
+		{
+		stop();
+		}
+	}

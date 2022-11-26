@@ -96,23 +96,20 @@ Font FalterLookAndFeel::getComboBoxFont( ComboBox & )
 
 void FalterLookAndFeel::drawLabel( Graphics & g, Label & l )
     {
-    
     g.setFont( fontMonospace );
-    
 
     if( File::isAbsolutePath( l.getText() ) )
         {
         g.setColour( light );
         const File path = l.getText();
         l.hideEditor( true );
-        const String shortPath = path.getRelativePathFrom( path.getParentDirectory() );
+        const String shortPath = path.getRelativePathFrom( path.getParentDirectory().getParentDirectory() );
         g.drawText( shortPath, Rectangle<float>( 3, 0, l.getWidth(), l.getHeight() ), Justification::left );
         return;
         }
     else
         {
         g.fillAll( dark );
-
         g.setColour( light );
         g.drawText( l.getText(), Rectangle<float>( margin, 2, l.getWidth(), l.getHeight() ), Justification::left );
         }
