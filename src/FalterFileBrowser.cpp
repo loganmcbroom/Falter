@@ -1,7 +1,11 @@
 #include "FalterFileBrowser.h"
 
+#include <utility>
+
 #include "FalterLookandFeel.h"
 #include "Settings.h"
+#include "FalterClip.h"
+#include "DragAndDropTypes.h"
 
 FalterFileBrowser::FalterFileBrowser()
     : FileBrowserComponent(
@@ -18,16 +22,37 @@ FalterFileBrowser::FalterFileBrowser()
     , filter( "*.wav;*.aiff", "", "Audio files" )
     {
     setFileFilter( &filter );
+    auto * tree = dynamic_cast<FileTreeComponent *>( getDisplayComponent() );
+    if( tree )
+        tree->setDragAndDropDescription( DragAndDropTypes::FalterFile );
+    else
+        Logger::writeToLog( "Drag and Drop from file browser setup failed... somehow?" );
     }
 
 void FalterFileBrowser::paint( Graphics & g )
     {
     g.fillAll( FalterLookAndFeel::getLNF().dark );
-    //FileBrowserComponent::paint( g );
     }
 
-// void FalterList<T>::paintButton( Graphics & g, bool, bool )
-// 	{
-// 	g.fillAll( dark );
-// 	}
+bool FalterFileBrowser::isInterestedInDragSource( const SourceDetails & s )
+    {
+    return s.description == DragAndDropTypes::AudioClip;
+    }
+
+void FalterFileBrowser::itemDropped( const SourceDetails & s )
+    {
+    if( s.description == DragAndDropTypes::AudioClip )	
+		{
+		auto item = dynamic_cast<FalterClip *>( s.sourceComponent.get() );
+		if( ! item ) return;
+		const flan::Audio & audio = item->getAudio();
+        if( audio.isNull() ) return;
+
+        const String filepath = getRoot().getFullPathName() + "\\" + item->getName();
+        Logger::writeToLog( "Saving by dropping to browser is currently disabled." );
+        //audio.save( filepath.toStdString() );
+		}
+	else jassertfalse;
+    }
+
 

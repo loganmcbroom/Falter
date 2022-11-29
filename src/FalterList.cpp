@@ -89,10 +89,14 @@ shared_ptr<Component> FalterList::getItem( int index )
 	}
 
 shared_ptr<Component> FalterList::getItem( Component * c )
-{
+	{
 	return getItem( getIndex( c ) );
-}
+	}
 
+void FalterList::setClearButtonText( const String & s )
+	{
+	clearButton->setButtonText( s );
+	}
 
 // Private -----------------------------------------------------------
 
@@ -100,6 +104,8 @@ shared_ptr<Component> FalterList::getItem( Component * c )
 void FalterList::paint( Graphics & g )
 	{
 	g.fillAll( FalterLookAndFeel::getLNF().dark );
+	g.setColour( FalterLookAndFeel::getLNF().light.withAlpha( 0.3f ) );
+	g.drawText( getName(), getLocalBounds(), Justification::centred );
 	}
 
 // Resized

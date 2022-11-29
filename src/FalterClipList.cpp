@@ -4,6 +4,7 @@
 #include <cassert>
 
 #include "FalterPlayer.h"
+#include "DragAndDropTypes.h"
 
 #define MAX_CLIPS 128
 
@@ -50,38 +51,46 @@ void FalterClipList::insertClipFromAudio( flan::Audio a, size_t index, const Str
 	insertItem( new FalterClip( a, player, thumbnailCache, name ), index );
 	}
 
-bool FalterClipList::isInterestedInDragSource( const SourceDetails & dragSourceDetails )
-{
-	return dragSourceDetails.description == "Clip";
-}
+bool FalterClipList::isInterestedInDragSource( const SourceDetails & s )
+	{
+	return s.description == DragAndDropTypes::AudioClip 
+		|| s.description == DragAndDropTypes::FalterFile;
+	}
 
-//This function sucks but it works
 void FalterClipList::itemDropped( const SourceDetails & s )
 	{
-	// auto parent = static_cast< FalterClipList * >( s.sourceComponent->getParentComponent() );
-	// auto item = static_cast< FalterClip * >( s.sourceComponent.get() );
+	const int slot = std::clamp( int( s.localPosition.y / itemHeight ), 0, getNumItems() );
 
-	// //Figure out what slot this thing should be in	
-	// int slot = s.localPosition.y / getItemHeight();
-	// if( parent == this && slot > getIndex( item ) ) --slot;
-	// if( slot > ( getNumItems() - 1 ) ) slot = ( getNumItems() - 1 );
-	// if( slot < 0 ) slot = 0;
-	
-
-	// if( parent != this )
-	// 	{ 
-	// 	//Copy the file out, delete the thing and recreate it in this container
-	// 	File f( item->getFile().getParentDirectory().getFullPathName() + "/_altar_move.wav" );
-	// 	item->getFile().copyFileTo( f );
-	// 	insertClipFromFile( f, slot, item->getName(), false );
-	// 	parent->erase( item );	
-	// 	f.deleteFile();
-	// 	}
-	// else
-	// 	{
-	// 	//Item came from this container so we juce need to move it
-	// 	swap( getIndex( item ), slot );
-	// 	}
+	if( s.description == DragAndDropTypes::AudioClip )	
+		{
+		auto parent = dynamic_cast<FalterClipList *>( s.sourceComponent->getParentComponent() );
+		auto item = dynamic_cast<FalterClip *>( s.sourceComponent.get() );
+		if( ! parent || ! item ) return;
+		
+		if( parent != this )
+			{ 
+			insertClipFromAudio( item->audio, slot, item->getName() );
+			parent->erase( item );	
+			}
+		else
+			{
+			swap( getIndex( item ), slot > getIndex( item ) ? slot - 1 : slot );
+			}
+		}
+	else if( s.description == DragAndDropTypes::FalterFile )
+		{
+		auto tree = dynamic_cast<FileTreeComponent *>( s.sourceComponent.get() );
+		if( ! tree ) return;
+		const int n = tree->getNumSelectedFiles();
+		for( int i = 0; i < n; ++i )
+			{
+			File file = tree->getSelectedFile( i );
+			flan::Audio audio( file.getFullPathName().toStdString() );
+			if( audio.isNull() ) continue;
+			insertClipFromAudio( audio, slot, file.getFileName() );
+			}
+		}
+	else jassertfalse;
 	}
 
 

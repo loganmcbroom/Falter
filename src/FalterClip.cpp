@@ -8,6 +8,7 @@
 #include "FalterLookandFeel.h"
 #include "FalterPlayer.h"
 #include "Settings.h"
+#include "DragAndDropTypes.h"
 
 static std::vector<const float *> getFlanChanPointers( flan::Audio a )
 	{
@@ -72,7 +73,7 @@ void FalterClip::mouseDrag( const MouseEvent & )
 	DragAndDropContainer * dragC = DragAndDropContainer::findParentDragContainerFor( this );
 	if (! dragC->isDragAndDropActive() ) 
 		{
-		dragC->startDragging( "Clip" , this );
+		dragC->startDragging( (String) DragAndDropTypes::AudioClip , this );
 		}
 	}
 

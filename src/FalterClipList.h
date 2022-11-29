@@ -21,13 +21,12 @@ public:
 	void insertClipFromAudio( flan::Audio file, size_t index, const String & name = "-" );
 
 private:
+	// DragAndDropTarget interface
 	bool isInterestedInDragSource( const SourceDetails & dragSourceDetails ) override;
-	///void itemDragEnter	( const SourceDetails &dragSourceDetails ) override;
-	///void itemDragMove	( const SourceDetails &dragSourceDetails ) override;
-	///void itemDragExit	( const SourceDetails &dragSourceDetails ) override;
-	void itemDropped	( const SourceDetails &dragSourceDetails ) override;
-	///bool shouldDrawDragImageWhenOver() override;
-
+	//void itemDragEnter( const SourceDetails &dragSourceDetails ) override;
+	//void itemDragMove( const SourceDetails &dragSourceDetails ) override;
+	//void itemDragExit( const SourceDetails &dragSourceDetails ) override;
+	void itemDropped( const SourceDetails &dragSourceDetails ) override;
 
 	FalterPlayer & player;
 	AudioThumbnailCache thumbnailCache;

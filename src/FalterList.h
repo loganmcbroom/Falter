@@ -23,6 +23,10 @@ public:
 	std::shared_ptr<Component> getItem( int index );
 	std::shared_ptr<Component> getItem( Component * c );
 
+	void setClearButtonText( const String & );
+
+	static const size_t itemHeight = 44;
+
 protected:
 	void buttonClicked( Button * b ) override;
 
@@ -33,12 +37,9 @@ private:
 	void scrollBarMoved( ScrollBar * scrollBarThatHasMoved, double newRangeStart ) override;
 	void mouseWheelMove(const MouseEvent & event, const MouseWheelDetails & wheel ) override;
 	
-	
 	std::vector< std::pair< std::shared_ptr<Component>, std::unique_ptr<FalterButton> > > items;
 
 	ScrollBar scroll;
 
 	std::unique_ptr<FalterButton> clearButton;
-
-	static const size_t itemHeight = 44;
 	};

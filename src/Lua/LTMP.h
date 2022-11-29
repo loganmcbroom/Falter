@@ -127,8 +127,10 @@ auto luaF_LTMP_getCurrentTuple( Tup t, int i )
 template<class Functor, size_t numArgs>
 static int luaF_LTMP_dispatched( lua_State* L )
     {
-    // If this gets called from the main thread, thread will be nullptr and it will crash, just fyi
-    auto & canceller = dynamic_cast<FalterThread *>( Thread::getCurrentThread() )->getCanceller();
+    auto * thread = dynamic_cast<FalterThread *>( Thread::getCurrentThread() );
+    if( ! thread )
+        luaL_error( L, "Thread was not Falter thread in LTMP." );
+    auto & canceller = thread->getCanceller();
     auto && cancelledFunctor = std::bind_front( Functor(), std::ref( canceller ) );
 
     if constexpr( numArgs == 0 )
@@ -183,12 +185,10 @@ static int luaF_LTMP( lua_State* L )
     else if constexpr( I == numNonDefaults )
         {
         if( i == I ) return luaF_LTMP_dispatched<AlgoFunctor, I>( L );
-        else luaL_error( L, "Too few arguments passed to flan function." );
+        else return luaL_error( L, "Too few arguments passed to flan function." );
         }
     // ! sizeof( T * ) is always false and type dependant. Using plain false does not compile.
     else static_assert( ! sizeof( AlgoFunctor * ), "Wrong number of non-defaulted arguments passed to a Lua function wrapper." );
-
-    return 0; // Unreachable
     }
 
 template<typename Functor, size_t numNonDefaults>

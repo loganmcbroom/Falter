@@ -4,6 +4,8 @@
 
 #include <flan/Audio.h>
 
+#include "simplefilewatcher/FileWatcher.h"
+
 #include "FalterLogger.h"
 #include "FalterPlayer.h"
 #include "Settings.h"
@@ -20,9 +22,13 @@ MainComponent::MainComponent()
 	, scriptSelectButton( "3", 	&FalterLookAndFeel::getLNF().fontWingdings 	)
 	, scriptLabel( "" )
 	, player( new FalterPlayer )
+	, fileWatcher()
+	, recentlyAutoProcessed( false )
+	, watchID( 0 )
 	, sampleBrowser()
 	, inClips( *player.get() )
 	, outClips( *player.get() )
+	, threads()
 	, log( loggerFactory() )
 	, settings( new Settings )
 	, logHeight( FalterLookAndFeel::getLNF().unit * 5 + FalterLookAndFeel::getLNF().margin * 4 )
@@ -42,12 +48,20 @@ MainComponent::MainComponent()
 	scriptSelectButton	.addListener( this );
 	sampleBrowser		.addListener( this );
 
+	inClips.setName( "Inputs" );
+	threads.setName( "Threads" );
+	outClips.setName( "Outputs" );
+
 	scriptLabel.setFont( FalterLookAndFeel::getLNF().fontMonospace );
 	scriptLabel.setText( Settings::getScriptFile().getFullPathName(), dontSendNotification );
+	if( File( scriptLabel.getText() ).exists() )
+		addWatchProtected();
 
 	setSize( 1000, 700 );
 
 	Logger::writeToLog( "Falter Initialized\n" );
+
+	startTimer( 100 );
 	}
 
 MainComponent::~MainComponent()
@@ -117,8 +131,8 @@ void MainComponent::buttonClicked( Button* button )
 void MainComponent::importFile( File file )
 	{
 	auto audio = flan::Audio( file.getFullPathName().toStdString() );
-	inClips.addClipFromAudio( audio, file.getFileName() );
-	procButton.setEnabled( true );
+	if( ! audio.isNull() )
+		inClips.addClipFromAudio( audio, file.getFileName() );
 	}
 
 void MainComponent::procButtonClicked() 
@@ -145,30 +159,41 @@ void MainComponent::procButtonClicked()
 
 void MainComponent::scriptSelectButtonClicked()
 	{
-	FileChooser chooser( "Select a lua script to run", Settings::getScriptFile(), "*.lua;*.txt" ); 
+	FileChooser chooser( "Select a Lua script to run", Settings::getScriptFile(), "*.lua;*.txt" ); 
 
 	if( chooser.browseForFileToOpen() )
 		{
 		File result = chooser.getResult();
 		Settings::setScriptFile( result );
 		scriptLabel.setText( result.getFullPathName(), NotificationType::dontSendNotification );
+
+		// Start watching new script
+		addWatchProtected();
 		}
 	}
 
 void MainComponent::filesDropped( const StringArray & files, int, int )
 	{
-	for ( auto && file : files )
-		{ 
+	for( const auto & file : files )
 		importFile( File( file ) );
-		}
 	fileDragExit( files );
 	}
 
 bool MainComponent::isInterestedInFileDrag( const StringArray & ) { return true; }
 
-void MainComponent::fileDragEnter( const StringArray &, int, int ) { scriptSelectButton.setButtonText( "1" ); }
+void MainComponent::fileDragEnter( const StringArray & s, int, int ) 
+	{ 
+	inClips.setClearButtonText( "Y" ); 
+	inClips.setName( File( s[0] ).getFileName() );
+	inClips.repaint();
+	}
 
-void MainComponent::fileDragExit( const StringArray & ) { scriptSelectButton.setButtonText( "0" ); }
+void MainComponent::fileDragExit( const StringArray & ) 
+	{ 
+	inClips.setClearButtonText( "r" ); 
+	inClips.setName( "Inputs" );
+	inClips.repaint();
+	}
 
 void MainComponent::selectionChanged()
 	{
@@ -188,4 +213,35 @@ void MainComponent::browserRootChanged( const File & dir )
 	settings->setFileLoadDir( dir );
 	}
 
+void MainComponent::handleFileAction( FW::WatchID otherWatchID, const FW::String & dir, const FW::String & filename, FW::Action action )
+	{
+	if( otherWatchID == watchID )
+		{
+		if( action == FW::Action::Modified && ! recentlyAutoProcessed )
+			{
+			procButtonClicked();
+			recentlyAutoProcessed = true;
+			}
+		else if( action == FW::Action::Delete )
+			fileWatcher.removeWatch( watchID );
+		}
+	}
+
+void MainComponent::addWatchProtected()
+	{
+	String dirString = File( scriptLabel.getText() ).getParentDirectory().getFullPathName();
+	try 
+		{ 
+		fileWatcher.removeWatch( watchID );
+		watchID = fileWatcher.addWatch( dirString.toStdString(), this, true ); 
+		}
+	catch( FW::FileNotFoundException & ) 
+		{ std::cout << "File watcher could not be created, automatic processing disabled."; }
+	}
+
+void MainComponent::timerCallback() 
+	{
+	recentlyAutoProcessed = false;
+	fileWatcher.update();
+	}
 

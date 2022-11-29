@@ -7,17 +7,16 @@ Off topic:
     song idea, cut mid video sponsered ads out of youtube videos
     song idea, something making fun of "top 10 x june 2022" articles
     can anything else interesting be done with the wavetable class?
-    wavetable cancel points
     do flan Func types actually need forwarding ctors?
+    CHOC loads the same files as libsndfile without the dependancy
 
 todo:
     load audio async for more responsive clip import?
     a way to record in new audio
     package flan dox with program
-    watch script to compute on save https://github.com/apetrone/simplefilewatcher
         
 task:
-    file browser drag and drop
-        Allow dragging from clips to browser
-        Allow dragging from browser to clips
-        Allow dragging from clips to other clips
+    allow pvoc clips
+    pvoc dnd browser->list
+    pvoc dnd list->list
+

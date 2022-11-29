@@ -32,6 +32,7 @@ target_sources( Falter
         src/FalterPlayer.cpp
         src/Types.h
         src/Settings.cpp
+        src/DragAndDropTypes.cpp
 
         src/Lua/Utility.cpp
         src/Lua/Usertypes.h
@@ -44,6 +45,12 @@ target_sources( Falter
         src/Lua/Function.cpp
         src/Lua/Interpolators.cpp
         src/Lua/Wavetable.cpp
+		
+		#simplefilewatcher lib
+		src/simplefilewatcher/FileWatcher.cpp
+		src/simplefilewatcher/FileWatcherLinux.cpp
+		src/simplefilewatcher/FileWatcherOSX.cpp
+		src/simplefilewatcher/FileWatcherWin32.cpp
         )
 
 target_compile_features( Falter PRIVATE cxx_std_20 )
