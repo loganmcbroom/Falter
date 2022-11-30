@@ -25,14 +25,14 @@ public:
     MainComponent();
     ~MainComponent();
 
+private:
     void paint( Graphics & g ) override;
     void resized() override;
 	void buttonClicked( Button * button ) override;
 
-private:
     void importFile( File file );
 
-	void procButtonClicked(); // Processes input files with the supplied lua script
+	void procButtonClicked();
 	void scriptSelectButtonClicked();
 
 	void filesDropped( const StringArray & files, int x, int y ) override;
@@ -57,20 +57,20 @@ private:
 	std::unique_ptr<Settings> settings;
 	std::unique_ptr<FalterPlayer> player;
 
+	// Script watching
 	FW::FileWatcher fileWatcher;
 	bool recentlyAutoProcessed;
 	FW::WatchID watchID;
 	
+	// GUI components
 	FalterButton procButton;
 	FalterButton scriptSelectButton;
-	
 	Label scriptLabel;
-
 	FalterFileBrowser sampleBrowser;
 	FalterClipList inClips, outClips;
 	FalterThreadList threads;
 
 	const int logHeight;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR( MainComponent )
 };

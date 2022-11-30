@@ -14,15 +14,13 @@ FalterThreadList::~FalterThreadList()
 	{
 	}
 
-void FalterThreadList::addThread( const String & script, const FalterThreadCallback & callback, const AudioVec & files )
+FalterThread & FalterThreadList::addThread( const String & script, const FalterThreadCallback & callback, const AudioVec & files )
 	{
 	static int n = 0; // Used for thread names
 	++n;
 	Time t = Time::getCurrentTime();
-	addItem( new FalterThread( n,
-			//+ t.formatted( "%M:%S." ) + String( t.getMilliseconds() ), 
-		script, 
-		callback, 
-		files ) );
+	auto newThread = std::make_shared<FalterThread>( n, script, callback, files );
+	addItem( newThread );
+	return *newThread;
 	}
 

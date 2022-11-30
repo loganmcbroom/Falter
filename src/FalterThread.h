@@ -12,16 +12,10 @@
 
 using FalterThreadCallback = std::function< void( AudioVec &, const String & ) >;
 
-struct FalterThreadListener : public Thread::Listener
-{
-	FalterThreadListener() : canceller( false ) {}
-	void exitSignalSent() override { canceller = true; }
-	std::atomic<bool> canceller;
-};
-
 class FalterThread : public Thread
 				  , public Component
 				  , public Timer
+				  , public Thread::Listener
 {
 public:
 	FalterThread( 
@@ -42,6 +36,8 @@ private:
 	String getStartTimeString() const;
 	String getElapsedTimeString() const;
 
+	void exitSignalSent() override;
+	
 	int ID;
 	FalterThreadCallback callback;
 	const String script;
@@ -50,10 +46,9 @@ private:
 	juce::Time endTime;
 	String cdpDir;
 	File workingDir;
-	bool threadFinished;
 	bool threadSuccess;
 	bool allProcessesSetUp;
-	FalterThreadListener listener;
+	std::atomic<bool> canceller;
 
-	static CriticalSection mutex;
+	std::vector<flan::Audio> outputs;
 };

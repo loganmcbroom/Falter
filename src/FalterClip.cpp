@@ -58,6 +58,7 @@ FalterClip::FalterClip( flan::Audio _audio
 
 FalterClip::~FalterClip()
 	{
+	thumbnail.setSource( nullptr );
 	player.deactivateClip( this );
 	}
 

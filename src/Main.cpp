@@ -6,14 +6,17 @@ class GuiAppApplication  : public juce::JUCEApplication
 public:
     //==============================================================================
     GuiAppApplication() 
+        : lookAndFeel( std::make_unique<FalterLookAndFeel>() )
         {
-        FalterLookAndFeel::instance = new FalterLookAndFeel();
+        FalterLookAndFeel::instance = lookAndFeel.get();
         }
 
     ~GuiAppApplication()
         {
-        delete FalterLookAndFeel::instance;
+        FalterLookAndFeel::instance = nullptr;
         }
+
+    std::unique_ptr<FalterLookAndFeel> lookAndFeel;
 
     // We inject these as compile definitions from the CMakeLists.txt
     // If you've enabled the juce header with `juce_generate_juce_header(<thisTarget>)`
@@ -28,7 +31,7 @@ public:
         // This method is where you should put your application's initialisation code..
         juce::ignoreUnused (commandLine);
 
-        mainWindow.reset (new MainWindow (getApplicationName()));
+        mainWindow = std::make_unique<MainWindow>( getApplicationName() );
     }
 
     void shutdown() override
@@ -69,7 +72,7 @@ public:
                               DocumentWindow::allButtons)
         {
             setUsingNativeTitleBar (true);
-            setContentOwned (new MainComponent(), true);
+            setContentOwned( new MainComponent(), true );
 
            #if JUCE_IOS || JUCE_ANDROID
             setFullScreen (true);

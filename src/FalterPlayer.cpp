@@ -3,8 +3,8 @@
 #include "FalterClip.h"
 
 FalterPlayer::FalterPlayer()
-	: formatManager( new AudioFormatManager )
-	, transportSource( new AudioTransportSource )
+	: formatManager( std::make_unique<AudioFormatManager>() )
+	, transportSource( std::make_unique<AudioTransportSource>() )
 	, activeClip( nullptr )
 	{
 	formatManager->registerBasicFormats();

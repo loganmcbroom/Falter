@@ -35,13 +35,7 @@ static const struct luaL_Reg printlib [] =
 	{NULL, NULL} /* end of array */
 	};
 
-CriticalSection FalterThread::mutex;
-
-FalterThread::FalterThread( 
-	int threadID, 
-	const String & _script, 
-	const FalterThreadCallback & _callback, 
-	const AudioVec & inputs )
+FalterThread::FalterThread( int threadID, const String & _script, const FalterThreadCallback & _callback, const AudioVec & inputs )
 	: Thread( String( threadID ) + " " + File( _script ).getFileName() )
 	, ID( threadID )
 	, callback( _callback )
@@ -51,12 +45,12 @@ FalterThread::FalterThread(
 	, endTime( )
 	, cdpDir( )
 	, workingDir( )
-	, threadFinished( false )
 	, threadSuccess( false )
 	, allProcessesSetUp( true )
-	, listener()
+	, canceller( false )
+	, outputs()
 	{
-	addListener( &listener );
+	addListener( this );
 
 	bool startupError = false;
 	auto err = [&]( const char * error )
@@ -116,13 +110,14 @@ FalterThread::~FalterThread()
 
 void FalterThread::log( const String & s )
 	{
-	MessageManagerLock mml;
-	Logger::writeToLog( s );
+	const MessageManagerLock mml;
+	if( mml.lockWasGained() )
+		Logger::writeToLog( s );
 	}
 
 std::atomic<bool> & FalterThread::getCanceller()
 	{
-	return listener.canceller;
+	return canceller;
 	}
 
 void FalterThread::paint( Graphics & g )
@@ -136,7 +131,7 @@ void FalterThread::paint( Graphics & g )
 	// Draw info text
 	const auto bound = getLocalBounds().reduced( 6 );
 	g.setFont( lnf.fontMonospace );
-	g.setColour( threadFinished? threadSuccess? lnf.accent2 : lnf.accent1 :lnf.light );
+	g.setColour( canceller? threadSuccess? lnf.accent2 : lnf.accent1 : lnf.light );
 	g.drawText( getThreadName(), bound, Justification::topLeft );
 	g.drawText( String( "ID: " ) + String( ID ), bound, Justification::bottomLeft );
 	g.drawText( getStartTimeString(), bound, Justification::topRight );
@@ -145,28 +140,17 @@ void FalterThread::paint( Graphics & g )
 
 void FalterThread::run()
 	{
-	auto exit = [&]()
-		{
-		// Success or not these need to be called
-		const ScopedLock lock( mutex );
-		MessageManagerLock mml;
-		stopTimer();
-		threadFinished = true;
-		endTime = Time::getCurrentTime();
-		repaint();
-		};
-
 	if( threadShouldExit() )
 		{
 		log( "Exiting thread early due to startup error.\n" );
-		exit();
+		signalThreadShouldExit();
 		return;
 		}
 	
 	if( lua_gettop( L ) != 1 ) // There should only be the script
 		{
 		log( "Lua stack size was not 1 when starting a new thread, stack size was " + String( lua_gettop( L ) ) + ".\n" );
-		exit();
+		signalThreadShouldExit();
 		return;
 		}
 
@@ -179,17 +163,13 @@ void FalterThread::run()
 
 		threadSuccess = true;	
 
-		// Pull all the audios returned from lua into a container and send them to the callback
-		AudioVec outputs;
+		// Pull all the audios returned from lua into a container to be grabbed from MainComponent
 		const int numLuaOutputs = lua_gettop( L );
 		for( int i = 1; i <= numLuaOutputs; ++i )
 			{
 			AudioVec currentReturn = luaF_checkAsArray<flan::Audio>( L, i );
 			outputs.insert( outputs.end(), currentReturn.begin(), currentReturn.end() );
 			}
-		const ScopedLock lock( mutex );
-		MessageManagerLock mml;
-		callback( outputs, getThreadName() );
 		}
 	else
 		{
@@ -201,7 +181,7 @@ void FalterThread::run()
 			}
 		}
 	
-	exit(); // Lambda defined above
+	signalThreadShouldExit();
 	}
 
 void FalterThread::timerCallback()
@@ -224,7 +204,24 @@ String FalterThread::getStartTimeString() const
 String FalterThread::getElapsedTimeString() const
 	{
 	const uint64_t startTimeMS = startTime.toMilliseconds();
-	const uint64_t endTimeMS = threadFinished? endTime.toMilliseconds() : Time::currentTimeMillis();
+	const uint64_t endTimeMS = canceller? endTime.toMilliseconds() : Time::currentTimeMillis();
 	const uint64_t elapsedMS = endTimeMS - startTimeMS;
 	return juce::Time( elapsedMS ).formatted( "%M:%S." ) + forceCorrectMS( elapsedMS % 1000 );
+	}
+
+void FalterThread::exitSignalSent() 
+	{
+	canceller = true; 
+	stopTimer();
+	endTime = Time::getCurrentTime();
+
+	// Lock
+		{
+		const MessageManagerLock mml;
+		if( mml.lockWasGained() )
+			{
+			callback( outputs, getThreadName() );
+			repaint();
+			}
+		}
 	}

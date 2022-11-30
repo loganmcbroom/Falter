@@ -13,8 +13,8 @@ public:
 	~FalterList();
 	
 	int getNumItems() { return int( items.size() ); };
-	std::shared_ptr<Component> addItem( Component * item );
-	std::shared_ptr<Component> insertItem( Component * item, size_t index );
+	std::shared_ptr<Component> addItem( std::shared_ptr<Component> item );
+	std::shared_ptr<Component> insertItem( std::shared_ptr<Component> item, size_t index );
 	int getIndex( Component * item );
 	void erase( int index );
 	void erase( Component * item );
@@ -38,8 +38,7 @@ private:
 	void mouseWheelMove(const MouseEvent & event, const MouseWheelDetails & wheel ) override;
 	
 	std::vector< std::pair< std::shared_ptr<Component>, std::unique_ptr<FalterButton> > > items;
-
 	ScrollBar scroll;
-
 	std::unique_ptr<FalterButton> clearButton;
+	ReadWriteLock changingItemsLock;
 	};

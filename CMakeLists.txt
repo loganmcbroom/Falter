@@ -33,6 +33,7 @@ target_sources( Falter
         src/Types.h
         src/Settings.cpp
         src/DragAndDropTypes.cpp
+        src/AudioLoadThread.cpp
 
         src/Lua/Utility.cpp
         src/Lua/Usertypes.h

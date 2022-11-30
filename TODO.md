@@ -9,14 +9,11 @@ Off topic:
     can anything else interesting be done with the wavetable class?
     do flan Func types actually need forwarding ctors?
     CHOC loads the same files as libsndfile without the dependancy
+    cancellers in audio/pvoc loading
 
 todo:
-    load audio async for more responsive clip import?
+    fix warnings
     a way to record in new audio
-    package flan dox with program
         
 task:
-    allow pvoc clips
-    pvoc dnd browser->list
-    pvoc dnd list->list
 

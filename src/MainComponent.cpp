@@ -9,11 +9,12 @@
 #include "FalterLogger.h"
 #include "FalterPlayer.h"
 #include "Settings.h"
+#include "AudioLoadThread.h"
 
-static FalterLogger * loggerFactory()
+static std::unique_ptr<FalterLogger> loggerFactory()
 	{
-	auto * log = new FalterLogger;
-	Logger::setCurrentLogger( log );
+	auto log = std::make_unique<FalterLogger>();
+	Logger::setCurrentLogger( log.get() );
 	return log;
 	}
 
@@ -21,7 +22,7 @@ MainComponent::MainComponent()
 	: procButton( "P", 			&FalterLookAndFeel::getLNF().fontSymbol 	)
 	, scriptSelectButton( "3", 	&FalterLookAndFeel::getLNF().fontWingdings 	)
 	, scriptLabel( "" )
-	, player( new FalterPlayer )
+	, player( std::make_unique<FalterPlayer>() )
 	, fileWatcher()
 	, recentlyAutoProcessed( false )
 	, watchID( 0 )
@@ -30,7 +31,7 @@ MainComponent::MainComponent()
 	, outClips( *player.get() )
 	, threads()
 	, log( loggerFactory() )
-	, settings( new Settings )
+	, settings( std::make_unique<Settings>() )
 	, logHeight( FalterLookAndFeel::getLNF().unit * 5 + FalterLookAndFeel::getLNF().margin * 4 )
 	{
 	setLookAndFeel( &FalterLookAndFeel::getLNF() );
@@ -130,9 +131,7 @@ void MainComponent::buttonClicked( Button* button )
 
 void MainComponent::importFile( File file )
 	{
-	auto audio = flan::Audio( file.getFullPathName().toStdString() );
-	if( ! audio.isNull() )
-		inClips.addClipFromAudio( audio, file.getFileName() );
+	inClips.importAudioFileAsync( file );
 	}
 
 void MainComponent::procButtonClicked() 
@@ -147,7 +146,7 @@ void MainComponent::procButtonClicked()
 		{
 		for( auto & a : as )
 			if( ! a.isNull() )
-				outClips.addClipFromAudio( a, String( "Output of: " ) + threadName );
+				outClips.insertClipFromAudio( a, -1, String( "Output of: " ) + threadName );
 		};
 
 	AudioVec inAudio;
@@ -244,4 +243,3 @@ void MainComponent::timerCallback()
 	recentlyAutoProcessed = false;
 	fileWatcher.update();
 	}
-

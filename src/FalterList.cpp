@@ -6,12 +6,11 @@
 #define CLEAR_HEIGHT 25
 #define ERASE_WIDTH 25
 
-using namespace std;
-
 FalterList::FalterList()
 	: Component()
 	, scroll( true )
-	, clearButton( new FalterButton("r", &FalterLookAndFeel::getLNF().fontWebdings, int( CLEAR_HEIGHT * .67f ) ) )
+	, clearButton( std::make_unique<FalterButton>("r", &FalterLookAndFeel::getLNF().fontWebdings, int( CLEAR_HEIGHT * .67f ) ) )
+	, changingItemsLock()
 	{
 	addAndMakeVisible( &scroll );
 	scroll.addListener( this );
@@ -26,22 +25,24 @@ FalterList::~FalterList()
 	{
 	}
 
-shared_ptr<Component> FalterList::addItem( Component * item )
+std::shared_ptr<Component> FalterList::addItem( std::shared_ptr<Component> item )
 	{
 	return insertItem( item, items.size() );
 	}
 
-shared_ptr<Component> FalterList::insertItem( Component * item, size_t index )
+std::shared_ptr<Component> FalterList::insertItem( std::shared_ptr<Component> item, size_t index )
 	{
-	if( index < 0 ) index = 0;
-	FalterButton * button = new FalterButton( "r", &FalterLookAndFeel::getLNF().fontWebdings, int( ERASE_WIDTH / 2.0f ) );
-	items.emplace( items.begin() + index, item, button );
-	addAndMakeVisible( item );
-	addAndMakeVisible( button );
+	auto button = std::make_unique<FalterButton>( "r", &FalterLookAndFeel::getLNF().fontWebdings, int( ERASE_WIDTH / 2.0f ) );
 	button->addListener( this );
+	addAndMakeVisible( button.get() );
+	addAndMakeVisible( item.get() );
 
-	scroll.setRangeLimits( 0, float( itemHeight ) * float( items.size() ) + CLEAR_HEIGHT, 
-		NotificationType::dontSendNotification );
+		{
+		const ScopedWriteLock scoperLock( changingItemsLock );
+		items.emplace( items.begin() + index, item, std::move( button ) );
+		}
+
+	scroll.setRangeLimits( 0, float( itemHeight ) * float( items.size() ) + CLEAR_HEIGHT, NotificationType::dontSendNotification );
 	resized();
 
 	clearButton->toFront( false );
@@ -62,7 +63,10 @@ int FalterList::getIndex( Component * clip )
 
 void FalterList::erase( int index )
 	{
-	items.erase( items.begin() + index );
+		{
+		const ScopedWriteLock scoperLock( changingItemsLock );
+		items.erase( items.begin() + index );
+		}
 	scroll.setRangeLimits( 0, float( itemHeight ) * float( items.size() ) + CLEAR_HEIGHT, NotificationType::dontSendNotification );
 	resized();
 	}
@@ -74,21 +78,27 @@ void FalterList::erase( Component * item )
 
 void FalterList::clear()
 	{
-	items.clear();
+		{
+		const ScopedWriteLock scoperLock( changingItemsLock );
+		items.clear();
+		}
 	}
 
 void FalterList::swap( int a, int b )
 	{
-	iter_swap( items.begin() + a, items.begin() + b );
+		{
+		const ScopedWriteLock scoperLock( changingItemsLock );
+		iter_swap( items.begin() + a, items.begin() + b );
+		}
 	resized();
 	}
 
-shared_ptr<Component> FalterList::getItem( int index )
+std::shared_ptr<Component> FalterList::getItem( int index )
 	{
 	return items[index].first; 
 	}
 
-shared_ptr<Component> FalterList::getItem( Component * c )
+std::shared_ptr<Component> FalterList::getItem( Component * c )
 	{
 	return getItem( getIndex( c ) );
 	}

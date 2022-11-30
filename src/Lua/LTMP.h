@@ -13,10 +13,11 @@ extern "C"
 #include "lauxlib.h"
 }
 
-#include "./FalterThread.h"
 #include "./Types.h"
 
 #include "Utility.h"
+
+std::atomic<bool> & getThreadCanceller( lua_State * L );
 
 template<typename T> std::vector<T> luaF_LTMP_check( lua_State * L, int i )
     {
@@ -127,10 +128,7 @@ auto luaF_LTMP_getCurrentTuple( Tup t, int i )
 template<class Functor, size_t numArgs>
 static int luaF_LTMP_dispatched( lua_State* L )
     {
-    auto * thread = dynamic_cast<FalterThread *>( Thread::getCurrentThread() );
-    if( ! thread )
-        luaL_error( L, "Thread was not Falter thread in LTMP." );
-    auto & canceller = thread->getCanceller();
+    auto & canceller = getThreadCanceller( L );
     auto && cancelledFunctor = std::bind_front( Functor(), std::ref( canceller ) );
 
     if constexpr( numArgs == 0 )

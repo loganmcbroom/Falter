@@ -5,9 +5,11 @@
 #include "FalterClip.h"
 
 class FalterPlayer;
+class AudioLoadThread;
 
 class FalterClipList : public FalterList
-					, public DragAndDropTarget
+					 , public DragAndDropTarget
+					 , public Thread::Listener
 	{
 public:
 	FalterClipList( FalterPlayer & player );
@@ -17,8 +19,8 @@ public:
 	void erase( unsigned int pos );
 	void clear();
 
-	void addClipFromAudio( flan::Audio, const String & name = "-" );
-	void insertClipFromAudio( flan::Audio file, size_t index, const String & name = "-" );
+	void insertClipFromAudio( flan::Audio file, int index = -1, const String & name = "-" );
+	void importAudioFileAsync( const File & file );
 
 private:
 	// DragAndDropTarget interface
@@ -26,10 +28,13 @@ private:
 	//void itemDragEnter( const SourceDetails &dragSourceDetails ) override;
 	//void itemDragMove( const SourceDetails &dragSourceDetails ) override;
 	//void itemDragExit( const SourceDetails &dragSourceDetails ) override;
-	void itemDropped( const SourceDetails &dragSourceDetails ) override;
+	void itemDropped( const SourceDetails & dragSourceDetails ) override;
+
+	void exitSignalSent() override;
 
 	FalterPlayer & player;
 	AudioThumbnailCache thumbnailCache;
+	ThreadPool threadPool;
 	};
 
 

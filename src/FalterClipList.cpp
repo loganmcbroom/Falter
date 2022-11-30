@@ -5,24 +5,18 @@
 
 #include "FalterPlayer.h"
 #include "DragAndDropTypes.h"
+#include "AudioLoadThread.h"
 
-#define MAX_CLIPS 128
+#define MAX_CLIPS 1024
 
-//Constructor
 FalterClipList::FalterClipList( FalterPlayer & _player )
 	: player( _player )
 	, thumbnailCache( MAX_CLIPS )
+	, threadPool()
 	{
 	}
 
-//Destructor
-FalterClipList::~FalterClipList()
-	{
-	for( int i = 0; i < getNumItems(); ++i )
-		{
-		dynamic_pointer_cast<FalterClip>( getItem( i ) )->getThumbnail().setSource( nullptr );
-		}
-	}
+FalterClipList::~FalterClipList() {}
 
 void FalterClipList::erase( FalterClip * item )
 	{
@@ -41,14 +35,9 @@ void FalterClipList::clear()
 	thumbnailCache.clear();
 	}
 
-void FalterClipList::addClipFromAudio( flan::Audio a, const String & name )
+void FalterClipList::insertClipFromAudio( flan::Audio a, int index, const String & name )
 	{
-	insertClipFromAudio( a, getNumItems(), name );
-	}
-
-void FalterClipList::insertClipFromAudio( flan::Audio a, size_t index, const String & name )
-	{
-	insertItem( new FalterClip( a, player, thumbnailCache, name ), index );
+	insertItem( std::make_shared<FalterClip>( a, player, thumbnailCache, name ), index == -1 ? getNumItems() : index );
 	}
 
 bool FalterClipList::isInterestedInDragSource( const SourceDetails & s )
@@ -85,12 +74,32 @@ void FalterClipList::itemDropped( const SourceDetails & s )
 		for( int i = 0; i < n; ++i )
 			{
 			File file = tree->getSelectedFile( i );
-			flan::Audio audio( file.getFullPathName().toStdString() );
-			if( audio.isNull() ) continue;
-			insertClipFromAudio( audio, slot, file.getFileName() );
+			importAudioFileAsync( file );
 			}
 		}
 	else jassertfalse;
 	}
 
+void FalterClipList::importAudioFileAsync( const File & file )
+	{
+	auto newJob = std::make_unique<AudioLoadThread>( file );
+	newJob->addListener( this );
+	threadPool.addJob( newJob.release(), true );
+	}
+
+void FalterClipList::exitSignalSent() 
+	{
+	auto * job = dynamic_cast<AudioLoadThread *>( ThreadPoolJob::getCurrentThreadPoolJob() );
+	if( ! job )
+		{
+		const MessageManagerLock mml;
+		if( mml.lockWasGained() )
+			Logger::writeToLog( "Audio loader couldn't be accessed." );
+		return;
+		}
+
+	const MessageManagerLock mml;
+	if( mml.lockWasGained() )
+		insertClipFromAudio( *job->output.release(), -1, job->file.getFileName() );
+	}
 
