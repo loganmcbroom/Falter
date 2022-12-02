@@ -48,7 +48,9 @@ bool FalterClipList::isInterestedInDragSource( const SourceDetails & s )
 
 void FalterClipList::itemDropped( const SourceDetails & s )
 	{
-	const int slot = std::clamp( int( s.localPosition.y / itemHeight ), 0, getNumItems() );
+	//const float scrollZoom = scroll.getCurrentRangeSize() / scroll.getMaximumRangeLimit();
+	const float trueYPos = s.localPosition.y + scroll.getCurrentRange().getStart();
+	const int slot = std::clamp( int( trueYPos / itemHeight ), 0, getNumItems() );
 
 	if( s.description == DragAndDropTypes::AudioClip )	
 		{

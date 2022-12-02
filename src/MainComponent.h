@@ -9,9 +9,11 @@
 #include "FalterClipList.h"
 #include "FalterThreadList.h"
 #include "FalterLookAndFeel.h"
+#include "FalterAudioDeviceSelector.h"
 class FalterLogger;
 class FalterPlayer;
 class Settings;
+class AudioRecorder;
 
 class MainComponent : public Component
                     , public Button::Listener
@@ -33,6 +35,8 @@ private:
     void importFile( File file );
 
 	void procButtonClicked();
+	void recordButtonClicked();
+	void settingsButtonClicked();
 	void scriptSelectButtonClicked();
 
 	void filesDropped( const StringArray & files, int x, int y ) override;
@@ -55,7 +59,10 @@ private:
 
 	std::unique_ptr<FalterLogger> log;
 	std::unique_ptr<Settings> settings;
+	std::unique_ptr<AudioDeviceManager> audioDeviceManager;
 	std::unique_ptr<FalterPlayer> player;
+	std::unique_ptr<AudioRecorder> recorder;
+	bool settingsMode;
 
 	// Script watching
 	FW::FileWatcher fileWatcher;
@@ -63,12 +70,20 @@ private:
 	FW::WatchID watchID;
 	
 	// GUI components
+	Component mainContainer;
 	FalterButton procButton;
+	FalterButton recordButton;
+	FalterButton settingsButton;
 	FalterButton scriptSelectButton;
 	Label scriptLabel;
+
 	FalterFileBrowser sampleBrowser;
-	FalterClipList inClips, outClips;
+	FalterClipList inClips;
+	FalterClipList outClips;
 	FalterThreadList threads;
+
+	Component settingsContainer;
+	FalterAudioDeviceSelector deviceSelector;
 
 	const int logHeight;
 

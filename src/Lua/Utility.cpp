@@ -55,10 +55,10 @@ template<> bool luaF_is<std::string>( lua_State * L, int i ) { return lua_isstri
 
 // Check ==========================================================================================================================
 
-template<> int luaF_check( lua_State * L, int i ) { return luaL_checkinteger( L, i ); }
-template<> uint32_t luaF_check( lua_State * L, int i ) { return luaL_checkinteger( L, i ); }
-template<> float luaF_check( lua_State * L, int i ) { return luaL_checknumber( L, i ); }
-template<> bool luaF_check( lua_State * L, int i ) { return lua_toboolean( L, i ); }
+template<> int luaF_check( lua_State * L, int i ) { return static_cast<int>( luaL_checkinteger( L, i ) ); }
+template<> uint32_t luaF_check( lua_State * L, int i ) { return static_cast<uint32_t>(  luaL_checkinteger( L, i ) ); }
+template<> float luaF_check( lua_State * L, int i ) { return static_cast<float>(  luaL_checknumber( L, i ) ); }
+template<> bool luaF_check( lua_State * L, int i ) { return static_cast<bool>(  lua_toboolean( L, i ) ); }
 
 template<> flan::Interval luaF_check( lua_State * L, int i ) 
     { 
@@ -66,7 +66,7 @@ template<> flan::Interval luaF_check( lua_State * L, int i )
     if( i < 0 ) i = lua_gettop( L ) + 1 + i;
     lua_rawgeti( L, i, 1 );
     lua_rawgeti( L, i, 2 );
-    flan::Interval interval( luaL_checknumber( L, -2 ), luaL_checknumber( L, -1 ) );
+    flan::Interval interval( static_cast<float>( luaL_checknumber( L, -2 ) ), static_cast<float>( luaL_checknumber( L, -1 ) ) );
     lua_pop( L, 2 );
     return interval;
     }
@@ -78,7 +78,12 @@ template<> flan::Rect luaF_check( lua_State * L, int i )
     lua_rawgeti( L, i, 2 );
     lua_rawgeti( L, i, 3 );
     lua_rawgeti( L, i, 4 );
-    flan::Rect rect( luaL_checknumber( L, -4 ), luaL_checknumber( L, -3 ), luaL_checknumber( L, -2 ), luaL_checknumber( L, -1 ) );
+    flan::Rect rect( 
+        static_cast<float>( luaL_checknumber( L, -4 ) ), 
+        static_cast<float>( luaL_checknumber( L, -3 ) ), 
+        static_cast<float>( luaL_checknumber( L, -2 ) ), 
+        static_cast<float>( luaL_checknumber( L, -1  )) 
+        );
     lua_pop( L, 4 );
     return rect;
     }

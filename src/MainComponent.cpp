@@ -10,6 +10,7 @@
 #include "FalterPlayer.h"
 #include "Settings.h"
 #include "AudioLoadThread.h"
+#include "AudioRecorder.h"
 
 static std::unique_ptr<FalterLogger> loggerFactory()
 	{
@@ -19,38 +20,60 @@ static std::unique_ptr<FalterLogger> loggerFactory()
 	}
 
 MainComponent::MainComponent()
-	: procButton( "P", 			&FalterLookAndFeel::getLNF().fontSymbol 	)
-	, scriptSelectButton( "3", 	&FalterLookAndFeel::getLNF().fontWingdings 	)
-	, scriptLabel( "" )
+	: log( loggerFactory() )
+	, settings( std::make_unique<Settings>() )
+	, audioDeviceManager( std::make_unique<AudioDeviceManager>() )
 	, player( std::make_unique<FalterPlayer>() )
+	, recorder( std::make_unique<AudioRecorder>() )
+	, settingsMode( false )
 	, fileWatcher()
 	, recentlyAutoProcessed( false )
 	, watchID( 0 )
+	, mainContainer()
+	, procButton( "P", 			&FalterLookAndFeel::getLNF().fontSymbol 	)
+	, recordButton( "l", 		&FalterLookAndFeel::getLNF().fontWingdings  )
+	, settingsButton( "$", 		&FalterLookAndFeel::getLNF().fontWingdings  )
+	, scriptSelectButton( "3", 	&FalterLookAndFeel::getLNF().fontWingdings 	)
+	, scriptLabel( "" )
 	, sampleBrowser()
 	, inClips( *player.get() )
 	, outClips( *player.get() )
 	, threads()
-	, log( loggerFactory() )
-	, settings( std::make_unique<Settings>() )
+	, settingsContainer()
+	, deviceSelector( *audioDeviceManager )
 	, logHeight( FalterLookAndFeel::getLNF().unit * 5 + FalterLookAndFeel::getLNF().margin * 4 )
 	{
 	setLookAndFeel( &FalterLookAndFeel::getLNF() );
 
-	addAndMakeVisible( *log 				);
-	addAndMakeVisible( &procButton 			);
-	addAndMakeVisible( &scriptSelectButton 	);
-	addAndMakeVisible( &scriptLabel    		);
-	addAndMakeVisible( &sampleBrowser 		);
-	addAndMakeVisible( &inClips    			);
-	addAndMakeVisible( &threads	   			);
-	addAndMakeVisible( &outClips   			);
+	audioDeviceManager->initialise( 2, 2, nullptr, true );
+	audioDeviceManager->addAudioCallback( recorder.get() );
 
+	addAndMakeVisible( procButton 			);
+	addAndMakeVisible( recordButton			);
+	addAndMakeVisible( settingsButton		);
+	addAndMakeVisible( scriptSelectButton 	);
+	addAndMakeVisible( scriptLabel    		);
+
+	addAndMakeVisible( &mainContainer );
+		mainContainer.addAndMakeVisible( sampleBrowser 			);
+		mainContainer.addAndMakeVisible( inClips    			);
+		mainContainer.addAndMakeVisible( threads	   			);
+		mainContainer.addAndMakeVisible( outClips   			);
+
+	addChildComponent( &settingsContainer );
+		settingsContainer.addAndMakeVisible( &deviceSelector 	);
+		settingsContainer.setColour( Label::ColourIds::backgroundColourId, FalterLookAndFeel::getLNF().dark );
+
+	addAndMakeVisible( *log );
+	
 	procButton			.addListener( this );
+	recordButton		.addListener( this );
+	settingsButton		.addListener( this );
 	scriptSelectButton	.addListener( this );
 	sampleBrowser		.addListener( this );
 
-	inClips.setName( "Inputs" );
-	threads.setName( "Threads" );
+	inClips	.setName( "Inputs" 	);
+	threads	.setName( "Threads" );
 	outClips.setName( "Outputs" );
 
 	scriptLabel.setFont( FalterLookAndFeel::getLNF().fontMonospace );
@@ -60,14 +83,16 @@ MainComponent::MainComponent()
 
 	setSize( 1000, 700 );
 
-	Logger::writeToLog( "Falter Initialized\n" );
-
 	startTimer( 100 );
+
+	Logger::writeToLog( "Falter Initialized\n" );
 	}
 
 MainComponent::~MainComponent()
 	{
 	player->stop();
+	recorder->stopRecording();
+	audioDeviceManager->removeAudioCallback( recorder.get() );
 	Logger::setCurrentLogger( nullptr );
 	setLookAndFeel( nullptr );
 	}
@@ -83,7 +108,15 @@ void MainComponent::resized()
 	const int u = FalterLookAndFeel::getLNF().unit;
 	const int w = getWidth();
 	const int h = getHeight();
-	const int numButtons = 2;
+	const int numButtons = 4;
+
+	Rectangle<int> containerRect( 
+		0, 
+		m * 2 + u, 
+		w, 
+		h - ( u + m * 2 ) - ( logHeight + m * 2 ) );
+	mainContainer.setBounds( containerRect );
+	settingsContainer.setBounds( containerRect );
 
 	auto boundButton = [&]( int n, Component * c )
 		{
@@ -91,7 +124,9 @@ void MainComponent::resized()
 		};
 
 	boundButton( 0, &procButton );
-	boundButton( 1, &scriptSelectButton );
+	boundButton( 1, &recordButton );
+	boundButton( 2, &settingsButton );
+	boundButton( 3, &scriptSelectButton );
 
 	scriptLabel.setBounds( 
 		numButtons * ( u + m ) + m, 
@@ -102,12 +137,12 @@ void MainComponent::resized()
 
 	auto boundColumn = [&]( int n, int N, Component * c )
 		{
-		const float iw = w - m;
+		const float iw = static_cast<float>( w - m );
 		c->setBounds( 
-			n * ( iw / N ) + m, // x
-			m * 2 + u, // y
-			iw / N - m, // Width
-			h - ( u + m * 3 ) - ( logHeight + m ) // Height
+			static_cast<int>( n * ( iw / N ) + m ), // x
+			0, // y
+			static_cast<int>( iw / N - m ), // Width
+			c->getParentHeight() // Height
 			);
 		};
 
@@ -116,17 +151,21 @@ void MainComponent::resized()
 	boundColumn( 2, 4, &threads );
 	boundColumn( 3, 4, &outClips );
 
-	Rectangle<int> errorRect( 
+	deviceSelector.setBounds( m, 0, deviceSelector.getParentWidth() - 2 * m, deviceSelector.getParentHeight() );
+
+	Rectangle<int> bottomRect( 
 		m, getHeight() - ( logHeight + m ), 
 		getWidth() - m * 2, logHeight );
 
-	log->setBounds( errorRect );
+	log->setBounds( bottomRect );
 	}
 
 void MainComponent::buttonClicked( Button* button )
 	{
-		 if( button == &procButton	) 			{ procButtonClicked(); }
-	else if( button == &scriptSelectButton	) 	{ scriptSelectButtonClicked(); }
+		 if( button == &procButton			) procButtonClicked(); 			
+	else if( button == &recordButton		) recordButtonClicked();		
+	else if( button == &settingsButton		) settingsButtonClicked();		
+	else if( button == &scriptSelectButton	) scriptSelectButtonClicked(); 	
 	}
 
 void MainComponent::importFile( File file )
@@ -144,9 +183,9 @@ void MainComponent::procButtonClicked()
 
 	auto retrieveFiles = [&]( AudioVec & as, const String & threadName )
 		{
-		for( auto & a : as )
-			if( ! a.isNull() )
-				outClips.insertClipFromAudio( a, -1, String( "Output of: " ) + threadName );
+		for( int i = 0; i < as.size(); ++i )
+			if( ! as[i].isNull() )
+				outClips.insertClipFromAudio( as[i], -1, String( "Output " ) + String( i + 1 ) + String( " of: " ) + threadName );
 		};
 
 	AudioVec inAudio;
@@ -154,6 +193,28 @@ void MainComponent::procButtonClicked()
 		inAudio.emplace_back( dynamic_pointer_cast<FalterClip>( inClips.getItem( i ) )->getAudio() );
 		
 	threads.addThread( scriptLabel.getText(), retrieveFiles, inAudio );
+	}
+
+void MainComponent::recordButtonClicked()
+	{
+	if( recorder->isRecording() )
+		{
+		std::unique_ptr<flan::Audio> recording = recorder->stopRecording();
+		inClips.insertClipFromAudio( *recording.release(), -1, String( "Recording " ) + String( recorder->getNumRecords() ) );
+		recordButton.setButtonText( "l" );
+		}
+	else
+		{
+		recorder->startRecording();
+		recordButton.setButtonText( "n" );
+		}
+	}
+
+void MainComponent::settingsButtonClicked()
+	{
+	settingsMode = ! settingsMode;
+	mainContainer.setVisible( ! settingsMode );
+	settingsContainer.setVisible( settingsMode );
 	}
 
 void MainComponent::scriptSelectButtonClicked()
@@ -166,7 +227,7 @@ void MainComponent::scriptSelectButtonClicked()
 		Settings::setScriptFile( result );
 		scriptLabel.setText( result.getFullPathName(), NotificationType::dontSendNotification );
 
-		// Start watching new script
+		// Start watching new script for changes
 		addWatchProtected();
 		}
 	}
@@ -212,9 +273,9 @@ void MainComponent::browserRootChanged( const File & dir )
 	settings->setFileLoadDir( dir );
 	}
 
-void MainComponent::handleFileAction( FW::WatchID otherWatchID, const FW::String & dir, const FW::String & filename, FW::Action action )
+void MainComponent::handleFileAction( FW::WatchID otherWatchID, const FW::String &, const FW::String & filename, FW::Action action )
 	{
-	if( otherWatchID == watchID )
+	if( otherWatchID == watchID && filename == File( scriptLabel.getText() ).getFileName().toStdString() )
 		{
 		if( action == FW::Action::Modified && ! recentlyAutoProcessed )
 			{

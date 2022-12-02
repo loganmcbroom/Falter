@@ -90,15 +90,13 @@ void FalterClip::paintButton(Graphics &g, bool isMouseOverButton, bool )
 		{
 		// Draw audio thumbnail
 		g.setColour( isMouseOverButton? lnf.accent1.withAlpha( .3f ) : lnf.accent1 );
-		juce::Rectangle<int> rect( getLocalBounds().withLeft( getHeight() / 2 ) );
-		thumbnail.drawChannels( g, rect.reduced( 2 ), 0, thumbnail.getTotalLength(), 1.0f );
+		juce::Rectangle<int> boundsWithoutExitButtonRect( getLocalBounds().withLeft( getHeight() / 2 ) );
+		thumbnail.drawChannels( g, boundsWithoutExitButtonRect.reduced( 2 ), 0, thumbnail.getTotalLength(), 1.0f );
 
 		if( isMouseOverButton )
 			{
 			g.setFont( lnf.fontMonospace );
-
 			g.setColour( lnf.light );
-			const auto rect = juce::Rectangle<int>( int( getHeight() / 2.0f ), 0, int( getWidth() ), getHeight() ).reduced( 3 );
 
 			// Write audio length
 			auto r2dec = []( float x ){ return std::round( x * 1000 ) / 1000.0f; };
@@ -106,10 +104,10 @@ void FalterClip::paintButton(Graphics &g, bool isMouseOverButton, bool )
 			String lengthText = length > 60?
 				String( r2dec( length / 60.0f ) ) + " min" :
 				String( r2dec( length ) ) + " sec";
-			g.drawText( lengthText, rect, Justification::bottomLeft );
+			g.drawText( lengthText, boundsWithoutExitButtonRect.reduced( 3 ), Justification::bottomLeft );
 
 			// write audio name
-			g.drawText( getName(), rect, Justification::topLeft );
+			g.drawText( getName(), boundsWithoutExitButtonRect.reduced( 3 ), Justification::topLeft );
 			}
 		}
 	}
@@ -182,8 +180,8 @@ void FalterClip::timerCallback()
 
 	// The weird computation handles some buttons being stuck on top of the component
 	const float s = getHeight() / 2.0f;
-	const float e = getWidth();
-	const float r = source.getCurrentPosition() / audio.getLength();
+	const float e = static_cast<float>( getWidth() );
+	const float r = static_cast<float>( source.getCurrentPosition() ) / static_cast<float>( audio.getLength() );
 	const float initialX = s + ( e - s ) * r;
 	
 	// Draw white line to show current playback position
@@ -192,4 +190,4 @@ void FalterClip::timerCallback()
 		0.0f, 
 		getToggleState() ? 2.0f : 0.0f, 
 		float( getHeight() ) ) );
-	}
+	} 

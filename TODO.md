@@ -10,10 +10,10 @@ Off topic:
     do flan Func types actually need forwarding ctors?
     CHOC loads the same files as libsndfile without the dependancy
     cancellers in audio/pvoc loading
+    juce browser reset bug: https://forum.juce.com/t/filebrowsercomponent-timercallback-resetting-browser/53902
+    denormals?: https://www.carlh.net/plugins/denormals.php
 
 todo:
-    fix warnings
-    a way to record in new audio
         
 task:
 

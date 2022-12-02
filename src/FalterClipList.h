@@ -5,7 +5,7 @@
 #include "FalterClip.h"
 
 class FalterPlayer;
-class AudioLoadThread;
+struct AudioLoadThread;
 
 class FalterClipList : public FalterList
 					 , public DragAndDropTarget

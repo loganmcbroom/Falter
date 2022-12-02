@@ -22,7 +22,7 @@ using namespace flan;
 static flan::Func2x2 Func2x2Ident = []( vec2 z ){ return z; };
 static flan::Func2x1 Func2x1_t = []( vec2 z ){ return z.x(); };
 static flan::Func2x1 Func2x1_f = []( vec2 z ){ return z.y(); };
-static flan::Func2x1 Func2x1_Arith_Ident = []( float t, float i ){ return i == 1; };
+static flan::Func2x1 Func2x1_Arith_Ident = []( float, float i ){ return i == 1; };
 
 // Methods ======================================================================================================================
 

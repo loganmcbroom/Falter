@@ -29,7 +29,11 @@ AudioMod luaF_checkAudioMod( lua_State * L, int i )
             return out;
             };
         }
-    else luaL_error( L, "Non-function used in place of AudioMod" );
+    else 
+        {
+        luaL_error( L, "Non-function used in place of AudioMod" );
+        return AudioMod();
+        }
     }
 
 PrismFunc luaF_checkPrismFunc( lua_State * L, int i )
@@ -40,7 +44,6 @@ PrismFunc luaF_checkPrismFunc( lua_State * L, int i )
         const int ref = luaL_ref( L, LUA_REGISTRYINDEX );
         return [L, ref]( int note, flan::Time t, int harmonic, flan::Frequency contourFreq, const std::vector<flan::Magnitude> & harmonicMagnitudes ) -> flan::MF
             {
-            int x = lua_gettop( L );
             lua_rawgeti( L, LUA_REGISTRYINDEX, ref );
             luaF_push( L, note );
             luaF_push( L, t );
@@ -53,7 +56,11 @@ PrismFunc luaF_checkPrismFunc( lua_State * L, int i )
             return out;
             };
         }
-    else luaL_error( L, "Non-function used in place of Prismfunc" );
+    else 
+        {
+        luaL_error( L, "Non-function used in place of Prismfunc" );
+        return PrismFunc();
+        }
     }
 
 // static int luaF_AudioMod_call( lua_State * L )

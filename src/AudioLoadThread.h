@@ -2,7 +2,7 @@
 
 #include <JuceHeader.h>
 
-namespace flan { class Audio; }
+#include "Types.h"
 
 //using AudioLoadThreadCallback = std::function<void ( const flan::Audio & )>;
 

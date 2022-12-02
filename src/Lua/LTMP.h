@@ -41,38 +41,6 @@ template<typename T> void luaF_LTMP_push( lua_State* L, const std::vector<T> & o
         luaF_pushArrayOfType( L, os );
     }
 
-
-// getMaxSize - Calls size() on each input and returns the largest result
-// template<typename T>
-// static int getMaxSize( const T & t )
-//     {
-//     return t.size();
-//     }
-// template<typename T, typename ... Rest>
-// static int getMaxSize( const T & t, const Rest & ... rest )
-//     {
-//     return std::max( (size_t) t.size(), (size_t) getMaxSize( rest... ) );
-//     }
-
-
-// getMinSize - Calls size() on each input and returns the smallest result
-// template<typename T>
-// static int getMinSize( const T & t )
-//     {
-//     return t.size();
-//     }
-// template<typename T, typename ... Rest>
-// static int getMinSize( const T & t, const Rest & ... rest )
-//     {
-//     return std::min( (size_t) t.size(), (size_t) getMinSize( rest... ) );
-//     }
-
-
-
-
-
-// LTMP ===============================================================================================================================
-
 template<typename Functor, size_t numArgs, size_t I = 0> 
 constexpr auto luaF_wrapFunctor_checkArgs( lua_State * L ) 
     {
@@ -173,7 +141,7 @@ static int luaF_LTMP_dispatched( lua_State* L )
 template<typename AlgoFunctor, size_t numNonDefaults, size_t I = liph::function_argument_count<AlgoFunctor> - 1> // -1 for canceller
 static int luaF_LTMP( lua_State* L )
     {
-    const size_t i = lua_gettop( L );
+    const size_t i = static_cast<size_t>( lua_gettop( L ) );
 
     if constexpr( I > numNonDefaults )
         {

@@ -34,6 +34,8 @@ target_sources( Falter
         src/Settings.cpp
         src/DragAndDropTypes.cpp
         src/AudioLoadThread.cpp
+        src/AudioRecorder.cpp
+        src/FalterAudioDeviceSelector.cpp
 
         src/Lua/Utility.cpp
         src/Lua/Usertypes.h

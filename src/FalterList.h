@@ -4,7 +4,7 @@
 
 class FalterButton;
 
-class FalterList  : public Component
+class FalterList : public Component
 				 , public ScrollBar::Listener
 				 , public Button::Listener
 	{
@@ -29,8 +29,6 @@ public:
 
 protected:
 	void buttonClicked( Button * b ) override;
-
-private:
 	void paint( Graphics & ) override;
 	void resized() override;
 	void positionItems( bool scrollVisible );

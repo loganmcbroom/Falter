@@ -238,7 +238,7 @@ public:
     {
         if (auto* parent = findParentComponentOfClass<AudioDeviceSelectorComponent>())
         {
-            Rectangle<int> r (proportionOfWidth (0.35f), 0, proportionOfWidth (0.6f), 3000);
+            Rectangle<int> r (200, 0, getWidth() - 200 - 15, 3000);
 
             const int maxListBoxHeight = 100;
             const int h = parent->getItemHeight();
@@ -250,12 +250,13 @@ public:
 
                 if (testButton != nullptr)
                 {
-                    testButton->changeWidthToFitText (h);
-                    testButton->setBounds (row.removeFromRight (testButton->getWidth()));
+                    //testButton->changeWidthToFitText (h);
+                    testButton->setBounds (row.removeFromRight(100));
                     row.removeFromRight (space);
                 }
 
                 outputDeviceDropDown->setBounds (row);
+                outputDeviceLabel->setBounds( row.withX( 10 ).withWidth( r.getX() - 10 ) );
                 r.removeFromTop (space);
             }
 
@@ -266,6 +267,7 @@ public:
                 inputLevelMeter->setBounds (row.removeFromRight (testButton != nullptr ? testButton->getWidth() : row.getWidth() / 6));
                 row.removeFromRight (space);
                 inputDeviceDropDown->setBounds (row);
+                inputDeviceLabel->setBounds( row.withX( 10 ).withWidth( r.getX() - 10 ) );
                 r.removeFromTop (space);
             }
 
@@ -273,7 +275,9 @@ public:
             {
                 outputChanList->setRowHeight (jmin (22, h));
                 outputChanList->setBounds (r.removeFromTop (outputChanList->getBestHeight (maxListBoxHeight)));
-                outputChanLabel->setBounds (0, outputChanList->getBounds().getCentreY() - h / 2, r.getX(), h);
+                outputChanLabel->setJustificationType ( Justification::centredRight  );
+                outputChanLabel->setBounds ( 10, outputChanList->getBounds().getCentreY() - h / 2, r.getX() - 10, h);
+
                 r.removeFromTop (space);
             }
 
@@ -281,11 +285,9 @@ public:
             {
                 inputChanList->setRowHeight (jmin (22, h));
                 inputChanList->setBounds (r.removeFromTop (inputChanList->getBestHeight (maxListBoxHeight)));
-                inputChanLabel->setBounds (0, inputChanList->getBounds().getCentreY() - h / 2, r.getX(), h);
+                //inputChanLabel->setBounds (0, inputChanList->getBounds().getCentreY() - h / 2, r.getX(), h);
                 r.removeFromTop (space);
             }
-
-            r.removeFromTop (space * 2);
 
             if (showAdvancedSettingsButton != nullptr
                 && sampleRateDropDown != nullptr && bufferSizeDropDown != nullptr)
@@ -305,6 +307,7 @@ public:
                 if (advancedSettingsVisible)
                 {
                     sampleRateDropDown->setBounds (r.removeFromTop (h));
+                    sampleRateLabel->setBounds( 10, sampleRateDropDown->getY(), r.getX() - 10, sampleRateDropDown->getHeight() );
                     r.removeFromTop (space);
                 }
             }
@@ -316,6 +319,7 @@ public:
                 if (advancedSettingsVisible)
                 {
                     bufferSizeDropDown->setBounds (r.removeFromTop (h));
+                    bufferSizeLabel->setBounds( 10, bufferSizeDropDown->getY(), r.getX() - 10, bufferSizeDropDown->getHeight() );
                     r.removeFromTop (space);
                 }
             }
@@ -462,8 +466,8 @@ public:
                                                                       TRANS ("(no audio output channels found)")));
                     addAndMakeVisible (outputChanList.get());
                     outputChanLabel.reset (new Label ({}, TRANS("Active output channels:")));
-                    outputChanLabel->setJustificationType (Justification::centredRight);
-                    outputChanLabel->attachToComponent (outputChanList.get(), true);
+                    addAndMakeVisible( *outputChanLabel );
+                    outputChanLabel->setJustificationType ( Justification::centredRight  );
                 }
 
                 outputChanList->refresh();
@@ -484,7 +488,7 @@ public:
                     addAndMakeVisible (inputChanList.get());
                     inputChanLabel.reset (new Label ({}, TRANS("Active input channels:")));
                     inputChanLabel->setJustificationType (Justification::centredRight);
-                    inputChanLabel->attachToComponent (inputChanList.get(), true);
+                    addAndMakeVisible( *inputChanLabel );
                 }
 
                 inputChanList->refresh();
@@ -633,7 +637,8 @@ private:
 
                 outputDeviceLabel.reset (new Label ({}, type.hasSeparateInputsAndOutputs() ? TRANS("Output:")
                                                                                            : TRANS("Device:")));
-                outputDeviceLabel->attachToComponent (outputDeviceDropDown.get(), true);
+                addAndMakeVisible( *outputDeviceLabel );
+                outputDeviceLabel->setJustificationType (Justification::centredRight);
 
                 if (setup.maxNumOutputChannels > 0)
                 {
@@ -660,7 +665,7 @@ private:
                 addAndMakeVisible (inputDeviceDropDown.get());
 
                 inputDeviceLabel.reset (new Label ({}, TRANS("Input:")));
-                inputDeviceLabel->attachToComponent (inputDeviceDropDown.get(), true);
+                addAndMakeVisible( *inputDeviceLabel );
 
                 inputLevelMeter.reset (new SimpleDeviceManagerInputLevelMeter (*setup.manager));
                 addAndMakeVisible (inputLevelMeter.get());
@@ -680,7 +685,8 @@ private:
             addAndMakeVisible (sampleRateDropDown.get());
 
             sampleRateLabel.reset (new Label ({}, TRANS("Sample rate:")));
-            sampleRateLabel->attachToComponent (sampleRateDropDown.get(), true);
+            addAndMakeVisible( *sampleRateLabel );
+            sampleRateLabel->setJustificationType (Justification::centredRight);
         }
         else
         {
@@ -710,7 +716,7 @@ private:
             addAndMakeVisible (bufferSizeDropDown.get());
 
             bufferSizeLabel.reset (new Label ({}, TRANS("Audio buffer size:")));
-            bufferSizeLabel->attachToComponent (bufferSizeDropDown.get(), true);
+            addAndMakeVisible( *bufferSizeLabel );
         }
         else
         {
@@ -1007,7 +1013,7 @@ AudioDeviceSelectorComponent::AudioDeviceSelectorComponent (AudioDeviceManager& 
 
         deviceTypeDropDownLabel.reset (new Label ({}, TRANS("Audio device type:")));
         deviceTypeDropDownLabel->setJustificationType (Justification::centredRight);
-        deviceTypeDropDownLabel->attachToComponent (deviceTypeDropDown.get(), true);
+        addAndMakeVisible( *deviceTypeDropDownLabel );
     }
 
     if (showMidiInputOptions)
@@ -1066,13 +1072,14 @@ void AudioDeviceSelectorComponent::setItemHeight (int newItemHeight)
 
 void AudioDeviceSelectorComponent::resized()
 {
-    Rectangle<int> r (proportionOfWidth (0.35f), 15, proportionOfWidth (0.6f), 3000);
+    Rectangle<int> r (200, 15, getWidth() - 200 - 15, 3000);
     auto space = itemHeight / 4;
 
     if (deviceTypeDropDown != nullptr)
     {
         deviceTypeDropDown->setBounds (r.removeFromTop (itemHeight));
-        r.removeFromTop (space * 3);
+        deviceTypeDropDownLabel->setBounds( 10, deviceTypeDropDown->getY(), r.getX() - 10, deviceTypeDropDown->getHeight() );
+        r.removeFromTop (space);
     }
 
     if (audioDeviceSettingsComp != nullptr)

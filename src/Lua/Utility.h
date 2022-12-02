@@ -26,7 +26,7 @@ template<typename T> void luaF_push( lua_State * L, T );
 template<typename T> concept is_vector = std::same_as<T, std::vector<typename T::value_type>>;
 template<is_vector T> bool luaF_is( lua_State * L, int i ) { return luaF_isArrayOfType<typename T::value_type>( L, i ); }
 template<is_vector T> T luaF_check( lua_State * L, int i ) { return luaF_checkArrayOfType<typename T::value_type>( L, i ); }
-template<is_vector T> void luaF_push( lua_State * L, T v ) { return luaF_pushArrayOfType<typename T::value_type>( L, v ); }
+template<is_vector T> void luaF_push( lua_State * L, T v ) { luaF_pushArrayOfType<typename T::value_type>( L, v ); }
 
 
 // Array passing ===============================================================================================================================
@@ -36,7 +36,7 @@ bool luaF_isArrayOfType( lua_State * L, int i )
     {
     if( ! lua_istable( L, i ) ) return false;
     if( lua_gettop( L ) == 0 ) return false;
-    const int N = lua_objlen( L, i );
+    const int N = static_cast<int>( lua_objlen( L, i ) );
     for( int j = 1; j <= N; ++j )
         {
         lua_rawgeti( L, i, j );
@@ -50,7 +50,7 @@ bool luaF_isArrayOfType( lua_State * L, int i )
 template<typename T>
 std::vector<T> luaF_checkArrayOfType( lua_State * L, int i )
     {
-    const int N = lua_objlen( L, i );
+    const int N = static_cast<int>( lua_objlen( L, i ) );
     std::vector<T> outputs;
     outputs.reserve( N );
     for( int n = 1; n <= N; ++n )
@@ -65,9 +65,9 @@ std::vector<T> luaF_checkArrayOfType( lua_State * L, int i )
 template<typename T>
 void luaF_pushArrayOfType( lua_State * L, const std::vector<T> & Ts )
     {
-    lua_createtable( L, Ts.size(), 0 );
+    lua_createtable( L, static_cast<int>( Ts.size() ), 0 );
 
-    for( int i = 0; i < Ts.size(); ++i )
+    for( int i = 0; i < static_cast<int>( Ts.size() ); ++i )
         {
         luaF_push( L, Ts[i] );
         lua_rawseti( L, -2, i + 1 );
