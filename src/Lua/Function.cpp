@@ -31,7 +31,7 @@ template<> bool luaF_isFunc<pFunc2x2>( lua_State * L, int i )
     return luaF_is<vec2>( L, i ) || lua_isfunction( L, i ) || luaF_isUsertype<pFunc2x2>( L, i );
     }
 
-// This gets a number, lua function, or already defined flan Func type and returns a flan Func
+// This gets a number, lua function, or already defined flan Func type and returns a flan Function
 template<typename T>
 T luaF_checkFunc_base( lua_State * L, int i )
     {
@@ -47,21 +47,36 @@ T luaF_checkFunc_base( lua_State * L, int i )
         const int ref = luaL_ref( L, LUA_REGISTRYINDEX );
         return std::make_shared<F>( [L, ref]( I in ) -> O
             {
+            int num_args;
+
             lua_rawgeti( L, LUA_REGISTRYINDEX, ref );
             if constexpr( std::is_same_v<I, flan::vec2> == true )
                 {
                 luaF_push( L, in.x() );
                 luaF_push( L, in.y() );
-                lua_call( L, 2, 1 );
+                num_args = 2;
                 }
             else
                 {
                 luaF_push( L, in );
-                lua_call( L, 1, 1 );
+                num_args = 1;
                 }
-            const auto out = luaF_check<O>( L, -1 );
-            lua_pop( L, 1 );
-            return out;
+
+            if constexpr( std::is_same_v<O, flan::vec2> == true )
+                {
+                lua_call( L, num_args, 2 );
+                const vec2 out = { luaF_check<float>( L, -2 ), luaF_check<float>( L, -1 ) };
+                lua_settop( L, 0 );
+                return out;
+                }
+            else
+                {
+                lua_call( L, num_args, 1 );
+                const auto out = luaF_check<O>( L, -1 );
+                lua_settop( L, 0 );
+                return out;
+                }
+            
             }, flan::ExecutionPolicy::Linear_Sequenced );
         }
     else if( luaF_isUsertype<T>( L, i ) )

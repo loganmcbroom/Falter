@@ -403,10 +403,10 @@ struct F_Audio_compress { pAudio operator()( pAudio a,
 // Spatial
 //============================================================================================================================================================
 
-struct F_Audio_stereo_spatialize_variadic { pAudio operator()( pAudio a,
+struct F_Audio_stereo_spatialize_variable { pAudio operator()( pAudio a,
     pFunc1x2 position )
     { std::cout << "flan::Audio::stereo_spatialize";
-    return std::make_shared<flan::Audio>( a->stereo_spatialize( *position ) ); } };
+    return std::make_shared<flan::Audio>( a->stereo_spatialize_variable( *position ) ); } };
 
 struct F_Audio_stereo_spatialize { pAudio operator()( pAudio a,
     vec2 position )
@@ -774,7 +774,7 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_compress,                              2>( L, "compress"                               );
 
             // Spatial
-            luaF_register_helper<F_Audio_stereo_spatialize_variadic,            2>( L, "stereo_spatialize_variadic"             );                               
+            luaF_register_helper<F_Audio_stereo_spatialize_variable,            2>( L, "stereo_spatialize_variable"             );                               
             luaF_register_helper<F_Audio_stereo_spatialize,                     2>( L, "stereo_spatialize"                      );                               
             luaF_register_helper<F_Audio_pan,                                   2>( L, "pan"                                    );
             //luaF_register_helper<F_Audio_pan_in_place,                          2>( L, "pan_in_place"                           );  
