@@ -56,7 +56,7 @@ target_sources( Falter
 		src/simplefilewatcher/FileWatcherWin32.cpp
         )
 
-target_compile_features( Falter PRIVATE cxx_std_20 )
+target_compile_features( Falter PRIVATE cxx_std_23 )
 set_target_properties( Falter PROPERTIES CXX_EXTENSIONS OFF )
 target_include_directories( Falter PRIVATE src )
 
