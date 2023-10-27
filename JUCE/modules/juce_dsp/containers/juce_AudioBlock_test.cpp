@@ -104,7 +104,7 @@ public:
         {
             resetBlocks();
 
-            expectEquals ((int) block.getNumChannels(), (int) data.size());
+            expectEquals ((int) block.get_num_channels(), (int) data.size());
             expectEquals ((int) block.getNumSamples(), numSamples);
 
             expect (block.getChannelPointer (0)[2] == SampleType (3.0));
@@ -359,10 +359,10 @@ private:
     SIMDVoid<T> copyingTests()
     {
         auto numSIMDElements = SIMDRegister<NumericType>::SIMDNumElements;
-        AudioBuffer<NumericType> numericData ((int) block.getNumChannels(),
+        AudioBuffer<NumericType> numericData ((int) block.get_num_channels(),
                                               (int) (block.getNumSamples() * numSIMDElements));
 
-        for (int c = 0; c < numericData.getNumChannels(); ++c)
+        for (int c = 0; c < numericData.get_num_channels(); ++c)
             std::fill_n (numericData.getWritePointer (c), numericData.getNumSamples(), (NumericType) 1.0);
 
         numericData.applyGainRamp (0, numericData.getNumSamples(), (NumericType) 0.127, (NumericType) 17.3);
@@ -436,7 +436,7 @@ private:
     {
         auto value = SampleType (1.0);
 
-        for (size_t c = 0; c < block.getNumChannels(); ++c)
+        for (size_t c = 0; c < block.get_num_channels(); ++c)
         {
             for (size_t i = 0; i < block.getNumSamples(); ++i)
             {
@@ -486,8 +486,8 @@ private:
     }
 
     //==============================================================================
-    static constexpr int numChannels = 2, numSamples = 6;
-    std::array<SampleType*, numChannels> data, otherData;
+    static constexpr int num_channels = 2, numSamples = 6;
+    std::array<SampleType*, num_channels> data, otherData;
     AudioBlock<SampleType> block, otherBlock;
 };
 

@@ -138,11 +138,11 @@ public:
             addMetadataItem (comment, "TRACKNUMBER", OggVorbisAudioFormat::id3trackNumber);
 
             lengthInSamples = (uint32) ov_pcm_total (&ovFile, -1);
-            numChannels = (unsigned int) info->channels;
+            num_channels = (unsigned int) info->channels;
             bitsPerSample = 16;
             sampleRate = (double) info->rate;
 
-            reservoir.setSize ((int) numChannels, (int) jmin (lengthInSamples, (int64) 4096));
+            reservoir.setSize ((int) num_channels, (int) jmin (lengthInSamples, (int64) 4096));
         }
     }
 
@@ -168,7 +168,7 @@ public:
             const auto bufferIndices = rangeToRead - bufferedRange.getStart();
             const auto writePos = (int64) startOffsetInDestBuffer + (rangeToRead.getStart() - startSampleInFile);
 
-            for (int i = jmin (numDestChannels, reservoir.getNumChannels()); --i >= 0;)
+            for (int i = jmin (numDestChannels, reservoir.get_num_channels()); --i >= 0;)
                 if (destSamples[i] != nullptr)
                     memcpy (destSamples[i] + writePos,
                             reservoir.getReadPointer (i) + bufferIndices.getStart(),
@@ -197,7 +197,7 @@ public:
 
                 jassert (samps <= numToRead);
 
-                for (int i = jmin ((int) numChannels, reservoir.getNumChannels()); --i >= 0;)
+                for (int i = jmin ((int) num_channels, reservoir.get_num_channels()); --i >= 0;)
                     memcpy (reservoir.getWritePointer (i, offset), dataIn[i], (size_t) samps * sizeof (float));
 
                 numToRead -= samps;
@@ -343,7 +343,7 @@ public:
                 const double gain = 1.0 / 0x80000000u;
                 float** const vorbisBuffer = vorbis_analysis_buffer (&vd, numSamples);
 
-                for (int i = (int) numChannels; --i >= 0;)
+                for (int i = (int) num_channels; --i >= 0;)
                 {
                     if (auto* dst = vorbisBuffer[i])
                     {
@@ -452,7 +452,7 @@ AudioFormatReader* OggVorbisAudioFormat::createReaderFor (InputStream* in, bool 
 
 AudioFormatWriter* OggVorbisAudioFormat::createWriterFor (OutputStream* out,
                                                           double sampleRate,
-                                                          unsigned int numChannels,
+                                                          unsigned int num_channels,
                                                           int bitsPerSample,
                                                           const StringPairArray& metadataValues,
                                                           int qualityOptionIndex)
@@ -460,7 +460,7 @@ AudioFormatWriter* OggVorbisAudioFormat::createWriterFor (OutputStream* out,
     if (out == nullptr)
         return nullptr;
 
-    std::unique_ptr<OggWriter> w (new OggWriter (out, sampleRate, numChannels,
+    std::unique_ptr<OggWriter> w (new OggWriter (out, sampleRate, num_channels,
                                                  (unsigned int) bitsPerSample,
                                                  qualityOptionIndex, metadataValues));
 

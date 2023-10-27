@@ -45,8 +45,8 @@ void FalterFileBrowser::itemDropped( const SourceDetails & s )
 		{
 		auto item = dynamic_cast<FalterClip *>( s.sourceComponent.get() );
 		if( ! item ) return;
-		const flan::Audio & audio = item->getAudio();
-        if( audio.isNull() ) return;
+		const std::shared_ptr<flan::Audio> audio = item->getAudio();
+        if( audio->is_null() ) return;
 
         const String filepath = getRoot().getFullPathName() + "\\" + item->getName();
         Logger::writeToLog( "Saving by dropping to browser is currently disabled." );

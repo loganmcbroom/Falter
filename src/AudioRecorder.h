@@ -22,6 +22,6 @@ private:
 
 	int numRecords;
 	std::unique_ptr<std::vector<std::vector<float>>> outputBuffer;
-    int sampleRate;
-	int numChannels;
+    int sample_rate;
+	int num_channels;
 };

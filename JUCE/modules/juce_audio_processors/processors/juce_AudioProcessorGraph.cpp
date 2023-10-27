@@ -58,7 +58,7 @@ struct GraphRenderSequence
             {
                 auto chunkSize = jmin (maxSamples, numSamples - chunkStartSample);
 
-                AudioBuffer<FloatType> audioChunk (buffer.getArrayOfWritePointers(), buffer.getNumChannels(), chunkStartSample, chunkSize);
+                AudioBuffer<FloatType> audioChunk (buffer.getArrayOfWritePointers(), buffer.get_num_channels(), chunkStartSample, chunkSize);
                 midiChunk.clear();
                 midiChunk.addEvents (midiMessages, chunkStartSample, chunkSize, -chunkStartSample);
 
@@ -73,7 +73,7 @@ struct GraphRenderSequence
         }
 
         currentAudioInputBuffer = &buffer;
-        currentAudioOutputBuffer.setSize (jmax (1, buffer.getNumChannels()), numSamples);
+        currentAudioOutputBuffer.setSize (jmax (1, buffer.get_num_channels()), numSamples);
         currentAudioOutputBuffer.clear();
         currentMidiInputBuffer = &midiMessages;
         currentMidiOutputBuffer.clear();
@@ -85,7 +85,7 @@ struct GraphRenderSequence
                 op->perform (context);
         }
 
-        for (int i = 0; i < buffer.getNumChannels(); ++i)
+        for (int i = 0; i < buffer.get_num_channels(); ++i)
             buffer.copyFrom (i, 0, currentAudioOutputBuffer, i, 0, numSamples);
 
         midiMessages.clear();
@@ -1509,7 +1509,7 @@ static void processIOBlock (AudioProcessorGraph::AudioGraphIOProcessor& io, Sequ
         {
             auto&& currentAudioOutputBuffer = sequence.currentAudioOutputBuffer;
 
-            for (int i = jmin (currentAudioOutputBuffer.getNumChannels(), buffer.getNumChannels()); --i >= 0;)
+            for (int i = jmin (currentAudioOutputBuffer.get_num_channels(), buffer.get_num_channels()); --i >= 0;)
                 currentAudioOutputBuffer.addFrom (i, 0, buffer, i, 0, buffer.getNumSamples());
 
             break;
@@ -1519,7 +1519,7 @@ static void processIOBlock (AudioProcessorGraph::AudioGraphIOProcessor& io, Sequ
         {
             auto* currentInputBuffer = sequence.currentAudioInputBuffer;
 
-            for (int i = jmin (currentInputBuffer->getNumChannels(), buffer.getNumChannels()); --i >= 0;)
+            for (int i = jmin (currentInputBuffer->get_num_channels(), buffer.get_num_channels()); --i >= 0;)
                 buffer.copyFrom (i, 0, *currentInputBuffer, i, 0, buffer.getNumSamples());
 
             break;

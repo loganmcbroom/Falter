@@ -263,17 +263,17 @@ public:
             }
         }
 
-        auto numChannels = tag & 0xffff;
+        auto num_channels = tag & 0xffff;
         if (tag >= coreAudioHOASN3DLayoutTag && tag <= (coreAudioHOASN3DLayoutTag | 0xffff))
         {
-            auto sqrtMinusOne   = std::sqrt (static_cast<float> (numChannels)) - 1.0f;
+            auto sqrtMinusOne   = std::sqrt (static_cast<float> (num_channels)) - 1.0f;
             auto ambisonicOrder = jmax (0, static_cast<int> (std::floor (sqrtMinusOne)));
 
             if (static_cast<float> (ambisonicOrder) == sqrtMinusOne)
                 return AudioChannelSet::ambisonic (ambisonicOrder).getChannelTypes();
         }
 
-        for (UInt32 i = 0; i < numChannels; ++i)
+        for (UInt32 i = 0; i < num_channels; ++i)
             speakers.add (static_cast<AudioChannelSet::ChannelType> (AudioChannelSet::discreteChannel0 + i));
 
         return speakers;

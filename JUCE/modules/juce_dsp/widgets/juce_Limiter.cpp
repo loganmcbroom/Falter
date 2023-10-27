@@ -48,7 +48,7 @@ template <typename SampleType>
 void Limiter<SampleType>::prepare (const ProcessSpec& spec)
 {
     jassert (spec.sampleRate > 0);
-    jassert (spec.numChannels > 0);
+    jassert (spec.num_channels > 0);
 
     sampleRate = spec.sampleRate;
 

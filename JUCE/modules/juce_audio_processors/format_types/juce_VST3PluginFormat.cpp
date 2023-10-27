@@ -234,16 +234,16 @@ static int getNumSingleDirectionChannelsFor (Vst::IComponent* component, Directi
     const auto direction = toVstType (busDirection);
     const Steinberg::int32 numBuses = component->getBusCount (Vst::kAudio, direction);
 
-    int numChannels = 0;
+    int num_channels = 0;
 
     for (Steinberg::int32 i = numBuses; --i >= 0;)
     {
         Vst::BusInfo busInfo;
         warnOnFailure (component->getBusInfo (Vst::kAudio, direction, i, busInfo));
-        numChannels += ((busInfo.flags & Vst::BusInfo::kDefaultActive) != 0 ? (int) busInfo.channelCount : 0);
+        num_channels += ((busInfo.flags & Vst::BusInfo::kDefaultActive) != 0 ? (int) busInfo.channelCount : 0);
     }
 
-    return numChannels;
+    return num_channels;
 }
 
 static void setStateForAllEventBuses (Vst::IComponent* component,
@@ -2679,7 +2679,7 @@ public:
 
         updateTimingInformation (data, getSampleRate());
 
-        for (int i = getTotalNumInputChannels(); i < buffer.getNumChannels(); ++i)
+        for (int i = getTotalNumInputChannels(); i < buffer.get_num_channels(); ++i)
             buffer.clear (i, 0, numSamples);
 
         inputParameterChanges->clear();

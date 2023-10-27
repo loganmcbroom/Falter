@@ -48,7 +48,7 @@ public:
                                         to the renderer
         @param maximumSamplesPerBlock   The maximum number of samples that will be in the blocks
                                         sent to process() method
-        @param numChannels              The number of channels that the process() method will be
+        @param num_channels              The number of channels that the process() method will be
                                         expected to handle
         @param precision                This should be the same as the result of getProcessingPrecision()
                                         for the enclosing AudioProcessor
@@ -57,11 +57,11 @@ public:
     */
     virtual void prepareToPlay (double sampleRate,
                                 int maximumSamplesPerBlock,
-                                int numChannels,
+                                int num_channels,
                                 AudioProcessor::ProcessingPrecision precision,
                                 AlwaysNonRealtime alwaysNonRealtime = AlwaysNonRealtime::no)
     {
-        ignoreUnused (sampleRate, maximumSamplesPerBlock, numChannels, precision, alwaysNonRealtime);
+        ignoreUnused (sampleRate, maximumSamplesPerBlock, num_channels, precision, alwaysNonRealtime);
     }
 
     /** Frees render resources allocated in prepareToPlay(). */

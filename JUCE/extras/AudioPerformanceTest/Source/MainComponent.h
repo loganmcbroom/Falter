@@ -74,7 +74,7 @@ public:
         std::size_t bufferSize = (std::size_t) outputAudio.getNumSamples();
         initialiseBuffers (bufferToFill, bufferSize);
 
-        for (int ch = 0; ch < outputAudio.getNumChannels(); ++ch)
+        for (int ch = 0; ch < outputAudio.get_num_channels(); ++ch)
             crunchSomeNumbers (outputAudio.getWritePointer (ch), bufferSize, numLoopIterationsPerCallback);
 
         std::lock_guard<std::mutex> lock (metricMutex);

@@ -82,7 +82,7 @@ public:
 private:
     bool isLegacy = false;
     std::unique_ptr<MPEZoneLayout::Zone> zone;
-    int channelIncrement, numChannels, firstChannel, lastChannel, midiChannelLastAssigned;
+    int channelIncrement, num_channels, firstChannel, lastChannel, midiChannelLastAssigned;
 
     //==============================================================================
     struct MidiChannel

@@ -455,8 +455,8 @@ public:
 			// pass in a pointer to get the struct, and num channel infos
 			// you can pass in NULL to just get the number
 			// a return value of 0 (the default in AUBase) means the property is not supported...
-	/*! @method SupportedNumChannels */
-	virtual UInt32				SupportedNumChannels (	const AUChannelInfo**			outInfo);
+	/*! @method Supportednum_channels */
+	virtual UInt32				Supportednum_channels (	const AUChannelInfo**			outInfo);
 
 	/*! @method ValidFormat */
 	virtual bool				ValidFormat(			AudioUnitScope					inScope,
@@ -477,7 +477,7 @@ public:
 
 	/*! @method MakeCanonicalFormat */
 			void				MakeCanonicalFormat(	CAStreamBasicDescription &	outDesc,
-														int							numChannels = 2);
+														int							num_channels = 2);
 
 	/*! @method GetStreamFormat */
 	virtual const CAStreamBasicDescription &

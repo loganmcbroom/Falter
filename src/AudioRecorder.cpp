@@ -2,13 +2,13 @@
 
 #include <memory>
 
-#include <flan/Audio.h>
+#include <flan/Audio/Audio.h>
 
 AudioRecorder::AudioRecorder()
 	: numRecords( 1 )
 	, outputBuffer( nullptr )
-    , sampleRate( 0 )
-	, numChannels( 0 )
+    , sample_rate( 0 )
+	, num_channels( 0 )
 	{
 	}
 
@@ -25,13 +25,13 @@ bool AudioRecorder::isRecording() const
 void AudioRecorder::startRecording()
 	{
 	if( isRecording() ) return Logger::writeToLog( "Error: recorder was already recording." );	
-	if( numChannels == 0 ) return Logger::writeToLog( "Error: bad number of channels in audio recorder." );	
-    if( sampleRate == 0 ) return Logger::writeToLog( "Error: bad sample rate in audio recorder." );	
+	if( num_channels == 0 ) return Logger::writeToLog( "Error: bad number of channels in audio recorder." );	
+    if( sample_rate == 0 ) return Logger::writeToLog( "Error: bad sample rate in audio recorder." );	
 
 	++numRecords;
 
 	outputBuffer = std::make_unique<std::vector<std::vector<float>>>();
-	outputBuffer->resize( numChannels );
+	outputBuffer->resize( num_channels );
 	}
 
 std::unique_ptr<flan::Audio> AudioRecorder::stopRecording()
@@ -39,16 +39,16 @@ std::unique_ptr<flan::Audio> AudioRecorder::stopRecording()
 	if( ! isRecording() ) return std::unique_ptr<flan::Audio>( nullptr );
 
 	flan::Audio::Format format;
-	format.numChannels = numChannels;
-	format.numFrames = (*outputBuffer)[0].size();
-	format.sampleRate = sampleRate;
+	format.num_channels = num_channels;
+	format.num_frames = (*outputBuffer)[0].size();
+	format.sample_rate = sample_rate;
 	auto out = std::make_unique<flan::Audio>( format );
 
 	// The buffer being recorded to had an unknown size as recoding happened, so a copy is required here
 	for( int i = 0; i < outputBuffer->size(); ++i )
 		{
 		const std::vector<float> & channel = (*outputBuffer)[i];
-		std::copy( channel.begin(), channel.end(), out->begin() + i * format.numFrames );
+		std::copy( channel.begin(), channel.end(), out->get_buffer().begin() + i * format.num_frames );
 		}
 
 	outputBuffer.reset( nullptr );
@@ -63,14 +63,14 @@ int AudioRecorder::getNumRecords() const
 
 void AudioRecorder::audioDeviceAboutToStart( AudioIODevice * device ) 
 	{
-	numChannels = static_cast<int>( device->getActiveInputChannels().toInt64() );
-	sampleRate = device->getCurrentSampleRate();
+	num_channels = static_cast<int>( device->getActiveInputChannels().toInt64() );
+	sample_rate = device->getCurrentSampleRate();
 	}
 
 void AudioRecorder::audioDeviceStopped() 
 	{
-	numChannels = 0;
-	sampleRate = 0;
+	num_channels = 0;
+	sample_rate = 0;
 	}
 
 void AudioRecorder::audioDeviceIOCallback( const float ** inputChannelData, int numInputChannels, float ** outputChannelData, int numOutputChannels, int numNewFrames ) 
@@ -82,9 +82,9 @@ void AudioRecorder::audioDeviceIOCallback( const float ** inputChannelData, int 
 			{
 			const float * inChannel = inputChannelData[i];
 			std::vector<float> & outChannel = (*outputBuffer)[i];
-			int currentNumFrames = outChannel.size();
-			outChannel.resize( currentNumFrames + numNewFrames );
-			std::copy( inChannel, inChannel + numNewFrames, outChannel.begin() + currentNumFrames );
+			int currentnum_frames = outChannel.size();
+			outChannel.resize( currentnum_frames + numNewFrames );
+			std::copy( inChannel, inChannel + numNewFrames, outChannel.begin() + currentnum_frames );
 			}
 		}
 

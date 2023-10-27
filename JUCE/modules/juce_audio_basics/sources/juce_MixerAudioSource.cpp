@@ -135,7 +135,7 @@ void MixerAudioSource::getNextAudioBlock (const AudioSourceChannelInfo& info)
 
         if (inputs.size() > 1)
         {
-            tempBuffer.setSize (jmax (1, info.buffer->getNumChannels()),
+            tempBuffer.setSize (jmax (1, info.buffer->get_num_channels()),
                                 info.buffer->getNumSamples());
 
             AudioSourceChannelInfo info2 (&tempBuffer, 0, info.numSamples);
@@ -144,7 +144,7 @@ void MixerAudioSource::getNextAudioBlock (const AudioSourceChannelInfo& info)
             {
                 inputs.getUnchecked(i)->getNextAudioBlock (info2);
 
-                for (int chan = 0; chan < info.buffer->getNumChannels(); ++chan)
+                for (int chan = 0; chan < info.buffer->get_num_channels(); ++chan)
                     info.buffer->addFrom (chan, info.startSample, tempBuffer, chan, 0, info.numSamples);
             }
         }

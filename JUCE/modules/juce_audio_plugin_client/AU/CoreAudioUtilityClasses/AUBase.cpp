@@ -433,10 +433,10 @@ OSStatus			AUBase::DispatchGetPropertyInfo(AudioUnitPropertyID				inID,
 		outWritable = false;
 		break;
 
-	case kAudioUnitProperty_SupportedNumChannels:
+	case kAudioUnitProperty_Supportednum_channels:
 	{
 		ca_require(inScope == kAudioUnitScope_Global, InvalidScope);
-		UInt32 num = SupportedNumChannels (NULL);
+		UInt32 num = Supportednum_channels (NULL);
 		if (num) {
 			outDataSize = sizeof (AUChannelInfo) * num;
 			result = noErr;
@@ -677,10 +677,10 @@ OSStatus			AUBase::DispatchGetProperty(	AudioUnitPropertyID 			inID,
 		mLastRenderError = 0;
 		break;
 
-	case kAudioUnitProperty_SupportedNumChannels:
+	case kAudioUnitProperty_Supportednum_channels:
 		{
 			const AUChannelInfo* infoPtr = NULL;
-			UInt32 num = SupportedNumChannels (&infoPtr);
+			UInt32 num = Supportednum_channels (&infoPtr);
 			if(num != 0 && infoPtr != NULL)
 				memcpy (outData, infoPtr, num * sizeof (AUChannelInfo));
 		}
@@ -1802,7 +1802,7 @@ errexit:
 
 //_____________________________________________________________________________
 //
-UInt32				AUBase::SupportedNumChannels (	const AUChannelInfo** 			outInfo)
+UInt32				AUBase::Supportednum_channels (	const AUChannelInfo** 			outInfo)
 {
 	return 0;
 }
@@ -1937,8 +1937,8 @@ OSStatus 	AUBase::SetAudioChannelLayout(				AudioUnitScope 				inScope,
 
 	// the num channels of the layout HAS TO MATCH the current channels of the Element's stream format
 	UInt32 currentChannels = ioEl->GetStreamFormat().NumberChannels();
-	UInt32 numChannelsInLayout = CAAudioChannelLayout::NumberChannels(*inLayout);
-	if (currentChannels != numChannelsInLayout)
+	UInt32 num_channelsInLayout = CAAudioChannelLayout::NumberChannels(*inLayout);
+	if (currentChannels != num_channelsInLayout)
 		return kAudioUnitErr_InvalidPropertyValue;
 
 	UInt32 numLayouts = GetChannelLayoutTags (inScope, inElement, NULL);

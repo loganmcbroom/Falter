@@ -49,19 +49,19 @@ struct OboeAudioIODeviceBufferHelpers<int16>
 
     static void convertFromOboe (const int16* srcInterleaved, AudioBuffer<float>& audioBuffer, int numSamples)
     {
-        const auto numChannels = audioBuffer.getNumChannels();
+        const auto num_channels = audioBuffer.get_num_channels();
 
-        AudioData::deinterleaveSamples (AudioData::InterleavedSource<NativeInt16>    { reinterpret_cast<const uint16*> (srcInterleaved), numChannels },
-                                        AudioData::NonInterleavedDest<NativeFloat32> { audioBuffer.getArrayOfWritePointers(),            numChannels },
+        AudioData::deinterleaveSamples (AudioData::InterleavedSource<NativeInt16>    { reinterpret_cast<const uint16*> (srcInterleaved), num_channels },
+                                        AudioData::NonInterleavedDest<NativeFloat32> { audioBuffer.getArrayOfWritePointers(),            num_channels },
                                         numSamples);
     }
 
     static void convertToOboe (const AudioBuffer<float>& audioBuffer, int16* dstInterleaved, int numSamples)
     {
-        const auto numChannels = audioBuffer.getNumChannels();
+        const auto num_channels = audioBuffer.get_num_channels();
 
-        AudioData::interleaveSamples (AudioData::NonInterleavedSource<NativeFloat32> { audioBuffer.getArrayOfReadPointers(),       numChannels },
-                                      AudioData::InterleavedDest<NativeInt16>        { reinterpret_cast<uint16*> (dstInterleaved), numChannels },
+        AudioData::interleaveSamples (AudioData::NonInterleavedSource<NativeFloat32> { audioBuffer.getArrayOfReadPointers(),       num_channels },
+                                      AudioData::InterleavedDest<NativeInt16>        { reinterpret_cast<uint16*> (dstInterleaved), num_channels },
                                       numSamples);
     }
 };
@@ -75,7 +75,7 @@ struct OboeAudioIODeviceBufferHelpers<float>
 
     static bool referAudioBufferDirectlyToOboeIfPossible (float* nativeBuffer, AudioBuffer<float>& audioBuffer, int numSamples)
     {
-        if (audioBuffer.getNumChannels() == 1)
+        if (audioBuffer.get_num_channels() == 1)
         {
             audioBuffer.setDataToReferTo (&nativeBuffer, 1, numSamples);
             return true;
@@ -88,30 +88,30 @@ struct OboeAudioIODeviceBufferHelpers<float>
 
     static void convertFromOboe (const float* srcInterleaved, AudioBuffer<float>& audioBuffer, int numSamples)
     {
-        auto numChannels = audioBuffer.getNumChannels();
+        auto num_channels = audioBuffer.get_num_channels();
 
-        if (numChannels > 0)
+        if (num_channels > 0)
         {
             // No need to convert, we instructed the buffer to point to the src data directly already
             jassert (audioBuffer.getWritePointer (0) != srcInterleaved);
 
-            AudioData::deinterleaveSamples (AudioData::InterleavedSource<Format>  { srcInterleaved,                        numChannels },
-                                            AudioData::NonInterleavedDest<Format> { audioBuffer.getArrayOfWritePointers(), numChannels },
+            AudioData::deinterleaveSamples (AudioData::InterleavedSource<Format>  { srcInterleaved,                        num_channels },
+                                            AudioData::NonInterleavedDest<Format> { audioBuffer.getArrayOfWritePointers(), num_channels },
                                             numSamples);
         }
     }
 
     static void convertToOboe (const AudioBuffer<float>& audioBuffer, float* dstInterleaved, int numSamples)
     {
-        auto numChannels = audioBuffer.getNumChannels();
+        auto num_channels = audioBuffer.get_num_channels();
 
-        if (numChannels > 0)
+        if (num_channels > 0)
         {
             // No need to convert, we instructed the buffer to point to the src data directly already
             jassert (audioBuffer.getReadPointer (0) != dstInterleaved);
 
-            AudioData::interleaveSamples (AudioData::NonInterleavedSource<Format> { audioBuffer.getArrayOfReadPointers(), numChannels },
-                                          AudioData::InterleavedDest<Format>      { dstInterleaved,                       numChannels },
+            AudioData::interleaveSamples (AudioData::NonInterleavedSource<Format> { audioBuffer.getArrayOfReadPointers(), num_channels },
+                                          AudioData::InterleavedDest<Format>      { dstInterleaved,                       num_channels },
                                           numSamples);
         }
     }
@@ -319,16 +319,16 @@ private:
     StringArray getChannelNames (bool forInput)
     {
         auto& deviceId = forInput ? inputDeviceId : outputDeviceId;
-        auto& numChannels = forInput ? maxNumInputChannels : maxNumOutputChannels;
+        auto& num_channels = forInput ? maxNumInputChannels : maxNumOutputChannels;
 
         // If the device id is unknown (on olders APIs) or if the device claims to
         // support "any" channel count, use a sensible default
-        if (deviceId == -1 || numChannels == -1)
+        if (deviceId == -1 || num_channels == -1)
             return forInput ? StringArray ("Input") : StringArray ("Left", "Right");
 
         StringArray names;
 
-        for (int i = 0; i < numChannels; ++i)
+        for (int i = 0; i < num_channels; ++i)
             names.add ("Channel " + String (i + 1));
 
         return names;
@@ -693,15 +693,15 @@ private:
         }
 
         // Not strictly required as these should not change, but recommended by Google anyway
-        void checkStreamSetup (OboeStream* stream, int deviceId, int numChannels, int expectedSampleRate,
+        void checkStreamSetup (OboeStream* stream, int deviceId, int num_channels, int expectedSampleRate,
                                int expectedBufferSize, oboe::AudioFormat format)
         {
             if (auto* nativeStream = stream != nullptr ? stream->getNativeStream() : nullptr)
             {
-                ignoreUnused (deviceId, numChannels, sampleRate, expectedBufferSize);
+                ignoreUnused (deviceId, num_channels, sampleRate, expectedBufferSize);
                 ignoreUnused (streamFormat, bitDepth);
 
-                jassert (numChannels == 0 || numChannels == nativeStream->getChannelCount());
+                jassert (num_channels == 0 || num_channels == nativeStream->getChannelCount());
                 jassert (expectedSampleRate == 0 || expectedSampleRate == nativeStream->getSampleRate());
                 jassert (format == nativeStream->getFormat());
             }
@@ -1110,9 +1110,9 @@ public:
 
         return new OboeAudioIODevice (name,
                                       inputDeviceInfo.id, inputDeviceInfo.sampleRates,
-                                      inputDeviceInfo.numChannels,
+                                      inputDeviceInfo.num_channels,
                                       outputDeviceInfo.id, outputDeviceInfo.sampleRates,
-                                      outputDeviceInfo.numChannels);
+                                      outputDeviceInfo.num_channels);
     }
 
     static bool isOboeAvailable()
@@ -1174,7 +1174,7 @@ public:
             JUCE_OBOE_LOG ("name = " << device.name);
             JUCE_OBOE_LOG ("id = " << String (device.id));
             JUCE_OBOE_LOG ("sample rates size = " << String (device.sampleRates.size()));
-            JUCE_OBOE_LOG ("num channels = " + String (device.numChannels));
+            JUCE_OBOE_LOG ("num channels = " + String (device.num_channels));
         }
 
         JUCE_OBOE_LOG ("-----OutputDevices:");
@@ -1186,7 +1186,7 @@ public:
             JUCE_OBOE_LOG ("name = " << device.name);
             JUCE_OBOE_LOG ("id = " << String (device.id));
             JUCE_OBOE_LOG ("sample rates size = " << String (device.sampleRates.size()));
-            JUCE_OBOE_LOG ("num channels = " + String (device.numChannels));
+            JUCE_OBOE_LOG ("num channels = " + String (device.num_channels));
         }
     }
 
@@ -1222,12 +1222,12 @@ public:
 
         auto jChannelCounts = LocalRef<jintArray> ((jintArray) env->CallObjectMethod (device, getChannelCountsMethod));
         auto channelCounts = jintArrayToJuceArray (jChannelCounts);
-        int numChannels = channelCounts.isEmpty() ? -1 : channelCounts.getLast();
+        int num_channels = channelCounts.isEmpty() ? -1 : channelCounts.getLast();
 
         auto isInput  = env->CallBooleanMethod (device, isSourceMethod);
         auto& devices = isInput ? inputDevices : outputDevices;
 
-        devices.add ({ name, id, sampleRates, numChannels });
+        devices.add ({ name, id, sampleRates, num_channels });
     }
 
     static String deviceTypeToString (int type)
@@ -1285,7 +1285,7 @@ public:
         String name;
         int id = -1;
         Array<int> sampleRates;
-        int numChannels;
+        int num_channels;
     };
 
     DeviceInfo getDeviceInfoForName (const String& name, bool isInput)

@@ -30,7 +30,7 @@ MemoryAudioSource::MemoryAudioSource (AudioBuffer<float>& bufferToUse, bool copy
         buffer.makeCopyOf (bufferToUse);
     else
         buffer.setDataToReferTo (bufferToUse.getArrayOfWritePointers(),
-                                 bufferToUse.getNumChannels(),
+                                 bufferToUse.get_num_channels(),
                                  bufferToUse.getNumSamples());
 }
 
@@ -51,7 +51,7 @@ void MemoryAudioSource::getNextAudioBlock (const AudioSourceChannelInfo& bufferT
     }
 
     auto& dst = *bufferToFill.buffer;
-    auto channels = jmin (dst.getNumChannels(), buffer.getNumChannels());
+    auto channels = jmin (dst.get_num_channels(), buffer.get_num_channels());
     int max = 0, pos = 0;
     auto n = buffer.getNumSamples();
     auto m = bufferToFill.numSamples;
@@ -65,7 +65,7 @@ void MemoryAudioSource::getNextAudioBlock (const AudioSourceChannelInfo& bufferT
         for (; ch < channels; ++ch)
             dst.copyFrom (ch, bufferToFill.startSample + pos, buffer, ch, i % n, max);
 
-        for (; ch < dst.getNumChannels(); ++ch)
+        for (; ch < dst.get_num_channels(); ++ch)
             dst.clear (ch, bufferToFill.startSample + pos, max);
 
         pos += max;
@@ -110,10 +110,10 @@ void MemoryAudioSource::setLooping (bool shouldLoop)
 
 static bool operator== (const AudioBuffer<float>& a, const AudioBuffer<float>& b)
 {
-    if (a.getNumChannels() != b.getNumChannels())
+    if (a.get_num_channels() != b.get_num_channels())
         return false;
 
-    for (int channel = 0; channel < a.getNumChannels(); ++channel)
+    for (int channel = 0; channel < a.get_num_channels(); ++channel)
     {
         auto* aPtr = a.getReadPointer (channel);
         auto* bPtr = b.getReadPointer (channel);
@@ -165,7 +165,7 @@ struct MemoryAudioSourceTests  : public UnitTest
             play (source, channelInfo);
 
             auto copy = buffer;
-            copy.setSize (buffer.getNumChannels(), blockSize, true, true, false);
+            copy.setSize (buffer.get_num_channels(), blockSize, true, true, false);
 
             expect (bufferToFill == copy);
 
@@ -199,7 +199,7 @@ struct MemoryAudioSourceTests  : public UnitTest
             play (source, channelInfo);
 
             auto copy = buffer;
-            copy.setSize (buffer.getNumChannels(), blockSize, true, true, false);
+            copy.setSize (buffer.get_num_channels(), blockSize, true, true, false);
 
             expect (bufferToFill == copy);
 
@@ -228,7 +228,7 @@ struct MemoryAudioSourceTests  : public UnitTest
     {
         AudioBuffer<float> buffer { 2, length };
 
-        for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
+        for (int channel = 0; channel < buffer.get_num_channels(); ++channel)
             for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
                 buffer.setSample (channel, sample, jmap ((float) sample, 0.0f, (float) length, -1.0f, 1.0f));
 
@@ -246,7 +246,7 @@ struct MemoryAudioSourceTests  : public UnitTest
 
     static bool isSilent (const AudioBuffer<float>& b)
     {
-        for (int channel = 0; channel < b.getNumChannels(); ++channel)
+        for (int channel = 0; channel < b.get_num_channels(); ++channel)
             if (b.findMinMax (channel, 0, b.getNumSamples()) != Range<float>{})
                 return false;
 

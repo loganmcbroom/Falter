@@ -63,7 +63,7 @@ static void getDeviceSampleRates (snd_pcm_t* handle, Array<double>& rates)
     }
 }
 
-static void getDeviceNumChannels (snd_pcm_t* handle, unsigned int* minChans, unsigned int* maxChans)
+static void getDevicenum_channels (snd_pcm_t* handle, unsigned int* minChans, unsigned int* maxChans)
 {
     snd_pcm_hw_params_t *params;
     snd_pcm_hw_params_alloca (&params);
@@ -73,7 +73,7 @@ static void getDeviceNumChannels (snd_pcm_t* handle, unsigned int* minChans, uns
         snd_pcm_hw_params_get_channels_min (params, minChans);
         snd_pcm_hw_params_get_channels_max (params, maxChans);
 
-        JUCE_ALSA_LOG ("getDeviceNumChannels: " << (int) *minChans << " " << (int) *maxChans);
+        JUCE_ALSA_LOG ("getDevicenum_channels: " << (int) *minChans << " " << (int) *maxChans);
 
         // some virtual devices (dmix for example) report 10000 channels , we have to clamp these values
         *maxChans = jmin (*maxChans, 256u);
@@ -81,7 +81,7 @@ static void getDeviceNumChannels (snd_pcm_t* handle, unsigned int* minChans, uns
     }
     else
     {
-        JUCE_ALSA_LOG ("getDeviceNumChannels failed");
+        JUCE_ALSA_LOG ("getDevicenum_channels failed");
     }
 }
 
@@ -110,7 +110,7 @@ static void getDeviceProperties (const String& deviceID,
 
         if (JUCE_CHECKED_RESULT (snd_pcm_open (&pcmHandle, deviceID.toUTF8().getAddress(), SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK)) >= 0)
         {
-            getDeviceNumChannels (pcmHandle, &minChansOut, &maxChansOut);
+            getDevicenum_channels (pcmHandle, &minChansOut, &maxChansOut);
             getDeviceSampleRates (pcmHandle, rates);
 
             snd_pcm_close (pcmHandle);
@@ -123,7 +123,7 @@ static void getDeviceProperties (const String& deviceID,
 
         if (JUCE_CHECKED_RESULT (snd_pcm_open (&pcmHandle, deviceID.toUTF8(), SND_PCM_STREAM_CAPTURE, SND_PCM_NONBLOCK) >= 0))
         {
-            getDeviceNumChannels (pcmHandle, &minChansIn, &maxChansIn);
+            getDevicenum_channels (pcmHandle, &minChansIn, &maxChansIn);
 
             if (rates.size() == 0)
                 getDeviceSampleRates (pcmHandle, rates);
@@ -150,7 +150,7 @@ public:
     ALSADevice (const String& devID, bool forInput)
         : handle (nullptr),
           bitDepth (16),
-          numChannelsRunning (0),
+          num_channelsRunning (0),
           latency (0),
           deviceID (devID),
           isInput (forInput),
@@ -189,13 +189,13 @@ public:
         }
     }
 
-    bool setParameters (unsigned int sampleRate, int numChannels, int bufferSize)
+    bool setParameters (unsigned int sampleRate, int num_channels, int bufferSize)
     {
         if (handle == nullptr)
             return false;
 
         JUCE_ALSA_LOG ("ALSADevice::setParameters(" << deviceID << ", "
-                         << (int) sampleRate << ", " << numChannels << ", " << bufferSize << ")");
+                         << (int) sampleRate << ", " << num_channels << ", " << bufferSize << ")");
 
         snd_pcm_hw_params_t* hwParams;
         snd_pcm_hw_params_alloca (&hwParams);
@@ -242,7 +242,7 @@ public:
                                                   (type & isFloatBit) != 0,
                                                   (type & isLittleEndianBit) != 0,
                                                   (type & onlyUseLower24Bits) != 0,
-                                                  numChannels,
+                                                  num_channels,
                                                   isInterleaved));
                 break;
             }
@@ -260,7 +260,7 @@ public:
         snd_pcm_uframes_t samplesPerPeriod = (snd_pcm_uframes_t) bufferSize;
 
         if (JUCE_ALSA_FAILED (snd_pcm_hw_params_set_rate_near (handle, hwParams, &sampleRate, nullptr))
-            || JUCE_ALSA_FAILED (snd_pcm_hw_params_set_channels (handle, hwParams, (unsigned int ) numChannels))
+            || JUCE_ALSA_FAILED (snd_pcm_hw_params_set_channels (handle, hwParams, (unsigned int ) num_channels))
             || JUCE_ALSA_FAILED (snd_pcm_hw_params_set_periods_near (handle, hwParams, &periods, &dir))
             || JUCE_ALSA_FAILED (snd_pcm_hw_params_set_period_size_near (handle, hwParams, &samplesPerPeriod, &dir))
             || JUCE_ALSA_FAILED (snd_pcm_hw_params (handle, hwParams)))
@@ -302,7 +302,7 @@ public:
         snd_pcm_sw_params_dump (swParams, out);
        #endif
 
-        numChannelsRunning = numChannels;
+        num_channelsRunning = num_channels;
 
         return true;
     }
@@ -310,22 +310,22 @@ public:
     //==============================================================================
     bool writeToOutputDevice (AudioBuffer<float>& outputChannelBuffer, const int numSamples)
     {
-        jassert (numChannelsRunning <= outputChannelBuffer.getNumChannels());
+        jassert (num_channelsRunning <= outputChannelBuffer.get_num_channels());
         float* const* const data = outputChannelBuffer.getArrayOfWritePointers();
         snd_pcm_sframes_t numDone = 0;
 
         if (isInterleaved)
         {
-            scratch.ensureSize ((size_t) ((int) sizeof (float) * numSamples * numChannelsRunning), false);
+            scratch.ensureSize ((size_t) ((int) sizeof (float) * numSamples * num_channelsRunning), false);
 
-            for (int i = 0; i < numChannelsRunning; ++i)
+            for (int i = 0; i < num_channelsRunning; ++i)
                 converter->convertSamples (scratch.getData(), i, data[i], 0, numSamples);
 
             numDone = snd_pcm_writei (handle, scratch.getData(), (snd_pcm_uframes_t) numSamples);
         }
         else
         {
-            for (int i = 0; i < numChannelsRunning; ++i)
+            for (int i = 0; i < num_channelsRunning; ++i)
                 converter->convertSamples (data[i], data[i], numSamples);
 
             numDone = snd_pcm_writen (handle, (void**) data, (snd_pcm_uframes_t) numSamples);
@@ -348,12 +348,12 @@ public:
 
     bool readFromInputDevice (AudioBuffer<float>& inputChannelBuffer, const int numSamples)
     {
-        jassert (numChannelsRunning <= inputChannelBuffer.getNumChannels());
+        jassert (num_channelsRunning <= inputChannelBuffer.get_num_channels());
         float* const* const data = inputChannelBuffer.getArrayOfWritePointers();
 
         if (isInterleaved)
         {
-            scratch.ensureSize ((size_t) ((int) sizeof (float) * numSamples * numChannelsRunning), false);
+            scratch.ensureSize ((size_t) ((int) sizeof (float) * numSamples * num_channelsRunning), false);
             scratch.fillWith (0); // (not clearing this data causes warnings in valgrind)
 
             auto num = snd_pcm_readi (handle, scratch.getData(), (snd_pcm_uframes_t) numSamples);
@@ -371,7 +371,7 @@ public:
             if (num < numSamples)
                 JUCE_ALSA_LOG ("Did not read all samples: num: " << num << ", numSamples: " << numSamples);
 
-            for (int i = 0; i < numChannelsRunning; ++i)
+            for (int i = 0; i < num_channelsRunning; ++i)
                 converter->convertSamples (data[i], 0, scratch.getData(), i, numSamples);
         }
         else
@@ -390,7 +390,7 @@ public:
             if (num < numSamples)
                 JUCE_ALSA_LOG ("Did not read all samples: num: " << num << ", numSamples: " << numSamples);
 
-            for (int i = 0; i < numChannelsRunning; ++i)
+            for (int i = 0; i < num_channelsRunning; ++i)
                 converter->convertSamples (data[i], data[i], numSamples);
         }
 
@@ -400,7 +400,7 @@ public:
     //==============================================================================
     snd_pcm_t* handle;
     String error;
-    int bitDepth, numChannelsRunning, latency;
+    int bitDepth, num_channelsRunning, latency;
     int underrunCount = 0, overrunCount = 0;
 
 private:
@@ -452,7 +452,7 @@ private:
                                                   bool interleaved)
     {
         JUCE_ALSA_LOG ("format: bitDepth=" << bitDepth << ", isFloat=" << (int) isFloat
-                        << ", isLittleEndian=" << (int) isLittleEndian << ", numChannels=" << numInterleavedChannels);
+                        << ", isLittleEndian=" << (int) isLittleEndian << ", num_channels=" << numInterleavedChannels);
 
         if (isFloat)         return ConverterHelper <AudioData::Float32>::createConverter (forInput, isLittleEndian, numInterleavedChannels, interleaved);
         if (bitDepth == 16)  return ConverterHelper <AudioData::Int16>  ::createConverter (forInput, isLittleEndian, numInterleavedChannels, interleaved);

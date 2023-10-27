@@ -232,9 +232,9 @@ namespace AAXClasses
         // if the plug-in ignores layout, it is ok to convert between formats only by their numchannnels
         if (ignoreLayout)
         {
-            auto numChannels = set.size();
+            auto num_channels = set.size();
 
-            switch (numChannels)
+            switch (num_channels)
             {
                 case 0:   return AAX_eStemFormat_None;
                 case 1:   return AAX_eStemFormat_Mono;
@@ -251,7 +251,7 @@ namespace AAXClasses
             }
 
             // check for ambisonics support
-            auto sqrtMinusOne   = std::sqrt (static_cast<float> (numChannels)) - 1.0f;
+            auto sqrtMinusOne   = std::sqrt (static_cast<float> (num_channels)) - 1.0f;
             auto ambisonicOrder = jmax (0, static_cast<int> (std::floor (sqrtMinusOne)));
 
             if (static_cast<float> (ambisonicOrder) == sqrtMinusOne)
@@ -1745,7 +1745,7 @@ namespace AAXClasses
                 return AAX_ERROR_UNIMPLEMENTED;
             }
 
-            hasSidechain = (newLayout.getNumChannels (true, 1) == 1);
+            hasSidechain = (newLayout.get_num_channels (true, 1) == 1);
 
             if (hasSidechain)
             {
@@ -1845,12 +1845,12 @@ namespace AAXClasses
 
                     if (channelFormat != AudioChannelSet::disabled())
                     {
-                        auto numChannels = channelFormat.size();
+                        auto num_channels = channelFormat.size();
 
-                        for (int ch = 0; ch < numChannels; ++ch)
+                        for (int ch = 0; ch < num_channels; ++ch)
                             layoutMap.add (juceChannelIndexToAax (ch, channelFormat) + chOffset);
 
-                        chOffset += numChannels;
+                        chOffset += num_channels;
                     }
                 }
             }

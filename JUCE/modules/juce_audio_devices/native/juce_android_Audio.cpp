@@ -343,7 +343,7 @@ public:
                 jshort* const src = env->GetShortArrayElements (audioBuffer, nullptr);
 
                 AudioData::deinterleaveSamples (AudioData::InterleavedSource<NativeInt16>    { reinterpret_cast<const uint16*> (src),        numDeviceInputChannels },
-                                                AudioData::NonInterleavedDest<NativeFloat32> { inputChannelBuffer.getArrayOfWritePointers(), inputChannelBuffer.getNumChannels() },
+                                                AudioData::NonInterleavedDest<NativeFloat32> { inputChannelBuffer.getArrayOfWritePointers(), inputChannelBuffer.get_num_channels() },
                                                 actualBufferSize);
 
                 env->ReleaseShortArrayElements (audioBuffer, src, 0);
@@ -376,7 +376,7 @@ public:
 
                 jshort* const dest = env->GetShortArrayElements (audioBuffer, nullptr);
 
-                AudioData::interleaveSamples (AudioData::NonInterleavedSource<NativeFloat32> { outputChannelBuffer.getArrayOfReadPointers(), outputChannelBuffer.getNumChannels() },
+                AudioData::interleaveSamples (AudioData::NonInterleavedSource<NativeFloat32> { outputChannelBuffer.getArrayOfReadPointers(), outputChannelBuffer.get_num_channels() },
                                               AudioData::InterleavedDest<NativeInt16>        { reinterpret_cast<uint16*> (dest),             numDeviceOutputChannels },
                                               actualBufferSize);
 

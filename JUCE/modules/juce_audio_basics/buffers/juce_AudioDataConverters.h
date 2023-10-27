@@ -844,10 +844,10 @@ public:
 
     //==============================================================================
     static void interleaveSamples (const float** source, float* dest,
-                                   int numSamples, int numChannels);
+                                   int numSamples, int num_channels);
 
     static void deinterleaveSamples (const float* source, float** dest,
-                                     int numSamples, int numChannels);
+                                     int numSamples, int num_channels);
 
 private:
     AudioDataConverters();

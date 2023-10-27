@@ -179,14 +179,14 @@ struct BufferHelpers<int16>
 {
     enum { isFloatingPoint = 0 };
 
-    static void initPCMDataFormat (PCMDataFormatEx& dataFormat, int numChannels, double sampleRate)
+    static void initPCMDataFormat (PCMDataFormatEx& dataFormat, int num_channels, double sampleRate)
     {
         dataFormat.formatType     = SL_DATAFORMAT_PCM;
-        dataFormat.numChannels    = (SLuint32) numChannels;
+        dataFormat.num_channels    = (SLuint32) num_channels;
         dataFormat.samplesPerSec  = (SLuint32) (sampleRate * 1000);
         dataFormat.bitsPerSample  = SL_PCMSAMPLEFORMAT_FIXED_16;
         dataFormat.containerSize  = SL_PCMSAMPLEFORMAT_FIXED_16;
-        dataFormat.channelMask    = (numChannels == 1) ? SL_SPEAKER_FRONT_CENTER :
+        dataFormat.channelMask    = (num_channels == 1) ? SL_SPEAKER_FRONT_CENTER :
                                                         (SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT);
         dataFormat.endianness     = SL_BYTEORDER_LITTLEENDIAN;
         dataFormat.representation = 0;
@@ -199,19 +199,19 @@ struct BufferHelpers<int16>
 
     static void convertFromOpenSL (const int16* srcInterleaved, AudioBuffer<float>& audioBuffer)
     {
-        const auto numChannels = audioBuffer.getNumChannels();
+        const auto num_channels = audioBuffer.get_num_channels();
 
-        AudioData::deinterleaveSamples (AudioData::InterleavedSource<LittleEndianInt16> { reinterpret_cast<const uint16*> (srcInterleaved), numChannels },
-                                        AudioData::NonInterleavedDest<NativeFloat32>    { audioBuffer.getArrayOfWritePointers(),            numChannels },
+        AudioData::deinterleaveSamples (AudioData::InterleavedSource<LittleEndianInt16> { reinterpret_cast<const uint16*> (srcInterleaved), num_channels },
+                                        AudioData::NonInterleavedDest<NativeFloat32>    { audioBuffer.getArrayOfWritePointers(),            num_channels },
                                         audioBuffer.getNumSamples());
     }
 
     static void convertToOpenSL (const AudioBuffer<float>& audioBuffer, int16* dstInterleaved)
     {
-        const auto numChannels = audioBuffer.getNumChannels();
+        const auto num_channels = audioBuffer.get_num_channels();
 
-        AudioData::interleaveSamples (AudioData::NonInterleavedSource<NativeFloat32> { audioBuffer.getArrayOfReadPointers(),       numChannels },
-                                      AudioData::InterleavedDest<LittleEndianInt16>  { reinterpret_cast<uint16*> (dstInterleaved), numChannels },
+        AudioData::interleaveSamples (AudioData::NonInterleavedSource<NativeFloat32> { audioBuffer.getArrayOfReadPointers(),       num_channels },
+                                      AudioData::InterleavedDest<LittleEndianInt16>  { reinterpret_cast<uint16*> (dstInterleaved), num_channels },
                                       audioBuffer.getNumSamples());
     }
 
@@ -222,14 +222,14 @@ struct BufferHelpers<float>
 {
     enum { isFloatingPoint = 1 };
 
-    static void initPCMDataFormat (PCMDataFormatEx& dataFormat, int numChannels, double sampleRate)
+    static void initPCMDataFormat (PCMDataFormatEx& dataFormat, int num_channels, double sampleRate)
     {
         dataFormat.formatType     = SL_ANDROID_DATAFORMAT_PCM_EX;
-        dataFormat.numChannels    = (SLuint32) numChannels;
+        dataFormat.num_channels    = (SLuint32) num_channels;
         dataFormat.samplesPerSec  = (SLuint32) (sampleRate * 1000);
         dataFormat.bitsPerSample  = 32;
         dataFormat.containerSize  = 32;
-        dataFormat.channelMask    = (numChannels == 1) ? SL_SPEAKER_FRONT_CENTER :
+        dataFormat.channelMask    = (num_channels == 1) ? SL_SPEAKER_FRONT_CENTER :
                                                         (SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT);
         dataFormat.endianness     = SL_BYTEORDER_LITTLEENDIAN;
         dataFormat.representation = SL_ANDROID_PCM_REPRESENTATION_FLOAT;
@@ -237,7 +237,7 @@ struct BufferHelpers<float>
 
     static void prepareCallbackBuffer (AudioBuffer<float>& audioBuffer, float* native)
     {
-        if (audioBuffer.getNumChannels() == 1)
+        if (audioBuffer.get_num_channels() == 1)
             audioBuffer.setDataToReferTo (&native, 1, audioBuffer.getNumSamples());
     }
 
@@ -246,31 +246,31 @@ struct BufferHelpers<float>
 
     static void convertFromOpenSL (const float* srcInterleaved, AudioBuffer<float>& audioBuffer)
     {
-        const auto numChannels = audioBuffer.getNumChannels();
+        const auto num_channels = audioBuffer.get_num_channels();
 
-        if (numChannels == 1)
+        if (num_channels == 1)
         {
             jassert (srcInterleaved == audioBuffer.getWritePointer (0));
             return;
         }
 
-        AudioData::deinterleaveSamples (AudioData::InterleavedSource<LittleEndianFloat32> { srcInterleaved,                        numChannels },
-                                        AudioData::NonInterleavedDest<NativeFloat32>      { audioBuffer.getArrayOfWritePointers(), numChannels },
+        AudioData::deinterleaveSamples (AudioData::InterleavedSource<LittleEndianFloat32> { srcInterleaved,                        num_channels },
+                                        AudioData::NonInterleavedDest<NativeFloat32>      { audioBuffer.getArrayOfWritePointers(), num_channels },
                                         audioBuffer.getNumSamples());
     }
 
     static void convertToOpenSL (const AudioBuffer<float>& audioBuffer, float* dstInterleaved)
     {
-        const auto numChannels = audioBuffer.getNumChannels();
+        const auto num_channels = audioBuffer.get_num_channels();
 
-        if (numChannels == 1)
+        if (num_channels == 1)
         {
             jassert (dstInterleaved == audioBuffer.getReadPointer (0));
             return;
         }
 
-        AudioData::interleaveSamples (AudioData::NonInterleavedSource<NativeFloat32>  { audioBuffer.getArrayOfReadPointers(), numChannels },
-                                      AudioData::InterleavedDest<LittleEndianFloat32> { dstInterleaved,                       numChannels },
+        AudioData::interleaveSamples (AudioData::NonInterleavedSource<NativeFloat32>  { audioBuffer.getArrayOfReadPointers(), num_channels },
+                                      AudioData::InterleavedDest<LittleEndianFloat32> { dstInterleaved,                       num_channels },
                                       audioBuffer.getNumSamples());
     }
 };
@@ -324,12 +324,12 @@ public:
     template <typename T, class Child, typename RunnerObjectType>
     struct OpenSLQueueRunner
     {
-        OpenSLQueueRunner (OpenSLSessionT<T>& sessionToUse, int numChannelsToUse)
+        OpenSLQueueRunner (OpenSLSessionT<T>& sessionToUse, int num_channelsToUse)
             : owner (sessionToUse),
-              numChannels (numChannelsToUse),
-              nativeBuffer (static_cast<size_t> (numChannels * owner.bufferSize * owner.numBuffers)),
-              scratchBuffer (numChannelsToUse, owner.bufferSize),
-              sampleBuffer (scratchBuffer.getArrayOfWritePointers(), numChannelsToUse, owner.bufferSize)
+              num_channels (num_channelsToUse),
+              nativeBuffer (static_cast<size_t> (num_channels * owner.bufferSize * owner.numBuffers)),
+              scratchBuffer (num_channelsToUse, owner.bufferSize),
+              sampleBuffer (scratchBuffer.getArrayOfWritePointers(), num_channelsToUse, owner.bufferSize)
         {}
 
         ~OpenSLQueueRunner()
@@ -379,7 +379,7 @@ public:
             nextBlock.set (0);
             numBlocksOut.set (0);
 
-            zeromem (nativeBuffer.get(), static_cast<size_t> (owner.bufferSize * numChannels * owner.numBuffers) * sizeof (T));
+            zeromem (nativeBuffer.get(), static_cast<size_t> (owner.bufferSize * num_channels * owner.numBuffers) * sizeof (T));
             scratchBuffer.clear();
             (*queue)->Clear (queue);
         }
@@ -393,7 +393,7 @@ public:
         bool isBufferAvailable() const         { return (numBlocksOut.get() < owner.numBuffers); }
         T* getNextBuffer()                     { nextBlock.set((nextBlock.get() + 1) % owner.numBuffers); return getCurrentBuffer(); }
         T* getCurrentBuffer()                  { return nativeBuffer.get() + (static_cast<size_t> (nextBlock.get()) * getBufferSizeInSamples()); }
-        size_t getBufferSizeInSamples() const  { return static_cast<size_t> (owner.bufferSize * numChannels); }
+        size_t getBufferSizeInSamples() const  { return static_cast<size_t> (owner.bufferSize * num_channels); }
 
         void finished (SLAndroidSimpleBufferQueueItf)
         {
@@ -417,7 +417,7 @@ public:
         SlRef<SLAndroidConfigurationItf_> config;
         GlobalRef javaProxy;
 
-        int numChannels;
+        int num_channels;
 
         HeapBlock<T> nativeBuffer;
         AudioBuffer<float> scratchBuffer, sampleBuffer;
@@ -431,8 +431,8 @@ public:
     {
         using Base = OpenSLQueueRunner<T, OpenSLQueueRunnerPlayer<T>, SLPlayItf_>;
 
-        OpenSLQueueRunnerPlayer (OpenSLSessionT<T>& sessionToUse, int numChannelsToUse)
-            : Base (sessionToUse, numChannelsToUse)
+        OpenSLQueueRunnerPlayer (OpenSLSessionT<T>& sessionToUse, int num_channelsToUse)
+            : Base (sessionToUse, num_channelsToUse)
         {}
 
         SlRef<SLPlayItf_> createPlayerOrRecorder()
@@ -441,7 +441,7 @@ public:
             SLDataLocator_OutputMix outputMix = { SL_DATALOCATOR_OUTPUTMIX, Base::owner.outputMix };
 
             PCMDataFormatEx dataFormat;
-            BufferHelpers<T>::initPCMDataFormat (dataFormat, Base::numChannels, Base::owner.sampleRate);
+            BufferHelpers<T>::initPCMDataFormat (dataFormat, Base::num_channels, Base::owner.sampleRate);
 
             SLDataSource source = { &queueLocator, &dataFormat };
             SLDataSink   sink   = { &outputMix,    nullptr };
@@ -476,8 +476,8 @@ public:
     {
         using Base = OpenSLQueueRunner<T, OpenSLQueueRunnerRecorder<T>, SLRecordItf_>;
 
-        OpenSLQueueRunnerRecorder (OpenSLSessionT<T>& sessionToUse, int numChannelsToUse)
-            : Base (sessionToUse, numChannelsToUse)
+        OpenSLQueueRunnerRecorder (OpenSLSessionT<T>& sessionToUse, int num_channelsToUse)
+            : Base (sessionToUse, num_channelsToUse)
         {}
 
         SlRef<SLRecordItf_> createPlayerOrRecorder()
@@ -486,7 +486,7 @@ public:
             SLDataLocator_AndroidSimpleBufferQueue queueLocator = { SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, static_cast<SLuint32> (Base::owner.numBuffers) };
 
             PCMDataFormatEx dataFormat;
-            BufferHelpers<T>::initPCMDataFormat (dataFormat, Base::numChannels, Base::owner.sampleRate);
+            BufferHelpers<T>::initPCMDataFormat (dataFormat, Base::num_channels, Base::owner.sampleRate);
 
             SLDataSource source = { &ioDeviceLocator, nullptr };
             SLDataSink   sink   = { &queueLocator,    &dataFormat };

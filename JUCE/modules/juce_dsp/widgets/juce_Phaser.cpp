@@ -94,7 +94,7 @@ template <typename SampleType>
 void Phaser<SampleType>::prepare (const ProcessSpec& spec)
 {
     jassert (spec.sampleRate > 0);
-    jassert (spec.numChannels > 0);
+    jassert (spec.num_channels > 0);
 
     sampleRate = spec.sampleRate;
 
@@ -102,8 +102,8 @@ void Phaser<SampleType>::prepare (const ProcessSpec& spec)
         filters[n]->prepare (spec);
 
     dryWet.prepare (spec);
-    feedbackVolume.resize (spec.numChannels);
-    lastOutput.resize (spec.numChannels);
+    feedbackVolume.resize (spec.num_channels);
+    lastOutput.resize (spec.num_channels);
 
     auto specDown = spec;
     specDown.sampleRate /= (double) maxUpdateCounter;

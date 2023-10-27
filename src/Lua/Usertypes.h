@@ -11,23 +11,28 @@ extern "C"
 }
 
 #include "./Types.h"
+#include "Interpolators.h"
 
-template<typename T> constexpr bool luaF_isUsertype() { return false; };
-template<> constexpr bool luaF_isUsertype<flan::Audio>()      { return true; };
-template<> constexpr bool luaF_isUsertype<flan::PVOC>()       { return true; };
-template<> constexpr bool luaF_isUsertype<flan::Func1x1>()    { return true; };
-template<> constexpr bool luaF_isUsertype<flan::Func2x1>()    { return true; };
-template<> constexpr bool luaF_isUsertype<flan::Func2x2>()    { return true; };
-template<> constexpr bool luaF_isUsertype<flan::Wavetable>()  { return true; };
+template<typename T> constexpr bool luaF_isUsertype()           { return false; };
+template<> constexpr bool luaF_isUsertype<pAudio>()             { return true; };
+template<> constexpr bool luaF_isUsertype<pPV>()                { return true; };
+template<> constexpr bool luaF_isUsertype<pFunc1x1>()           { return true; };
+template<> constexpr bool luaF_isUsertype<pFunc2x1>()           { return true; };
+template<> constexpr bool luaF_isUsertype<pFunc1x2>()           { return true; };
+template<> constexpr bool luaF_isUsertype<pFunc2x2>()           { return true; };
+template<> constexpr bool luaF_isUsertype<pWavetable>()         { return true; };
+template<> constexpr bool luaF_isUsertype<InterpolatorIndex>()  { return true; };
+template<> constexpr bool luaF_isUsertype<pAudioMod>()          { return true; };
+template<> constexpr bool luaF_isUsertype<pPrismFunc>()         { return true; };
 
-template<> constexpr bool luaF_isUsertype<AudioVec>()         { return true; };
-template<> constexpr bool luaF_isUsertype<PVOCVec>()          { return true; };
-template<> constexpr bool luaF_isUsertype<Func1x1Vec>()       { return true; };
-template<> constexpr bool luaF_isUsertype<Func2x1Vec>()       { return true; };
-template<> constexpr bool luaF_isUsertype<Func2x2Vec>()       { return true; };
-template<> constexpr bool luaF_isUsertype<WavetableVec>()     { return true; };
+template<> constexpr bool luaF_isUsertype<AudioVec>()           { return true; };
+template<> constexpr bool luaF_isUsertype<PVVec>()              { return true; };
+template<> constexpr bool luaF_isUsertype<Func1x1Vec>()         { return true; };
+template<> constexpr bool luaF_isUsertype<Func2x1Vec>()         { return true; };
+template<> constexpr bool luaF_isUsertype<Func1x2Vec>()         { return true; };
+template<> constexpr bool luaF_isUsertype<Func2x2Vec>()         { return true; };
+template<> constexpr bool luaF_isUsertype<WavetableVec>()       { return true; };
 
-template<> constexpr bool luaF_isUsertype<AudioMod>()         { return true; };
 
 template<typename T> std::string luaF_getUsertypeName();
 
@@ -60,13 +65,13 @@ void luaF_pushUsertype( lua_State * L, const T & instance )
     void * outputP = lua_newuserdata( L, sizeof( T ) );
     if( ! outputP ) luaL_error( L, ( luaF_getUsertypeName<T>() + " userdata couldn't be constructed." ).c_str() );
 
-    // Construct Userdata into created space, managing a new object which is move constructed from the method output
+    // Construct Userdata into created space, managing a new object which is move constructed from the method output.
     new(outputP) T( instance );
 
     // Make the userdata the type given by name
     luaL_getmetatable( L, luaF_getUsertypeName<T>().c_str() );
     if( lua_isnil( L, -1 ) )
-        luaL_error( L, "luaF_pushUsertype tried to get a metatable that doesn't exist" );
+        luaL_error( L, ( std::string( "luaF_pushUsertype tried to get a metatable that doesn't exist: " ) + typeid(T).name() ).c_str() );
     lua_setmetatable( L, -2 );
     }
 
@@ -91,7 +96,8 @@ static int luaF_Usertype_new( lua_State* L )
 template<typename T>
 static int luaF_Usertype_vec_new( lua_State* L )
     {
-    lua_createtable( L, 0, 0 );
+    if( ! luaF_isArrayOfType<T>( L, 1 ) ) return luaL_error( L, "Array type constructor didn't recieve a table of the given type." );
+    //lua_createtable( L, 0, 0 );
     luaL_setmetatable( L, luaF_getUsertypeName<std::vector<T>>().c_str() );
     return 1;
     }

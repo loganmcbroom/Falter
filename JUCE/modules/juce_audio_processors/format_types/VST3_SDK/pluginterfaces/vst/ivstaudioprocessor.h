@@ -175,7 +175,7 @@ struct ProcessSetup
 //------------------------------------------------------------------------
 /** Processing buffers of an audio bus.
 This structure contains the processing buffer for each channel of an audio bus.
-- The number of channels (numChannels) must always match the current bus arrangement.
+- The number of channels (num_channels) must always match the current bus arrangement.
   It could be set to value '0' when the host wants to flush the parameters (when the plug-in is not processed).
 - The size of the channel buffer array must always match the number of channels. So the host
   must always supply an array for the channel buffers, regardless if the
@@ -190,10 +190,10 @@ This structure contains the processing buffer for each channel of an audio bus.
 */
 struct AudioBusBuffers
 {
-	AudioBusBuffers () : numChannels (0), silenceFlags (0), channelBuffers64 (nullptr) {}
+	AudioBusBuffers () : num_channels (0), silenceFlags (0), channelBuffers64 (nullptr) {}
 
 //------------------------------------------------------------------------
-	int32 numChannels;		///< number of audio channels in bus
+	int32 num_channels;		///< number of audio channels in bus
 	uint64 silenceFlags;	///< Bitset of silence state per channel
 	union
 	{

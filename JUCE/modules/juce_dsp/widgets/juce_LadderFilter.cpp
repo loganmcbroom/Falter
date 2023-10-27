@@ -73,7 +73,7 @@ template <typename SampleType>
 void LadderFilter<SampleType>::prepare (const ProcessSpec& spec)
 {
     setSampleRate (SampleType (spec.sampleRate));
-    setNumChannels (spec.numChannels);
+    setnum_channels (spec.num_channels);
     reset();
 }
 

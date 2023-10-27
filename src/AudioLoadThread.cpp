@@ -1,6 +1,6 @@
 #include "AudioLoadThread.h"
 
-#include <flan/Audio.h>
+#include <flan/Audio/Audio.h>
 
 AudioLoadThread::AudioLoadThread( const File & _file )
 	: ThreadPoolJob( _file.getFullPathName() )

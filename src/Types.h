@@ -10,23 +10,41 @@ struct lua_State;
 namespace flan 
     {
     class Audio;
-    class PVOC;
-    struct Func1x1; 
-    struct Func2x1; 
-    struct Func2x2; 
+    class PV;
     class Graph;
     struct Interval;
     struct Rect;
     class Wavetable;
     struct MF;
+    struct TF;
+    struct vec2;
+    class AudioMod;
+    class PrismFunc;
+
+    template<typename I, typename O>
+    struct Function;
     }
 
-using AudioMod = std::function< flan::Audio ( const flan::Audio &, flan::Time ) >;
-using PrismFunc = std::function<flan::MF ( int note, flan::Time, int harmonic, flan::Frequency contourFreq, const std::vector<flan::Magnitude> & harmonicMagnitudes )>;
+using pAudio        = std::shared_ptr<flan::Audio>;
+using pPV           = std::shared_ptr<flan::PV>;
+using pWavetable    = std::shared_ptr<flan::Wavetable>;
+using pGraph        = std::shared_ptr<flan::Graph>;
+using pAudioMod     = std::shared_ptr<flan::AudioMod>;
+using pPrismFunc    = std::shared_ptr<flan::PrismFunc>;
 
-using AudioVec      = std::vector<flan::Audio>;
-using PVOCVec       = std::vector<flan::PVOC>;
-using Func1x1Vec    = std::vector<flan::Func1x1>;
-using Func2x1Vec    = std::vector<flan::Func2x1>;
-using Func2x2Vec    = std::vector<flan::Func2x2>;
-using WavetableVec  = std::vector<flan::Wavetable>;
+using AudioVec      = std::vector<pAudio>;
+using PVVec         = std::vector<pPV>;
+using WavetableVec  = std::vector<pWavetable>;
+
+using Func1x1 = flan::Function<float, float>;
+using Func2x1 = flan::Function<flan::vec2, float>;
+using Func1x2 = flan::Function<float, flan::vec2>;
+using Func2x2 = flan::Function<flan::vec2, flan::vec2>;
+using pFunc1x1 = std::shared_ptr<Func1x1>;
+using pFunc2x1 = std::shared_ptr<Func2x1>;
+using pFunc1x2 = std::shared_ptr<Func1x2>;
+using pFunc2x2 = std::shared_ptr<Func2x2>;
+using Func1x1Vec = std::vector<pFunc1x1>;
+using Func2x1Vec = std::vector<pFunc2x1>;
+using Func1x2Vec = std::vector<pFunc1x2>;
+using Func2x2Vec = std::vector<pFunc2x2>;

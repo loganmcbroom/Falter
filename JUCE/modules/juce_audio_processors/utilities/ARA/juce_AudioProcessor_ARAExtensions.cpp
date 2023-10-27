@@ -45,7 +45,7 @@ bool AudioProcessorARAExtension::getTailLengthSecondsForARA (double& tailLength)
 
 bool AudioProcessorARAExtension::prepareToPlayForARA (double sampleRate,
                                                       int samplesPerBlock,
-                                                      int numChannels,
+                                                      int num_channels,
                                                       AudioProcessor::ProcessingPrecision precision)
 {
 #if ARA_VALIDATE_API_CALLS
@@ -56,10 +56,10 @@ bool AudioProcessorARAExtension::prepareToPlayForARA (double sampleRate,
         return false;
 
     if (auto playbackRenderer = getPlaybackRenderer())
-        playbackRenderer->prepareToPlay (sampleRate, samplesPerBlock, numChannels, precision);
+        playbackRenderer->prepareToPlay (sampleRate, samplesPerBlock, num_channels, precision);
 
     if (auto editorRenderer = getEditorRenderer())
-        editorRenderer->prepareToPlay (sampleRate, samplesPerBlock, numChannels, precision);
+        editorRenderer->prepareToPlay (sampleRate, samplesPerBlock, num_channels, precision);
 
     return true;
 }

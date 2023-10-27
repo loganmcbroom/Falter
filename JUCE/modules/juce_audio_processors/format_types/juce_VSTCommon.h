@@ -56,7 +56,7 @@ struct SpeakerMappings  : private AudioChannelSet // (inheritance only to give e
         }
     };
 
-    static AudioChannelSet vstArrangementTypeToChannelSet (int32 arr, int fallbackNumChannels)
+    static AudioChannelSet vstArrangementTypeToChannelSet (int32 arr, int fallbacknum_channels)
     {
         if      (arr == Vst2::kSpeakerArrEmpty)        return AudioChannelSet::disabled();
         else if (arr == Vst2::kSpeakerArrMono)         return AudioChannelSet::mono();
@@ -89,12 +89,12 @@ struct SpeakerMappings  : private AudioChannelSet // (inheritance only to give e
             }
         }
 
-        return AudioChannelSet::discreteChannels (fallbackNumChannels);
+        return AudioChannelSet::discreteChannels (fallbacknum_channels);
     }
 
     static AudioChannelSet vstArrangementTypeToChannelSet (const Vst2::VstSpeakerArrangement& arr)
     {
-        return vstArrangementTypeToChannelSet (arr.type, arr.numChannels);
+        return vstArrangementTypeToChannelSet (arr.type, arr.num_channels);
     }
 
     static int32 channelSetToVstArrangementType (AudioChannelSet channels)
@@ -132,9 +132,9 @@ struct SpeakerMappings  : private AudioChannelSet // (inheritance only to give e
     static void channelSetToVstArrangement (const AudioChannelSet& channels, Vst2::VstSpeakerArrangement& result)
     {
         result.type = channelSetToVstArrangementType (channels);
-        result.numChannels = channels.size();
+        result.num_channels = channels.size();
 
-        for (int i = 0; i < result.numChannels; ++i)
+        for (int i = 0; i < result.num_channels; ++i)
         {
             auto& speaker = result.speakers[i];
 
@@ -174,9 +174,9 @@ struct SpeakerMappings  : private AudioChannelSet // (inheritance only to give e
             Vst2::VstSpeakerArrangement& dst = *allocate (numberOfChannels);
 
             dst.type = channelSetToVstArrangementType (channels);
-            dst.numChannels = numberOfChannels;
+            dst.num_channels = numberOfChannels;
 
-            for (int i = 0; i < dst.numChannels; ++i)
+            for (int i = 0; i < dst.num_channels; ++i)
             {
                 Vst2::VstSpeakerProperties& speaker = dst.speakers[i];
 
@@ -188,12 +188,12 @@ struct SpeakerMappings  : private AudioChannelSet // (inheritance only to give e
         VstSpeakerConfigurationHolder& operator= (const VstSpeakerConfigurationHolder& vstConfig) { return operator=(vstConfig.get()); }
         VstSpeakerConfigurationHolder& operator= (const Vst2::VstSpeakerArrangement& vstConfig)
         {
-            Vst2::VstSpeakerArrangement& dst = *allocate (vstConfig.numChannels);
+            Vst2::VstSpeakerArrangement& dst = *allocate (vstConfig.num_channels);
 
             dst.type             = vstConfig.type;
-            dst.numChannels      = vstConfig.numChannels;
+            dst.num_channels      = vstConfig.num_channels;
 
-            for (int i = 0; i < dst.numChannels; ++i)
+            for (int i = 0; i < dst.num_channels; ++i)
                 dst.speakers[i] = vstConfig.speakers[i];
 
             return *this;
@@ -214,9 +214,9 @@ struct SpeakerMappings  : private AudioChannelSet // (inheritance only to give e
 
         HeapBlock<Vst2::VstSpeakerArrangement> storage;
 
-        Vst2::VstSpeakerArrangement* allocate (int numChannels)
+        Vst2::VstSpeakerArrangement* allocate (int num_channels)
         {
-            auto arrangementSize = (size_t) (jmax (8, numChannels) - 8) * sizeof (Vst2::VstSpeakerProperties)
+            auto arrangementSize = (size_t) (jmax (8, num_channels) - 8) * sizeof (Vst2::VstSpeakerProperties)
                                     + sizeof (Vst2::VstSpeakerArrangement);
 
             storage.malloc (1, arrangementSize);
@@ -228,7 +228,7 @@ struct SpeakerMappings  : private AudioChannelSet // (inheritance only to give e
             Vst2::VstSpeakerArrangement& dst = *allocate (0);
 
             dst.type = Vst2::kSpeakerArrEmpty;
-            dst.numChannels = 0;
+            dst.num_channels = 0;
         }
     };
 

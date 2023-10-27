@@ -3421,8 +3421,8 @@ public:
 
         if (getHostType().isWavelab())
         {
-            const int numInputChans  = (data.inputs  != nullptr && data.inputs[0].channelBuffers32 != nullptr)  ? (int) data.inputs[0].numChannels  : 0;
-            const int numOutputChans = (data.outputs != nullptr && data.outputs[0].channelBuffers32 != nullptr) ? (int) data.outputs[0].numChannels : 0;
+            const int numInputChans  = (data.inputs  != nullptr && data.inputs[0].channelBuffers32 != nullptr)  ? (int) data.inputs[0].num_channels  : 0;
+            const int numOutputChans = (data.outputs != nullptr && data.outputs[0].channelBuffers32 != nullptr) ? (int) data.outputs[0].num_channels : 0;
 
             if ((pluginInstance->getTotalNumInputChannels() + pluginInstance->getTotalNumOutputChannels()) > 0
                  && (numInputChans + numOutputChans) == 0)
@@ -3513,7 +3513,7 @@ private:
         ClientRemappedBuffer<FloatType> remappedBuffer { bufferMapper, data };
         auto& buffer = remappedBuffer.buffer;
 
-        jassert ((int) buffer.getNumChannels() == jmax (pluginInstance->getTotalNumInputChannels(),
+        jassert ((int) buffer.get_num_channels() == jmax (pluginInstance->getTotalNumInputChannels(),
                                                         pluginInstance->getTotalNumOutputChannels()));
 
         {

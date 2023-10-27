@@ -70,7 +70,7 @@ void ToneGeneratorAudioSource::getNextAudioBlock (const AudioSourceChannelInfo& 
         const float sample = amplitude * (float) std::sin (currentPhase);
         currentPhase += phasePerSample;
 
-        for (int j = info.buffer->getNumChannels(); --j >= 0;)
+        for (int j = info.buffer->get_num_channels(); --j >= 0;)
             info.buffer->setSample (j, info.startSample + i, sample);
     }
 }

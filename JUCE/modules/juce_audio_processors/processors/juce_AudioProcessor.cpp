@@ -98,10 +98,10 @@ bool AudioProcessor::removeBus (bool inputBus)
         return false;
 
     auto busIndex = numBuses - 1;
-    auto numChannels = getChannelCountOfBus (inputBus, busIndex);
+    auto num_channels = getChannelCountOfBus (inputBus, busIndex);
     (inputBus ? inputBuses : outputBuses).remove (busIndex);
 
-    audioIOChanged (true, numChannels > 0);
+    audioIOChanged (true, num_channels > 0);
     return true;
 }
 
@@ -134,11 +134,11 @@ bool AudioProcessor::setBusesLayoutWithoutEnabling (const BusesLayout& arr)
     auto current = getBusesLayout();
 
     for (int i = 0; i < numIns; ++i)
-        if (request.getNumChannels (true, i) == 0)
+        if (request.get_num_channels (true, i) == 0)
             request.getChannelSet (true, i) = current.getChannelSet (true, i);
 
     for (int i = 0; i < numOuts; ++i)
-        if (request.getNumChannels (false, i) == 0)
+        if (request.get_num_channels (false, i) == 0)
             request.getChannelSet (false, i) = current.getChannelSet (false, i);
 
     if (! checkBusesLayoutSupported (request))
@@ -372,7 +372,7 @@ void AudioProcessor::setRateAndBufferSizeDetails (double newSampleRate, int newB
 }
 
 //==============================================================================
-void AudioProcessor::numChannelsChanged()      {}
+void AudioProcessor::num_channelsChanged()      {}
 void AudioProcessor::numBusesChanged()         {}
 void AudioProcessor::processorLayoutsChanged() {}
 
@@ -390,10 +390,10 @@ int AudioProcessor::getChannelIndexInProcessBlockBuffer (bool isInput, int busIn
 int AudioProcessor::getOffsetInBusBufferForAbsoluteChannelIndex (bool isInput, int absoluteChannelIndex, int& busIndex) const noexcept
 {
     auto numBuses = getBusCount (isInput);
-    int numChannels = 0;
+    int num_channels = 0;
 
-    for (busIndex = 0; busIndex < numBuses && absoluteChannelIndex >= (numChannels = getChannelLayoutOfBus (isInput, busIndex).size()); ++busIndex)
-        absoluteChannelIndex -= numChannels;
+    for (busIndex = 0; busIndex < numBuses && absoluteChannelIndex >= (num_channels = getChannelLayoutOfBus (isInput, busIndex).size()); ++busIndex)
+        absoluteChannelIndex -= num_channels;
 
     return busIndex >= numBuses ? -1 : absoluteChannelIndex;
 }
@@ -697,8 +697,8 @@ AudioProcessor::BusesLayout AudioProcessor::getNextBestLayoutInList (const Buses
     auto* inBus  = (hasInputs  ? &nearest.inputBuses. getReference (0) : nullptr);
     auto* outBus = (hasOutputs ? &nearest.outputBuses.getReference (0) : nullptr);
 
-    auto inNumChannelsRequested  = static_cast<int16> (inBus  != nullptr ? inBus->size()  : 0);
-    auto outNumChannelsRequested = static_cast<int16> (outBus != nullptr ? outBus->size() : 0);
+    auto innum_channelsRequested  = static_cast<int16> (inBus  != nullptr ? inBus->size()  : 0);
+    auto outnum_channelsRequested = static_cast<int16> (outBus != nullptr ? outBus->size() : 0);
 
     auto distance = std::numeric_limits<int32>::max();
     int bestConfiguration = 0;
@@ -708,8 +708,8 @@ AudioProcessor::BusesLayout AudioProcessor::getNextBestLayoutInList (const Buses
         auto inChannels  = legacyLayouts.getReference (i).inChannels;
         auto outChannels = legacyLayouts.getReference (i).outChannels;
 
-        auto channelDifference = ((std::abs (inChannels  - inNumChannelsRequested)  & 0xffff) << 16)
-                                    | ((std::abs (outChannels - outNumChannelsRequested) & 0xffff) << 0);
+        auto channelDifference = ((std::abs (inChannels  - innum_channelsRequested)  & 0xffff) << 16)
+                                    | ((std::abs (outChannels - outnum_channelsRequested) & 0xffff) << 0);
 
         if (channelDifference < distance)
         {
@@ -753,8 +753,8 @@ bool AudioProcessor::containsLayout (const BusesLayout& layouts, const Array<InO
     if (layouts.inputBuses.size() > 1 || layouts.outputBuses.size() > 1)
         return false;
 
-    const InOutChannelPair mainLayout (static_cast<int16> (layouts.getNumChannels (true, 0)),
-                                       static_cast<int16> (layouts.getNumChannels (false, 0)));
+    const InOutChannelPair mainLayout (static_cast<int16> (layouts.get_num_channels (true, 0)),
+                                       static_cast<int16> (layouts.get_num_channels (false, 0)));
 
     return channelLayouts.contains (mainLayout);
 }
@@ -869,7 +869,7 @@ void AudioProcessor::audioIOChanged (bool busNumberChanged, bool channelNumChang
         numBusesChanged();
 
     if (channelNumChanged)
-        numChannelsChanged();
+        num_channelsChanged();
 
     processorLayoutsChanged();
 }

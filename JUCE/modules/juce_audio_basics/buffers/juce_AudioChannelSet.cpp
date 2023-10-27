@@ -493,7 +493,7 @@ AudioChannelSet AudioChannelSet::ambisonic (int order)
 
 int AudioChannelSet::getAmbisonicOrder() const
 {
-    auto ambisonicOrder = getAmbisonicOrderForNumChannels (size());
+    auto ambisonicOrder = getAmbisonicOrderFornum_channels (size());
 
     if (ambisonicOrder >= 0)
         return (*this == ambisonic (ambisonicOrder) ? ambisonicOrder : -1);
@@ -501,52 +501,52 @@ int AudioChannelSet::getAmbisonicOrder() const
     return -1;
 }
 
-AudioChannelSet AudioChannelSet::discreteChannels (int numChannels)
+AudioChannelSet AudioChannelSet::discreteChannels (int num_channels)
 {
     AudioChannelSet s;
-    s.channels.setRange (discreteChannel0, numChannels, true);
+    s.channels.setRange (discreteChannel0, num_channels, true);
     return s;
 }
 
-AudioChannelSet AudioChannelSet::canonicalChannelSet (int numChannels)
+AudioChannelSet AudioChannelSet::canonicalChannelSet (int num_channels)
 {
-    if (numChannels == 1)  return AudioChannelSet::mono();
-    if (numChannels == 2)  return AudioChannelSet::stereo();
-    if (numChannels == 3)  return AudioChannelSet::createLCR();
-    if (numChannels == 4)  return AudioChannelSet::quadraphonic();
-    if (numChannels == 5)  return AudioChannelSet::create5point0();
-    if (numChannels == 6)  return AudioChannelSet::create5point1();
-    if (numChannels == 7)  return AudioChannelSet::create7point0();
-    if (numChannels == 8)  return AudioChannelSet::create7point1();
+    if (num_channels == 1)  return AudioChannelSet::mono();
+    if (num_channels == 2)  return AudioChannelSet::stereo();
+    if (num_channels == 3)  return AudioChannelSet::createLCR();
+    if (num_channels == 4)  return AudioChannelSet::quadraphonic();
+    if (num_channels == 5)  return AudioChannelSet::create5point0();
+    if (num_channels == 6)  return AudioChannelSet::create5point1();
+    if (num_channels == 7)  return AudioChannelSet::create7point0();
+    if (num_channels == 8)  return AudioChannelSet::create7point1();
 
-    return discreteChannels (numChannels);
+    return discreteChannels (num_channels);
 }
 
-AudioChannelSet AudioChannelSet::namedChannelSet (int numChannels)
+AudioChannelSet AudioChannelSet::namedChannelSet (int num_channels)
 {
-    if (numChannels == 1)  return AudioChannelSet::mono();
-    if (numChannels == 2)  return AudioChannelSet::stereo();
-    if (numChannels == 3)  return AudioChannelSet::createLCR();
-    if (numChannels == 4)  return AudioChannelSet::quadraphonic();
-    if (numChannels == 5)  return AudioChannelSet::create5point0();
-    if (numChannels == 6)  return AudioChannelSet::create5point1();
-    if (numChannels == 7)  return AudioChannelSet::create7point0();
-    if (numChannels == 8)  return AudioChannelSet::create7point1();
+    if (num_channels == 1)  return AudioChannelSet::mono();
+    if (num_channels == 2)  return AudioChannelSet::stereo();
+    if (num_channels == 3)  return AudioChannelSet::createLCR();
+    if (num_channels == 4)  return AudioChannelSet::quadraphonic();
+    if (num_channels == 5)  return AudioChannelSet::create5point0();
+    if (num_channels == 6)  return AudioChannelSet::create5point1();
+    if (num_channels == 7)  return AudioChannelSet::create7point0();
+    if (num_channels == 8)  return AudioChannelSet::create7point1();
 
     return {};
 }
 
-Array<AudioChannelSet> AudioChannelSet::channelSetsWithNumberOfChannels (int numChannels)
+Array<AudioChannelSet> AudioChannelSet::channelSetsWithNumberOfChannels (int num_channels)
 {
     Array<AudioChannelSet> retval;
 
-    if (numChannels != 0)
+    if (num_channels != 0)
     {
-        retval.add (AudioChannelSet::discreteChannels (numChannels));
+        retval.add (AudioChannelSet::discreteChannels (num_channels));
 
-        retval.addArray ([numChannels]() -> Array<AudioChannelSet>
+        retval.addArray ([num_channels]() -> Array<AudioChannelSet>
         {
-            switch (numChannels)
+            switch (num_channels)
             {
                 case 1:
                     return { AudioChannelSet::mono() };
@@ -594,7 +594,7 @@ Array<AudioChannelSet> AudioChannelSet::channelSetsWithNumberOfChannels (int num
             return {};
         }());
 
-        auto order = getAmbisonicOrderForNumChannels (numChannels);
+        auto order = getAmbisonicOrderFornum_channels (num_channels);
         if (order >= 0)
             retval.add (AudioChannelSet::ambisonic (order));
     }
@@ -631,9 +631,9 @@ int32 AudioChannelSet::getWaveChannelMask() const noexcept
 }
 
 //==============================================================================
-int JUCE_CALLTYPE AudioChannelSet::getAmbisonicOrderForNumChannels (int numChannels)
+int JUCE_CALLTYPE AudioChannelSet::getAmbisonicOrderFornum_channels (int num_channels)
 {
-    auto sqrtMinusOne   = std::sqrt (static_cast<float> (numChannels)) - 1.0f;
+    auto sqrtMinusOne   = std::sqrt (static_cast<float> (num_channels)) - 1.0f;
     auto ambisonicOrder = jmax (0, static_cast<int> (std::floor (sqrtMinusOne)));
 
     if (ambisonicOrder > 5)
@@ -708,15 +708,15 @@ private:
     void checkAmbisonic (uint64 mask, int order, const char* layoutName)
     {
         auto expected = AudioChannelSet::ambisonic (order);
-        auto numChannels = expected.size();
+        auto num_channels = expected.size();
 
-        expect (numChannels == BigInteger ((int64) mask).countNumberOfSetBits());
+        expect (num_channels == BigInteger ((int64) mask).countNumberOfSetBits());
         expect (channelSetFromMask (mask) == expected);
 
         expect (order == expected.getAmbisonicOrder());
         expect (expected.getDescription() == layoutName);
 
-        auto layouts = AudioChannelSet::channelSetsWithNumberOfChannels (numChannels);
+        auto layouts = AudioChannelSet::channelSetsWithNumberOfChannels (num_channels);
         expect (layouts.contains (expected));
 
         for (auto layout : layouts)

@@ -101,13 +101,13 @@ public:
     void handleIncomingMidiMessage (MidiInput*, const MidiMessage&) override;
 
 private:
-    struct NumChannels
+    struct num_channels
     {
-        NumChannels() = default;
-        NumChannels (int numIns, int numOuts) : ins (numIns), outs (numOuts) {}
+        num_channels() = default;
+        num_channels (int numIns, int numOuts) : ins (numIns), outs (numOuts) {}
 
-        explicit NumChannels (const AudioProcessor::BusesLayout& layout)
-            : ins (layout.getNumChannels (true, 0)), outs (layout.getNumChannels (false, 0)) {}
+        explicit num_channels (const AudioProcessor::BusesLayout& layout)
+            : ins (layout.get_num_channels (true, 0)), outs (layout.get_num_channels (false, 0)) {}
 
         AudioProcessor::BusesLayout toLayout() const
         {
@@ -119,7 +119,7 @@ private:
     };
 
     //==============================================================================
-    NumChannels findMostSuitableLayout (const AudioProcessor&) const;
+    num_channels findMostSuitableLayout (const AudioProcessor&) const;
     void resizeChannels();
 
     //==============================================================================
@@ -129,7 +129,7 @@ private:
     int blockSize = 0;
     bool isPrepared = false, isDoublePrecision = false;
 
-    NumChannels deviceChannels, defaultProcessorChannels, actualProcessorChannels;
+    num_channels deviceChannels, defaultProcessorChannels, actualProcessorChannels;
     std::vector<float*> channels;
     AudioBuffer<float> tempBuffer;
     AudioBuffer<double> conversionBuffer;

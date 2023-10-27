@@ -61,7 +61,7 @@ template <typename SampleType>
 void BallisticsFilter<SampleType>::prepare (const ProcessSpec& spec)
 {
     jassert (spec.sampleRate > 0);
-    jassert (spec.numChannels > 0);
+    jassert (spec.num_channels > 0);
 
     sampleRate = spec.sampleRate;
     expFactor  = -2.0 * MathConstants<double>::pi * 1000.0 / sampleRate;
@@ -69,7 +69,7 @@ void BallisticsFilter<SampleType>::prepare (const ProcessSpec& spec)
     setAttackTime  (attackTime);
     setReleaseTime (releaseTime);
 
-    yold.resize (spec.numChannels);
+    yold.resize (spec.num_channels);
 
     reset();
 }

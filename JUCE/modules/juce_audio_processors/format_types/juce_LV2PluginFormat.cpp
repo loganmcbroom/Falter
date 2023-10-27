@@ -4743,7 +4743,7 @@ private:
         for (const auto& port : instance->ports.getAudioPorts())
         {
             const auto channel = ioMap.getChannelForPort (port.header.index);
-            auto* ptr = isPositiveAndBelow (channel, audio.getNumChannels()) ? audio.getWritePointer (channel)
+            auto* ptr = isPositiveAndBelow (channel, audio.get_num_channels()) ? audio.getWritePointer (channel)
                                                                              : nullptr;
             instance->instance.connectPort (port.header.index, ptr);
         }

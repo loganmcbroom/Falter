@@ -69,14 +69,14 @@ SampleType DelayLine<SampleType, InterpolationType>::getDelay() const
 template <typename SampleType, typename InterpolationType>
 void DelayLine<SampleType, InterpolationType>::prepare (const ProcessSpec& spec)
 {
-    jassert (spec.numChannels > 0);
+    jassert (spec.NumChannels > 0);
 
-    bufferData.setSize ((int) spec.numChannels, totalSize, false, false, true);
+    bufferData.setSize ((int) spec.NumChannels, totalSize, false, false, true);
 
-    writePos.resize (spec.numChannels);
-    readPos.resize  (spec.numChannels);
+    writePos.resize (spec.NumChannels);
+    readPos.resize  (spec.NumChannels);
 
-    v.resize (spec.numChannels);
+    v.resize (spec.NumChannels);
     sampleRate = spec.sampleRate;
 
     reset();
@@ -87,7 +87,7 @@ void DelayLine<SampleType, InterpolationType>::setMaximumDelayInSamples (int max
 {
     jassert (maxDelayInSamples >= 0);
     totalSize = jmax (4, maxDelayInSamples + 1);
-    bufferData.setSize ((int) bufferData.getNumChannels(), totalSize, false, false, true);
+    bufferData.setSize ((int) bufferData.get_NumChannels(), totalSize, false, false, true);
     reset();
 }
 

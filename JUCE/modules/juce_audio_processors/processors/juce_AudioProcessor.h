@@ -316,7 +316,7 @@ public:
         Array<AudioChannelSet> outputBuses;
 
         /** Get the number of channels of a particular bus */
-        int getNumChannels (bool isInput, int busIndex) const noexcept
+        int get_num_channels (bool isInput, int busIndex) const noexcept
         {
             auto& bus = (isInput ? inputBuses : outputBuses);
             return isPositiveAndBelow (busIndex, bus.size()) ? bus.getReference (busIndex).size() : 0;
@@ -341,10 +341,10 @@ public:
         AudioChannelSet getMainOutputChannelSet() const noexcept    { return getChannelSet (false, 0); }
 
         /** Get the number of input channels on the main bus. */
-        int getMainInputChannels()  const noexcept                  { return getNumChannels (true, 0); }
+        int getMainInputChannels()  const noexcept                  { return get_num_channels (true, 0); }
 
         /** Get the number of output channels on the main bus. */
-        int getMainOutputChannels() const noexcept                  { return getNumChannels (false, 0); }
+        int getMainOutputChannels() const noexcept                  { return get_num_channels (false, 0); }
 
         bool operator== (const BusesLayout& other) const noexcept   { return inputBuses == other.inputBuses && outputBuses == other.outputBuses; }
         bool operator!= (const BusesLayout& other) const noexcept   { return inputBuses != other.inputBuses || outputBuses != other.outputBuses; }
@@ -649,11 +649,11 @@ public:
     template <typename FloatType>
     AudioBuffer<FloatType> getBusBuffer (AudioBuffer<FloatType>& processBlockBuffer, bool isInput, int busIndex) const
     {
-        auto busNumChannels = getChannelCountOfBus (isInput, busIndex);
+        auto busnum_channels = getChannelCountOfBus (isInput, busIndex);
         auto channelOffset = getChannelIndexInProcessBlockBuffer (isInput, busIndex, 0);
 
         return AudioBuffer<FloatType> (processBlockBuffer.getArrayOfWritePointers() + channelOffset,
-                                       busNumChannels, processBlockBuffer.getNumSamples());
+                                       busnum_channels, processBlockBuffer.getNumSamples());
     }
 
     //==============================================================================
@@ -1131,7 +1131,7 @@ public:
     virtual void setCurrentProgramStateInformation (const void* data, int sizeInBytes);
 
     /** This method is called when the total number of input or output channels is changed. */
-    virtual void numChannelsChanged();
+    virtual void num_channelsChanged();
 
     /** This method is called when the number of buses is changed. */
     virtual void numBusesChanged();

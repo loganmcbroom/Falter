@@ -1463,8 +1463,8 @@ struct VSTPluginInstance final   : public AudioPluginInstance,
         if (numInputBuses > 1 || numOutputBuses > 1)
             return (layouts == getBusesLayout());
 
-        return (layouts.getNumChannels (true,  0) <= vstEffect->numInputs
-             && layouts.getNumChannels (false, 0) <= vstEffect->numOutputs);
+        return (layouts.get_num_channels (true,  0) <= vstEffect->numInputs
+             && layouts.get_num_channels (false, 0) <= vstEffect->numOutputs);
     }
 
     //==============================================================================
@@ -2319,7 +2319,7 @@ private:
         }
 
         auto numSamples  = buffer.getNumSamples();
-        auto numChannels = buffer.getNumChannels();
+        auto num_channels = buffer.get_num_channels();
 
         if (initialised)
         {
@@ -2418,16 +2418,16 @@ private:
             auto maxChannels = jmax (vstEffect->numInputs, vstEffect->numOutputs);
             auto channels = channelBuffer.get();
 
-            if (numChannels < maxChannels)
+            if (num_channels < maxChannels)
             {
                 if (numSamples > tmpBuffer.getNumSamples())
-                    tmpBuffer.setSize (tmpBuffer.getNumChannels(), numSamples);
+                    tmpBuffer.setSize (tmpBuffer.get_num_channels(), numSamples);
 
                 tmpBuffer.clear();
             }
 
             for (int ch = 0; ch < maxChannels; ++ch)
-                channels[ch] = (ch < numChannels ? buffer.getWritePointer (ch) : tmpBuffer.getWritePointer (ch));
+                channels[ch] = (ch < num_channels ? buffer.getWritePointer (ch) : tmpBuffer.getWritePointer (ch));
 
             {
                 AudioBuffer<FloatType> processBuffer (channels, maxChannels, numSamples);

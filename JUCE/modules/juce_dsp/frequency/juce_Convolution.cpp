@@ -454,31 +454,31 @@ public:
           blockSize (maxBlockSize),
           isZeroDelay (isZeroDelayIn)
     {
-        constexpr auto numChannels = 2;
+        constexpr auto num_channels = 2;
 
         const auto makeEngine = [&] (int channel, int offset, int length, uint32 thisBlockSize)
         {
-            return std::make_unique<ConvolutionEngine> (buf.getReadPointer (jmin (buf.getNumChannels() - 1, channel), offset),
+            return std::make_unique<ConvolutionEngine> (buf.getReadPointer (jmin (buf.get_num_channels() - 1, channel), offset),
                                                         length,
                                                         static_cast<size_t> (thisBlockSize));
         };
 
         if (headSizeIn.headSizeInSamples == 0)
         {
-            for (int i = 0; i < numChannels; ++i)
+            for (int i = 0; i < num_channels; ++i)
                 head.emplace_back (makeEngine (i, 0, buf.getNumSamples(), static_cast<uint32> (maxBufferSize)));
         }
         else
         {
             const auto size = jmin (buf.getNumSamples(), headSizeIn.headSizeInSamples);
 
-            for (int i = 0; i < numChannels; ++i)
+            for (int i = 0; i < num_channels; ++i)
                 head.emplace_back (makeEngine (i, 0, size, static_cast<uint32> (maxBufferSize)));
 
             const auto tailBufferSize = static_cast<uint32> (headSizeIn.headSizeInSamples + (isZeroDelay ? 0 : maxBufferSize));
 
             if (size != buf.getNumSamples())
-                for (int i = 0; i < numChannels; ++i)
+                for (int i = 0; i < num_channels; ++i)
                     tail.emplace_back (makeEngine (i, size, buf.getNumSamples() - size, tailBufferSize));
         }
     }
@@ -494,7 +494,7 @@ public:
 
     void processSamples (const AudioBlock<const float>& input, AudioBlock<float>& output)
     {
-        const auto numChannels = jmin (head.size(), input.getNumChannels(), output.getNumChannels());
+        const auto num_channels = jmin (head.size(), input.get_num_channels(), output.get_num_channels());
         const auto numSamples  = jmin (input.getNumSamples(), output.getNumSamples());
 
         const AudioBlock<float> fullTailBlock (tailBuffer);
@@ -502,7 +502,7 @@ public:
 
         const auto isUniform = tail.empty();
 
-        for (size_t channel = 0; channel < numChannels; ++channel)
+        for (size_t channel = 0; channel < num_channels; ++channel)
         {
             if (! isUniform)
                 tail[channel]->processSamplesWithAddedLatency (input.getChannelPointer (channel),
@@ -522,9 +522,9 @@ public:
                 output.getSingleChannelBlock (channel) += tailBlock;
         }
 
-        const auto numOutputChannels = output.getNumChannels();
+        const auto numOutputChannels = output.get_num_channels();
 
-        for (auto i = numChannels; i < numOutputChannels; ++i)
+        for (auto i = num_channels; i < numOutputChannels; ++i)
             output.getSingleChannelBlock (i).copyFrom (output.getSingleChannelBlock (0));
     }
 
@@ -542,17 +542,17 @@ private:
     const bool isZeroDelay;
 };
 
-static AudioBuffer<float> fixNumChannels (const AudioBuffer<float>& buf, Convolution::Stereo stereo)
+static AudioBuffer<float> fixnum_channels (const AudioBuffer<float>& buf, Convolution::Stereo stereo)
 {
-    const auto numChannels = jmin (buf.getNumChannels(), stereo == Convolution::Stereo::yes ? 2 : 1);
+    const auto num_channels = jmin (buf.get_num_channels(), stereo == Convolution::Stereo::yes ? 2 : 1);
     const auto numSamples = buf.getNumSamples();
 
-    AudioBuffer<float> result (numChannels, buf.getNumSamples());
+    AudioBuffer<float> result (num_channels, buf.getNumSamples());
 
-    for (auto channel = 0; channel != numChannels; ++channel)
+    for (auto channel = 0; channel != num_channels; ++channel)
         result.copyFrom (channel, 0, buf.getReadPointer (channel), numSamples);
 
-    if (result.getNumSamples() == 0 || result.getNumChannels() == 0)
+    if (result.getNumSamples() == 0 || result.get_num_channels() == 0)
     {
         result.setSize (1, 1);
         result.setSample (0, 0, 1.0f);
@@ -565,13 +565,13 @@ static AudioBuffer<float> trimImpulseResponse (const AudioBuffer<float>& buf)
 {
     const auto thresholdTrim = Decibels::decibelsToGain (-80.0f);
 
-    const auto numChannels = buf.getNumChannels();
+    const auto num_channels = buf.get_num_channels();
     const auto numSamples = buf.getNumSamples();
 
     std::ptrdiff_t offsetBegin = numSamples;
     std::ptrdiff_t offsetEnd   = numSamples;
 
-    for (auto channel = 0; channel < numChannels; ++channel)
+    for (auto channel = 0; channel < num_channels; ++channel)
     {
         const auto indexAboveThreshold = [&] (auto begin, auto end)
         {
@@ -593,16 +593,16 @@ static AudioBuffer<float> trimImpulseResponse (const AudioBuffer<float>& buf)
 
     if (offsetBegin == numSamples)
     {
-        auto result = AudioBuffer<float> (numChannels, 1);
+        auto result = AudioBuffer<float> (num_channels, 1);
         result.clear();
         return result;
     }
 
     const auto newLength = jmax (1, numSamples - static_cast<int> (offsetBegin + offsetEnd));
 
-    AudioBuffer<float> result (numChannels, newLength);
+    AudioBuffer<float> result (num_channels, newLength);
 
-    for (auto channel = 0; channel < numChannels; ++channel)
+    for (auto channel = 0; channel < num_channels; ++channel)
     {
         result.copyFrom (channel,
                          0,
@@ -623,11 +623,11 @@ static float calculateNormalisationFactor (float sumSquaredMagnitude)
 
 static void normaliseImpulseResponse (AudioBuffer<float>& buf)
 {
-    const auto numChannels = buf.getNumChannels();
+    const auto num_channels = buf.get_num_channels();
     const auto numSamples  = buf.getNumSamples();
     const auto channelPtrs = buf.getArrayOfWritePointers();
 
-    const auto maxSumSquaredMag = std::accumulate (channelPtrs, channelPtrs + numChannels, 0.0f, [numSamples] (auto max, auto* channel)
+    const auto maxSumSquaredMag = std::accumulate (channelPtrs, channelPtrs + num_channels, 0.0f, [numSamples] (auto max, auto* channel)
     {
         return jmax (max, std::accumulate (channel, channel + numSamples, 0.0f, [] (auto sum, auto samp)
         {
@@ -637,7 +637,7 @@ static void normaliseImpulseResponse (AudioBuffer<float>& buf)
 
     const auto normalisationFactor = calculateNormalisationFactor (maxSumSquaredMag);
 
-    std::for_each (channelPtrs, channelPtrs + numChannels, [normalisationFactor, numSamples] (auto* channel)
+    std::for_each (channelPtrs, channelPtrs + num_channels, [normalisationFactor, numSamples] (auto* channel)
     {
         FloatVectorOperations::multiply (channel, normalisationFactor, numSamples);
     });
@@ -654,13 +654,13 @@ static AudioBuffer<float> resampleImpulseResponse (const AudioBuffer<float>& buf
 
     AudioBuffer<float> original = buf;
     MemoryAudioSource memorySource (original, false);
-    ResamplingAudioSource resamplingSource (&memorySource, false, buf.getNumChannels());
+    ResamplingAudioSource resamplingSource (&memorySource, false, buf.get_num_channels());
 
     const auto finalSize = roundToInt (jmax (1.0, buf.getNumSamples() / factorReading));
     resamplingSource.setResamplingRatio (factorReading);
     resamplingSource.prepareToPlay (finalSize, srcSampleRate);
 
-    AudioBuffer<float> result (buf.getNumChannels(), finalSize);
+    AudioBuffer<float> result (buf.get_num_channels(), finalSize);
     resamplingSource.getNextAudioBlock ({ &result, 0, result.getNumSamples() });
 
     return result;
@@ -711,12 +711,12 @@ static BufferWithSampleRate loadStreamToBuffer (std::unique_ptr<InputStream> str
     const auto fileLength = static_cast<size_t> (formatReader->lengthInSamples);
     const auto lengthToLoad = maxLength == 0 ? fileLength : jmin (maxLength, fileLength);
 
-    BufferWithSampleRate result { { jlimit (1, 2, static_cast<int> (formatReader->numChannels)),
+    BufferWithSampleRate result { { jlimit (1, 2, static_cast<int> (formatReader->num_channels)),
                                     static_cast<int> (lengthToLoad) },
                                   formatReader->sampleRate };
 
     formatReader->read (result.buffer.getArrayOfWritePointers(),
-                        result.buffer.getNumChannels(),
+                        result.buffer.get_num_channels(),
                         0,
                         result.buffer.getNumSamples());
 
@@ -760,7 +760,7 @@ public:
 
         impulseResponse = [&]
         {
-            auto corrected = fixNumChannels (buf.buffer, stereo);
+            auto corrected = fixnum_channels (buf.buffer, stereo);
             return trim == Convolution::Trim::yes ? trimImpulseResponse (corrected) : corrected;
         }();
 
@@ -943,7 +943,7 @@ public:
     {
         smoother.reset (spec.sampleRate, 0.05);
         smootherBuffer.setSize (1, static_cast<int> (spec.maximumBlockSize));
-        mixBuffer.setSize (static_cast<int> (spec.numChannels), static_cast<int> (spec.maximumBlockSize));
+        mixBuffer.setSize (static_cast<int> (spec.num_channels), static_cast<int> (spec.maximumBlockSize));
         reset();
     }
 
@@ -965,7 +965,7 @@ public:
             mixBlock.clear();
             previous (input, mixBlock);
 
-            for (size_t channel = 0; channel != output.getNumChannels(); ++channel)
+            for (size_t channel = 0; channel != output.get_num_channels(); ++channel)
             {
                 FloatVectorOperations::multiply (mixBlock.getChannelPointer (channel),
                                                  smootherBuffer.getReadPointer (0),
@@ -977,7 +977,7 @@ public:
 
             current (input, output);
 
-            for (size_t channel = 0; channel != output.getNumChannels(); ++channel)
+            for (size_t channel = 0; channel != output.get_num_channels(); ++channel)
             {
                 FloatVectorOperations::multiply (output.getChannelPointer (channel),
                                                  smootherBuffer.getReadPointer (0),
@@ -1140,7 +1140,7 @@ void Convolution::Mixer::prepare (const ProcessSpec& spec)
     sampleRate = spec.sampleRate;
 
     dryBlock = AudioBlock<float> (dryBlockStorage,
-                                  jmin (spec.numChannels, 2u),
+                                  jmin (spec.num_channels, 2u),
                                   spec.maximumBlockSize);
 
 }
@@ -1151,21 +1151,21 @@ void Convolution::Mixer::processSamples (const AudioBlock<const float>& input,
                                          bool isBypassed,
                                          ProcessWet&& processWet) noexcept
 {
-    const auto numChannels = jmin (input.getNumChannels(), volumeDry.size());
+    const auto num_channels = jmin (input.get_num_channels(), volumeDry.size());
     const auto numSamples  = jmin (input.getNumSamples(), output.getNumSamples());
 
-    auto dry = dryBlock.getSubsetChannelBlock (0, numChannels);
+    auto dry = dryBlock.getSubsetChannelBlock (0, num_channels);
 
     if (volumeDry[0].isSmoothing())
     {
         dry.copyFrom (input);
 
-        for (size_t channel = 0; channel < numChannels; ++channel)
+        for (size_t channel = 0; channel < num_channels; ++channel)
             volumeDry[channel].applyGain (dry.getChannelPointer (channel), (int) numSamples);
 
         processWet (input, output);
 
-        for (size_t channel = 0; channel < numChannels; ++channel)
+        for (size_t channel = 0; channel < num_channels; ++channel)
             volumeWet[channel].applyGain (output.getChannelPointer (channel), (int) numSamples);
 
         output += dry;
@@ -1179,7 +1179,7 @@ void Convolution::Mixer::processSamples (const AudioBlock<const float>& input,
         {
             currentIsBypassed = isBypassed;
 
-            for (size_t channel = 0; channel < numChannels; ++channel)
+            for (size_t channel = 0; channel < num_channels; ++channel)
             {
                 volumeDry[channel].setTargetValue (isBypassed ? 0.0f : 1.0f);
                 volumeDry[channel].reset (sampleRate, 0.05);
@@ -1280,8 +1280,8 @@ void Convolution::processSamples (const AudioBlock<const float>& input,
     if (! isActive)
         return;
 
-    jassert (input.getNumChannels() == output.getNumChannels());
-    jassert (isPositiveAndBelow (input.getNumChannels(), static_cast<size_t> (3))); // only mono and stereo is supported
+    jassert (input.get_num_channels() == output.get_num_channels());
+    jassert (isPositiveAndBelow (input.get_num_channels(), static_cast<size_t> (3))); // only mono and stereo is supported
 
     mixer.processSamples (input, output, isBypassed, [this] (const auto& in, auto& out)
     {

@@ -1,19 +1,14 @@
 Off topic:
-    Graph convertToPVOC
-    filter package
-    like one in twenty times converting to pvoc and back breaks
-        similar bug happened in prism, probably some kind of uninitialized gpu memory 
-    https://dsp.stackexchange.com/questions/41696/calculating-the-inverse-filter-for-the-exponential-sine-sweep-method/41700#41700
     song idea, cut mid video sponsered ads out of youtube videos
     song idea, something making fun of "top 10 x june 2022" articles
-    can anything else interesting be done with the wavetable class?
-    do flan Func types actually need forwarding ctors?
-    CHOC loads the same files as libsndfile without the dependancy
-    cancellers in audio/pvoc loading
     juce browser reset bug: https://forum.juce.com/t/filebrowsercomponent-timercallback-resetting-browser/53902
-    denormals?: https://www.carlh.net/plugins/denormals.php
 
-todo:
-        
-task:
-
+Maybe todo:
+    Audio:
+        synth grains needs a grain source function
+ 
+tasks:
+    Interpolator system with enum doesn't work with interpolate_points and also sucks
+        We would like to just take pFunc1x1 and call it a day
+        can't because flan::Function can't be copied, so it can't be captured by std::function, which is needed for interpolate_points
+        Function periodize suffers the same fate, can't capture the function passed in

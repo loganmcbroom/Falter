@@ -39,7 +39,7 @@ AudioSubsectionReader::AudioSubsectionReader (AudioFormatReader* sourceToUse,
     sampleRate = source->sampleRate;
     bitsPerSample = source->bitsPerSample;
     lengthInSamples = length;
-    numChannels = source->numChannels;
+    num_channels = source->num_channels;
     usesFloatingPointData = source->usesFloatingPointData;
 }
 
@@ -60,12 +60,12 @@ bool AudioSubsectionReader::readSamples (int** destSamples, int numDestChannels,
                                 startSampleInFile + startSample, numSamples);
 }
 
-void AudioSubsectionReader::readMaxLevels (int64 startSampleInFile, int64 numSamples, Range<float>* results, int numChannelsToRead)
+void AudioSubsectionReader::readMaxLevels (int64 startSampleInFile, int64 numSamples, Range<float>* results, int num_channelsToRead)
 {
     startSampleInFile = jmax ((int64) 0, startSampleInFile);
     numSamples = jmax ((int64) 0, jmin (numSamples, length - startSampleInFile));
 
-    source->readMaxLevels (startSampleInFile + startSample, numSamples, results, numChannelsToRead);
+    source->readMaxLevels (startSampleInFile + startSample, numSamples, results, num_channelsToRead);
 }
 
 } // namespace juce

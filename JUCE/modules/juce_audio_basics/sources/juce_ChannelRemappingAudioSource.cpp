@@ -106,9 +106,9 @@ void ChannelRemappingAudioSource::getNextAudioBlock (const AudioSourceChannelInf
 
     buffer.setSize (requiredNumberOfChannels, bufferToFill.numSamples, false, false, true);
 
-    const int numChans = bufferToFill.buffer->getNumChannels();
+    const int numChans = bufferToFill.buffer->get_num_channels();
 
-    for (int i = 0; i < buffer.getNumChannels(); ++i)
+    for (int i = 0; i < buffer.get_num_channels(); ++i)
     {
         const int remappedChan = getRemappedInputChannel (i);
 

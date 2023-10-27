@@ -334,18 +334,18 @@ namespace WavFileHelpers
     } JUCE_PACKED;
 
     //==============================================================================
-    inline AudioChannelSet canonicalWavChannelSet (int numChannels)
+    inline AudioChannelSet canonicalWavChannelSet (int num_channels)
     {
-        if (numChannels == 1)  return AudioChannelSet::mono();
-        if (numChannels == 2)  return AudioChannelSet::stereo();
-        if (numChannels == 3)  return AudioChannelSet::createLCR();
-        if (numChannels == 4)  return AudioChannelSet::quadraphonic();
-        if (numChannels == 5)  return AudioChannelSet::create5point0();
-        if (numChannels == 6)  return AudioChannelSet::create5point1();
-        if (numChannels == 7)  return AudioChannelSet::create7point0SDDS();
-        if (numChannels == 8)  return AudioChannelSet::create7point1SDDS();
+        if (num_channels == 1)  return AudioChannelSet::mono();
+        if (num_channels == 2)  return AudioChannelSet::stereo();
+        if (num_channels == 3)  return AudioChannelSet::createLCR();
+        if (num_channels == 4)  return AudioChannelSet::quadraphonic();
+        if (num_channels == 5)  return AudioChannelSet::create5point0();
+        if (num_channels == 6)  return AudioChannelSet::create5point1();
+        if (num_channels == 7)  return AudioChannelSet::create7point0SDDS();
+        if (num_channels == 8)  return AudioChannelSet::create7point1SDDS();
 
-        return AudioChannelSet::discreteChannels (numChannels);
+        return AudioChannelSet::discreteChannels (num_channels);
     }
 
     //==============================================================================
@@ -1263,7 +1263,7 @@ public:
                 {
                     // read the format chunk
                     auto format = (unsigned short) input->readShort();
-                    numChannels = (unsigned int) input->readShort();
+                    num_channels = (unsigned int) input->readShort();
                     sampleRate = input->readInt();
                     auto bytesPerSec = input->readInt();
                     input->skipNextBytes (2);
@@ -1273,12 +1273,12 @@ public:
                     {
                         bytesPerFrame = bytesPerSec / (int) sampleRate;
 
-                        if (numChannels != 0)
-                            bitsPerSample = 8 * (unsigned int) bytesPerFrame / numChannels;
+                        if (num_channels != 0)
+                            bitsPerSample = 8 * (unsigned int) bytesPerFrame / num_channels;
                     }
                     else
                     {
-                        bytesPerFrame = (int) (numChannels * bitsPerSample / 8);
+                        bytesPerFrame = (int) (num_channels * bitsPerSample / 8);
                     }
 
                     if (format == 3)
@@ -1296,7 +1296,7 @@ public:
                             input->skipNextBytes (4); // skip over size and bitsPerSample
                             auto channelMask = input->readInt();
                             dict["ChannelMask"] = String (channelMask);
-                            channelLayout = getChannelLayoutFromMask (channelMask, numChannels);
+                            channelLayout = getChannelLayoutFromMask (channelMask, num_channels);
 
                             ExtensibleWavSubFormat subFormat;
                             subFormat.data1 = (uint32) input->readInt();
@@ -1503,7 +1503,7 @@ public:
 
             copySampleData (bitsPerSample, usesFloatingPointData,
                             destSamples, startOffsetInDestBuffer, numDestChannels,
-                            tempBuffer, (int) numChannels, numThisTime);
+                            tempBuffer, (int) num_channels, numThisTime);
 
             startOffsetInDestBuffer += numThisTime;
             numSamples -= numThisTime;
@@ -1531,13 +1531,13 @@ public:
     //==============================================================================
     AudioChannelSet getChannelLayout() override
     {
-        if (channelLayout.size() == static_cast<int> (numChannels))
+        if (channelLayout.size() == static_cast<int> (num_channels))
             return channelLayout;
 
-        return WavFileHelpers::canonicalWavChannelSet (static_cast<int> (numChannels));
+        return WavFileHelpers::canonicalWavChannelSet (static_cast<int> (num_channels));
     }
 
-    static AudioChannelSet getChannelLayoutFromMask (int dwChannelMask, size_t totalNumChannels)
+    static AudioChannelSet getChannelLayoutFromMask (int dwChannelMask, size_t totalnum_channels)
     {
         AudioChannelSet wavFileChannelLayout;
 
@@ -1548,17 +1548,17 @@ public:
             wavFileChannelLayout.addChannel (static_cast<AudioChannelSet::ChannelType> (bit + 1));
 
         // channel layout and number of channels do not match
-        if (wavFileChannelLayout.size() != static_cast<int> (totalNumChannels))
+        if (wavFileChannelLayout.size() != static_cast<int> (totalnum_channels))
         {
             // for backward compatibility with old wav files, assume 1 or 2
             // channel wav files are mono/stereo respectively
-            if (totalNumChannels <= 2 && dwChannelMask == 0)
-                wavFileChannelLayout = AudioChannelSet::canonicalChannelSet (static_cast<int> (totalNumChannels));
+            if (totalnum_channels <= 2 && dwChannelMask == 0)
+                wavFileChannelLayout = AudioChannelSet::canonicalChannelSet (static_cast<int> (totalnum_channels));
             else
             {
                 auto discreteSpeaker = static_cast<int> (AudioChannelSet::discreteChannel0);
 
-                while (wavFileChannelLayout.size() < static_cast<int> (totalNumChannels))
+                while (wavFileChannelLayout.size() < static_cast<int> (totalnum_channels))
                     wavFileChannelLayout.addChannel (static_cast<AudioChannelSet::ChannelType> (discreteSpeaker++));
             }
         }
@@ -1628,15 +1628,15 @@ public:
         if (writeFailed)
             return false;
 
-        auto bytes = numChannels * (size_t) numSamples * bitsPerSample / 8;
+        auto bytes = num_channels * (size_t) numSamples * bitsPerSample / 8;
         tempBlock.ensureSize (bytes, false);
 
         switch (bitsPerSample)
         {
-            case 8:     WriteHelper<AudioData::UInt8, AudioData::Int32, AudioData::LittleEndian>::write (tempBlock.getData(), (int) numChannels, data, numSamples); break;
-            case 16:    WriteHelper<AudioData::Int16, AudioData::Int32, AudioData::LittleEndian>::write (tempBlock.getData(), (int) numChannels, data, numSamples); break;
-            case 24:    WriteHelper<AudioData::Int24, AudioData::Int32, AudioData::LittleEndian>::write (tempBlock.getData(), (int) numChannels, data, numSamples); break;
-            case 32:    WriteHelper<AudioData::Int32, AudioData::Int32, AudioData::LittleEndian>::write (tempBlock.getData(), (int) numChannels, data, numSamples); break;
+            case 8:     WriteHelper<AudioData::UInt8, AudioData::Int32, AudioData::LittleEndian>::write (tempBlock.getData(), (int) num_channels, data, numSamples); break;
+            case 16:    WriteHelper<AudioData::Int16, AudioData::Int32, AudioData::LittleEndian>::write (tempBlock.getData(), (int) num_channels, data, numSamples); break;
+            case 24:    WriteHelper<AudioData::Int24, AudioData::Int32, AudioData::LittleEndian>::write (tempBlock.getData(), (int) num_channels, data, numSamples); break;
+            case 32:    WriteHelper<AudioData::Int32, AudioData::Int32, AudioData::LittleEndian>::write (tempBlock.getData(), (int) num_channels, data, numSamples); break;
             default:    jassertfalse; break;
         }
 
@@ -1690,7 +1690,7 @@ private:
             return;
         }
 
-        const size_t bytesPerFrame = numChannels * bitsPerSample / 8;
+        const size_t bytesPerFrame = num_channels * bitsPerSample / 8;
         uint64 audioDataSize = bytesPerFrame * lengthInSamples;
         auto channelMask = getChannelMaskFromChannelLayout (channelLayout);
 
@@ -1762,7 +1762,7 @@ private:
                                                    : (short) 3 /*WAVE_FORMAT_IEEE_FLOAT*/);
         }
 
-        output->writeShort ((short) numChannels);
+        output->writeShort ((short) num_channels);
         output->writeInt ((int) sampleRate);
         output->writeInt ((int) ((double) bytesPerFrame * sampleRate)); // nAvgBytesPerSec
         output->writeShort ((short) bytesPerFrame); // nBlockAlign
@@ -1866,13 +1866,13 @@ public:
 
         WavAudioFormatReader::copySampleData (bitsPerSample, usesFloatingPointData,
                                               destSamples, startOffsetInDestBuffer, numDestChannels,
-                                              sampleToPointer (startSampleInFile), (int) numChannels, numSamples);
+                                              sampleToPointer (startSampleInFile), (int) num_channels, numSamples);
         return true;
     }
 
     void getSample (int64 sample, float* result) const noexcept override
     {
-        auto num = (int) numChannels;
+        auto num = (int) num_channels;
 
         if (map == nullptr || ! mappedSection.contains (sample))
         {
@@ -1897,7 +1897,7 @@ public:
         }
     }
 
-    void readMaxLevels (int64 startSampleInFile, int64 numSamples, Range<float>* results, int numChannelsToRead) override
+    void readMaxLevels (int64 startSampleInFile, int64 numSamples, Range<float>* results, int num_channelsToRead) override
     {
         numSamples = jmin (numSamples, lengthInSamples - startSampleInFile);
 
@@ -1905,7 +1905,7 @@ public:
         {
             jassert (numSamples <= 0); // you must make sure that the window contains all the samples you're going to attempt to read.
 
-            for (int i = 0; i < numChannelsToRead; ++i)
+            for (int i = 0; i < num_channelsToRead; ++i)
                 results[i] = {};
 
             return;
@@ -1913,11 +1913,11 @@ public:
 
         switch (bitsPerSample)
         {
-            case 8:     scanMinAndMax<AudioData::UInt8> (startSampleInFile, numSamples, results, numChannelsToRead); break;
-            case 16:    scanMinAndMax<AudioData::Int16> (startSampleInFile, numSamples, results, numChannelsToRead); break;
-            case 24:    scanMinAndMax<AudioData::Int24> (startSampleInFile, numSamples, results, numChannelsToRead); break;
-            case 32:    if (usesFloatingPointData) scanMinAndMax<AudioData::Float32> (startSampleInFile, numSamples, results, numChannelsToRead);
-                        else                       scanMinAndMax<AudioData::Int32>   (startSampleInFile, numSamples, results, numChannelsToRead);
+            case 8:     scanMinAndMax<AudioData::UInt8> (startSampleInFile, numSamples, results, num_channelsToRead); break;
+            case 16:    scanMinAndMax<AudioData::Int16> (startSampleInFile, numSamples, results, num_channelsToRead); break;
+            case 24:    scanMinAndMax<AudioData::Int24> (startSampleInFile, numSamples, results, num_channelsToRead); break;
+            case 32:    if (usesFloatingPointData) scanMinAndMax<AudioData::Float32> (startSampleInFile, numSamples, results, num_channelsToRead);
+                        else                       scanMinAndMax<AudioData::Int32>   (startSampleInFile, numSamples, results, num_channelsToRead);
                         break;
             default:    jassertfalse; break;
         }
@@ -1927,9 +1927,9 @@ public:
 
 private:
     template <typename SampleType>
-    void scanMinAndMax (int64 startSampleInFile, int64 numSamples, Range<float>* results, int numChannelsToRead) const noexcept
+    void scanMinAndMax (int64 startSampleInFile, int64 numSamples, Range<float>* results, int num_channelsToRead) const noexcept
     {
-        for (int i = 0; i < numChannelsToRead; ++i)
+        for (int i = 0; i < num_channelsToRead; ++i)
             results[i] = scanMinAndMaxInterleaved<SampleType, AudioData::LittleEndian> (i, startSampleInFile, numSamples);
     }
 
@@ -1982,7 +1982,7 @@ AudioFormatReader* WavAudioFormat::createReaderFor (InputStream* sourceStream, b
     }
    #endif
 
-    if (r->sampleRate > 0 && r->numChannels > 0 && r->bytesPerFrame > 0 && r->bitsPerSample <= 32)
+    if (r->sampleRate > 0 && r->num_channels > 0 && r->bytesPerFrame > 0 && r->bitsPerSample <= 32)
         return r.release();
 
     if (! deleteStreamIfOpeningFails)
@@ -2010,10 +2010,10 @@ MemoryMappedAudioFormatReader* WavAudioFormat::createMemoryMappedReader (FileInp
 }
 
 AudioFormatWriter* WavAudioFormat::createWriterFor (OutputStream* out, double sampleRate,
-                                                    unsigned int numChannels, int bitsPerSample,
+                                                    unsigned int num_channels, int bitsPerSample,
                                                     const StringPairArray& metadataValues, int qualityOptionIndex)
 {
-    return createWriterFor (out, sampleRate, WavFileHelpers::canonicalWavChannelSet (static_cast<int> (numChannels)),
+    return createWriterFor (out, sampleRate, WavFileHelpers::canonicalWavChannelSet (static_cast<int> (num_channels)),
                             bitsPerSample, metadataValues, qualityOptionIndex);
 }
 
@@ -2047,7 +2047,7 @@ namespace WavFileHelpers
             if (outStream != nullptr)
             {
                 std::unique_ptr<AudioFormatWriter> writer (wav.createWriterFor (outStream.get(), reader->sampleRate,
-                                                                                reader->numChannels, (int) reader->bitsPerSample,
+                                                                                reader->num_channels, (int) reader->bitsPerSample,
                                                                                 metadata, 0));
 
                 if (writer != nullptr)

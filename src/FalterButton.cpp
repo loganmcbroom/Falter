@@ -6,6 +6,7 @@ FalterButton::FalterButton( const String & _text, const Font * _font, size_t _fo
 	: Button( _text )
 	, font(_font)
 	, circle( false )
+	, down_text( _text )
 	{
 	setButtonText(_text);
 	if( _fontHeight != 0 )
@@ -39,7 +40,7 @@ void FalterButton::paintButton(Graphics &g, bool isMouseOverButton, bool isButto
 	g.setFont( f );
 
 	g.setColour( lnf.light );
-	g.drawText( getButtonText(),
+	g.drawText( isButtonDown ? down_text : getButtonText(),
 		Rectangle<int>( 0, 0, getWidth(), getHeight()), Justification::centred );
 
 	if( isEnabled() ) setMouseCursor( MouseCursor::PointingHandCursor );

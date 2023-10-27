@@ -435,7 +435,7 @@ public:
         if (! getClientMixFormat (tempClient, format))
             return;
 
-        actualNumChannels = numChannels = format.Format.nChannels;
+        actualnum_channels = num_channels = format.Format.nChannels;
         defaultSampleRate = format.Format.nSamplesPerSec;
         rates.addUsingDefaultSort (defaultSampleRate);
         mixFormatChannelMask = format.dwChannelMask;
@@ -459,10 +459,10 @@ public:
     {
         sampleRate = newSampleRate;
         channels = newChannels;
-        channels.setRange (actualNumChannels, channels.getHighestBit() + 1 - actualNumChannels, false);
-        numChannels = channels.getHighestBit() + 1;
+        channels.setRange (actualnum_channels, channels.getHighestBit() + 1 - actualnum_channels, false);
+        num_channels = channels.getHighestBit() + 1;
 
-        if (numChannels == 0)
+        if (num_channels == 0)
             return true;
 
         client = createClient();
@@ -533,7 +533,7 @@ public:
     WASAPIDeviceMode deviceMode;
 
     double sampleRate = 0, defaultSampleRate = 0;
-    int numChannels = 0, actualNumChannels = 0;
+    int num_channels = 0, actualnum_channels = 0;
     int minBufferSize = 0, defaultBufferSize = 0, latencySamples = 0;
     int lowLatencyBufferSizeMultiple = 0, lowLatencyMaxBufferSize = 0;
     DWORD mixFormatChannelMask = 0;
@@ -715,7 +715,7 @@ private:
     {
         zerostruct (format);
 
-        if (numChannels <= 2 && sampleFormat.bitsPerSampleToTry <= 16)
+        if (num_channels <= 2 && sampleFormat.bitsPerSampleToTry <= 16)
         {
             format.Format.wFormatTag = WAVE_FORMAT_PCM;
         }
@@ -726,7 +726,7 @@ private:
         }
 
         format.Format.nSamplesPerSec       = (DWORD) newSampleRate;
-        format.Format.nChannels            = (WORD) numChannels;
+        format.Format.nChannels            = (WORD) num_channels;
         format.Format.wBitsPerSample       = (WORD) (8 * sampleFormat.bytesPerSampleContainer);
         format.Samples.wValidBitsPerSample = (WORD) (sampleFormat.bitsPerSampleToTry);
         format.Format.nBlockAlign          = (WORD) (format.Format.nChannels * format.Format.wBitsPerSample / 8);
@@ -860,7 +860,7 @@ private:
 
             if (isInitialised)
             {
-                actualNumChannels  = format.Format.nChannels;
+                actualnum_channels  = format.Format.nChannels;
                 const bool isFloat = format.Format.wFormatTag == WAVE_FORMAT_EXTENSIBLE && format.SubFormat == KSDATAFORMAT_SUBTYPE_IEEE_FLOAT;
                 bytesPerSample     = format.Format.wBitsPerSample / 8;
                 bytesPerFrame      = format.Format.nBlockAlign;
@@ -894,7 +894,7 @@ public:
     bool open (double newSampleRate, const BigInteger& newChannels, int bufferSizeSamples)
     {
         return openClient (newSampleRate, newChannels, bufferSizeSamples)
-                && (numChannels == 0 || check (client->GetService (__uuidof (IAudioCaptureClient),
+                && (num_channels == 0 || check (client->GetService (__uuidof (IAudioCaptureClient),
                                                                    (void**) captureClient.resetAndGetPointerAddress())));
     }
 
@@ -910,7 +910,7 @@ public:
     void updateFormatWithType (SourceType*) noexcept
     {
         using NativeType = AudioData::Pointer<AudioData::Float32, AudioData::NativeEndian, AudioData::NonInterleaved, AudioData::NonConst>;
-        converter.reset (new AudioData::ConverterInstance<AudioData::Pointer<SourceType, AudioData::LittleEndian, AudioData::Interleaved, AudioData::Const>, NativeType> (actualNumChannels, 1));
+        converter.reset (new AudioData::ConverterInstance<AudioData::Pointer<SourceType, AudioData::LittleEndian, AudioData::Interleaved, AudioData::Const>, NativeType> (actualnum_channels, 1));
     }
 
     void updateFormat (bool isFloat) override
@@ -952,7 +952,7 @@ public:
 
     void handleDeviceBuffer()
     {
-        if (numChannels <= 0)
+        if (num_channels <= 0)
             return;
 
         uint8* inputData = nullptr;
@@ -992,7 +992,7 @@ public:
 
     void copyBuffersFromReservoir (float* const* destBuffers, const int numDestBuffers, const int bufferSize)
     {
-        if ((numChannels <= 0 && bufferSize == 0) || reservoir.isEmpty())
+        if ((num_channels <= 0 && bufferSize == 0) || reservoir.isEmpty())
             return;
 
         auto offset = jmax (0, bufferSize - queue.getNumReadable());
@@ -1042,7 +1042,7 @@ public:
     bool open (double newSampleRate, const BigInteger& newChannels, int bufferSizeSamples)
     {
         return openClient (newSampleRate, newChannels, bufferSizeSamples)
-                && (numChannels == 0 || check (client->GetService (__uuidof (IAudioRenderClient),
+                && (num_channels == 0 || check (client->GetService (__uuidof (IAudioRenderClient),
                                                                    (void**) renderClient.resetAndGetPointerAddress())));
     }
 
@@ -1056,7 +1056,7 @@ public:
     void updateFormatWithType (DestType*)
     {
         using NativeType = AudioData::Pointer<AudioData::Float32, AudioData::NativeEndian, AudioData::NonInterleaved, AudioData::Const>;
-        converter.reset (new AudioData::ConverterInstance<NativeType, AudioData::Pointer<DestType, AudioData::LittleEndian, AudioData::Interleaved, AudioData::NonConst>> (1, actualNumChannels));
+        converter.reset (new AudioData::ConverterInstance<NativeType, AudioData::Pointer<DestType, AudioData::LittleEndian, AudioData::Interleaved, AudioData::NonConst>> (1, actualnum_channels));
     }
 
     void updateFormat (bool isFloat) override
@@ -1085,7 +1085,7 @@ public:
 
     int getNumSamplesAvailableToCopy() const
     {
-        if (numChannels <= 0)
+        if (num_channels <= 0)
             return 0;
 
         if (! isExclusiveMode (deviceMode))
@@ -1102,7 +1102,7 @@ public:
     void copyBuffers (const float* const* srcBuffers, int numSrcBuffers, int bufferSize,
                       WASAPIInputDevice* inputDevice, Thread& thread)
     {
-        if (numChannels <= 0)
+        if (num_channels <= 0)
             return;
 
         int offset = 0;
@@ -1269,7 +1269,7 @@ public:
         StringArray outChannels;
 
         if (outputDevice != nullptr)
-            for (int i = 1; i <= outputDevice->actualNumChannels; ++i)
+            for (int i = 1; i <= outputDevice->actualnum_channels; ++i)
                 outChannels.add ("Output channel " + String (i));
 
         return outChannels;
@@ -1280,7 +1280,7 @@ public:
         StringArray inChannels;
 
         if (inputDevice != nullptr)
-            for (int i = 1; i <= inputDevice->actualNumChannels; ++i)
+            for (int i = 1; i <= inputDevice->actualnum_channels; ++i)
                 inChannels.add ("Input channel " + String (i));
 
         return inChannels;

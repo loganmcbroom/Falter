@@ -106,7 +106,7 @@ public:
         jassert (inBlock.getNumSamples()  == outBlock.getNumSamples());
 
         auto len         = inBlock.getNumSamples();
-        auto numChannels = inBlock.getNumChannels();
+        auto num_channels = inBlock.getNumChannels();
 
         if (context.isBypassed)
         {
@@ -118,7 +118,7 @@ public:
             return;
         }
 
-        if (numChannels == 1)
+        if (num_channels == 1)
         {
             auto* src = inBlock.getChannelPointer (0);
             auto* dst = outBlock.getChannelPointer (0);
@@ -134,7 +134,7 @@ public:
             for (size_t i = 0; i < len; ++i)
                 biases[i] = bias.getNextValue();
 
-            for (size_t chan = 0; chan < numChannels; ++chan)
+            for (size_t chan = 0; chan < num_channels; ++chan)
                 FloatVectorOperations::add (outBlock.getChannelPointer (chan),
                                             inBlock.getChannelPointer (chan),
                                             biases, static_cast<int> (len));

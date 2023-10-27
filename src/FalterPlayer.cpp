@@ -26,9 +26,9 @@ AudioTransportSource & FalterPlayer::getTransportSource()
 	return *transportSource.get();
 	}
 
-void FalterPlayer::prepareToPlay( int samplesPerBlockExpected, double sampleRate )
+void FalterPlayer::prepareToPlay( int samplesPerBlockExpected, double sample_rate )
 	{
-	transportSource->prepareToPlay( samplesPerBlockExpected, sampleRate );
+	transportSource->prepareToPlay( samplesPerBlockExpected, sample_rate );
 	}
 
 void FalterPlayer::getNextAudioBlock( const AudioSourceChannelInfo & bufferToFill )
@@ -50,7 +50,7 @@ void FalterPlayer::playAudio( FalterClip * clip )
 		}
 	activeClip = clip;
 
-	transportSource->setSource( &clip->audioSource, 0, nullptr, clip->audio.getSampleRate(), clip->audio.getNumChannels() );
+	transportSource->setSource( &clip->audioSource, 0, nullptr, clip->audio->get_sample_rate(), clip->audio->get_num_channels() );
 	transportSource->start();
 	transportSource->addChangeListener( clip );
 	}

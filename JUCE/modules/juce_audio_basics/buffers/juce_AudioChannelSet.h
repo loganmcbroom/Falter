@@ -296,20 +296,20 @@ public:
 
     //==============================================================================
     /** Creates a set of untyped discrete channels. */
-    static AudioChannelSet JUCE_CALLTYPE discreteChannels (int numChannels);
+    static AudioChannelSet JUCE_CALLTYPE discreteChannels (int num_channels);
 
     /** Create a canonical channel set for a given number of channels.
-        For example, numChannels = 1 will return mono, numChannels = 2 will return stereo, etc. */
-    static AudioChannelSet JUCE_CALLTYPE canonicalChannelSet (int numChannels);
+        For example, num_channels = 1 will return mono, num_channels = 2 will return stereo, etc. */
+    static AudioChannelSet JUCE_CALLTYPE canonicalChannelSet (int num_channels);
 
     /** Create a channel set for a given number of channels which is non-discrete.
-        If numChannels is larger than the number of channels of the surround format
+        If num_channels is larger than the number of channels of the surround format
         with the maximum amount of channels (currently 7.1 Surround), then this
         function returns an empty set.*/
-    static AudioChannelSet JUCE_CALLTYPE namedChannelSet (int numChannels);
+    static AudioChannelSet JUCE_CALLTYPE namedChannelSet (int num_channels);
 
     /** Return an array of channel sets which have a given number of channels */
-    static Array<AudioChannelSet> JUCE_CALLTYPE channelSetsWithNumberOfChannels (int numChannels);
+    static Array<AudioChannelSet> JUCE_CALLTYPE channelSetsWithNumberOfChannels (int num_channels);
 
     //==============================================================================
     /** Represents different audio channel types. */
@@ -519,7 +519,7 @@ private:
     explicit AudioChannelSet (const std::initializer_list<ChannelType>&);
 
     //==============================================================================
-    static int JUCE_CALLTYPE getAmbisonicOrderForNumChannels (int);
+    static int JUCE_CALLTYPE getAmbisonicOrderFornum_channels (int);
 };
 
 } // namespace juce

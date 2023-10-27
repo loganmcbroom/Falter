@@ -10,6 +10,7 @@
 #include "FalterThreadList.h"
 #include "FalterLookAndFeel.h"
 #include "FalterAudioDeviceSelector.h"
+
 class FalterLogger;
 class FalterPlayer;
 class Settings;
@@ -38,6 +39,7 @@ private:
 	void recordButtonClicked();
 	void settingsButtonClicked();
 	void scriptSelectButtonClicked();
+	void autoProcessButtonClicked();
 
 	void filesDropped( const StringArray & files, int x, int y ) override;
 	bool isInterestedInFileDrag( const StringArray & ) override;
@@ -63,6 +65,7 @@ private:
 	std::unique_ptr<FalterPlayer> player;
 	std::unique_ptr<AudioRecorder> recorder;
 	bool settingsMode;
+	bool autoProcess;
 
 	// Script watching
 	FW::FileWatcher fileWatcher;
@@ -75,6 +78,7 @@ private:
 	FalterButton recordButton;
 	FalterButton settingsButton;
 	FalterButton scriptSelectButton;
+	FalterButton autoProcessButton;
 	Label scriptLabel;
 
 	FalterFileBrowser sampleBrowser;

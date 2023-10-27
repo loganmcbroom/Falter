@@ -431,7 +431,7 @@ public:
         friend class AudioDeviceManager;
 
         Atomic<float> level { 0 };
-        void updateLevel (const float* const*, int numChannels, int numSamples) noexcept;
+        void updateLevel (const float* const*, int num_channels, int numSamples) noexcept;
     };
 
     /** Returns a reference-counted object that can be used to get the current input level.

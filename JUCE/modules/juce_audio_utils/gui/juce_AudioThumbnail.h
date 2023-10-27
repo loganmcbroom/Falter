@@ -103,7 +103,7 @@ public:
         If you're going to generate a thumbnail yourself, call this before using addBlock()
         to add the data.
     */
-    void reset (int numChannels, double sampleRate, int64 totalSamplesInSource = 0) override;
+    void reset (int num_channels, double sampleRate, int64 totalSamplesInSource = 0) override;
 
     /** Adds a block of level data to the thumbnail.
         Call reset() before using this, to tell the thumbnail about the data format.
@@ -129,7 +129,7 @@ public:
 
     //==============================================================================
     /** Returns the number of channels in the file. */
-    int getNumChannels() const noexcept override;
+    int get_num_channels() const noexcept override;
 
     /** Returns the length of the audio file, in seconds. */
     double getTotalLength() const noexcept override;
@@ -207,7 +207,7 @@ private:
     int32 samplesPerThumbSample = 0;
     int64 totalSamples { 0 };
     int64 numSamplesFinished = 0;
-    int32 numChannels = 0;
+    int32 num_channels = 0;
     double sampleRate = 0;
     CriticalSection lock;
 

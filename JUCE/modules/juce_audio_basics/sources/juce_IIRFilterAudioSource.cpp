@@ -66,12 +66,12 @@ void IIRFilterAudioSource::getNextAudioBlock (const AudioSourceChannelInfo& buff
 {
     input->getNextAudioBlock (bufferToFill);
 
-    const int numChannels = bufferToFill.buffer->getNumChannels();
+    const int num_channels = bufferToFill.buffer->get_num_channels();
 
-    while (numChannels > iirFilters.size())
+    while (num_channels > iirFilters.size())
         iirFilters.add (new IIRFilter (*iirFilters.getUnchecked (0)));
 
-    for (int i = 0; i < numChannels; ++i)
+    for (int i = 0; i < num_channels; ++i)
         iirFilters.getUnchecked(i)
             ->processSamples (bufferToFill.buffer->getWritePointer (i, bufferToFill.startSample),
                               bufferToFill.numSamples);

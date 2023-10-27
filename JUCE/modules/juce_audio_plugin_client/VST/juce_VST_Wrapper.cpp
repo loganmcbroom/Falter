@@ -446,8 +446,8 @@ public:
                     tmpBuffers.channels[i] = inputs[i];
 
                 {
-                    const int numChannels = jmax (numIn, numOut);
-                    AudioBuffer<FloatType> chans (tmpBuffers.channels, isMidiEffect ? 0 : numChannels, numSamples);
+                    const int num_channels = jmax (numIn, numOut);
+                    AudioBuffer<FloatType> chans (tmpBuffers.channels, isMidiEffect ? 0 : num_channels, numSamples);
 
                     if (isBypassed && processor->getBypassParameter() == nullptr)
                         processor->processBlockBypassed (chans, midiEvents);
@@ -1789,29 +1789,29 @@ private:
         if (pluginInput != nullptr && pluginInput->type >= 0)
         {
             // inconsistent request?
-            if (SpeakerMappings::vstArrangementTypeToChannelSet (*pluginInput).size() != pluginInput->numChannels)
+            if (SpeakerMappings::vstArrangementTypeToChannelSet (*pluginInput).size() != pluginInput->num_channels)
                 return 0;
         }
 
         if (pluginOutput != nullptr && pluginOutput->type >= 0)
         {
             // inconsistent request?
-            if (SpeakerMappings::vstArrangementTypeToChannelSet (*pluginOutput).size() != pluginOutput->numChannels)
+            if (SpeakerMappings::vstArrangementTypeToChannelSet (*pluginOutput).size() != pluginOutput->num_channels)
                 return 0;
         }
 
-        if (pluginInput != nullptr  && pluginInput->numChannels  > 0 && numIns  == 0)
+        if (pluginInput != nullptr  && pluginInput->num_channels  > 0 && numIns  == 0)
             return 0;
 
-        if (pluginOutput != nullptr && pluginOutput->numChannels > 0 && numOuts == 0)
+        if (pluginOutput != nullptr && pluginOutput->num_channels > 0 && numOuts == 0)
             return 0;
 
         auto layouts = processor->getBusesLayout();
 
-        if (pluginInput != nullptr && pluginInput-> numChannels >= 0 && numIns  > 0)
+        if (pluginInput != nullptr && pluginInput-> num_channels >= 0 && numIns  > 0)
             layouts.getChannelSet (true,  0) = SpeakerMappings::vstArrangementTypeToChannelSet (*pluginInput);
 
-        if (pluginOutput != nullptr && pluginOutput->numChannels >= 0 && numOuts > 0)
+        if (pluginOutput != nullptr && pluginOutput->num_channels >= 0 && numOuts > 0)
             layouts.getChannelSet (false, 0) = SpeakerMappings::vstArrangementTypeToChannelSet (*pluginOutput);
 
        #ifdef JucePlugin_PreferredChannelConfigurations

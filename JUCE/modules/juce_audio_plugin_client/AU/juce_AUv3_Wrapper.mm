@@ -641,7 +641,7 @@ public:
     {
         const bool isInput = ([auBus busType] == AUAudioUnitBusTypeInput);
         const int busIdx = static_cast<int> ([auBus index]);
-        const int newNumChannels = static_cast<int> ([format channelCount]);
+        const int newnum_channels = static_cast<int> ([format channelCount]);
 
         AudioProcessor& processor = getAudioProcessor();
 
@@ -652,7 +652,7 @@ public:
 
             short configs[][2] = {JucePlugin_PreferredChannelConfigurations};
 
-            if (! AudioUnitHelpers::isLayoutSupported (processor, isInput, busIdx, newNumChannels, configs))
+            if (! AudioUnitHelpers::isLayoutSupported (processor, isInput, busIdx, newnum_channels, configs))
                 return false;
           #else
             const AVAudioChannelLayout* layout    = [format channelLayout];
@@ -662,7 +662,7 @@ public:
             {
                 AudioChannelSet newLayout = CoreAudioLayouts::fromCoreAudio (layoutTag);
 
-                if (newLayout.size() != newNumChannels)
+                if (newLayout.size() != newnum_channels)
                     return false;
 
                 if (! bus->isLayoutSupported (newLayout))
@@ -670,7 +670,7 @@ public:
             }
             else
             {
-                if (! bus->isNumberOfChannelsSupported (newNumChannels))
+                if (! bus->isNumberOfChannelsSupported (newnum_channels))
                     return false;
             }
            #endif
@@ -1109,7 +1109,7 @@ private:
         }
 
         //==============================================================================
-        int numChannels() const noexcept                { return numberOfChannels; }
+        int num_channels() const noexcept                { return numberOfChannels; }
         bool interleaved() const noexcept               { return isInterleaved; }
         AudioBufferList* get() const noexcept           { return bufferList; }
 
@@ -1592,11 +1592,11 @@ private:
                     AudioBufferList* buffer = busBuffer.get();
 
                     const bool interleaved = busBuffer.interleaved();
-                    const int numChannels = busBuffer.numChannels();
+                    const int num_channels = busBuffer.num_channels();
 
                     const int* outLayoutMap = mapper.get (false, busIdx);
 
-                    for (int ch = 0; ch < numChannels; ++ch)
+                    for (int ch = 0; ch < num_channels; ++ch)
                         audioBuffer.setBuffer (chIdx++, interleaved ? nullptr : static_cast<float*> (buffer->mBuffers[outLayoutMap[ch]].mData));
                 }
 

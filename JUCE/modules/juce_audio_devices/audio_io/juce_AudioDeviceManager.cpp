@@ -506,10 +506,10 @@ void AudioDeviceManager::insertDefaultDeviceNames (AudioDeviceSetup& setup) cons
     {
         for (const auto isInput : { false, true })
         {
-            const auto numChannelsNeeded = isInput ? numInputChansNeeded : numOutputChansNeeded;
+            const auto num_channelsNeeded = isInput ? numInputChansNeeded : numOutputChansNeeded;
             const auto info = getSetupInfo (setup, isInput);
 
-            if (numChannelsNeeded > 0 && info.name.isEmpty())
+            if (num_channelsNeeded > 0 && info.name.isEmpty())
                 info.name = type->getDeviceNames (isInput) [type->getDefaultDeviceIndex (isInput)];
         }
     }
@@ -615,16 +615,16 @@ AudioIODeviceType* AudioDeviceManager::getCurrentDeviceTypeObject() const
 
 static void updateSetupChannels (AudioDeviceManager::AudioDeviceSetup& setup, int defaultNumIns, int defaultNumOuts)
 {
-    auto updateChannels = [] (const String& deviceName, BigInteger& channels, int defaultNumChannels)
+    auto updateChannels = [] (const String& deviceName, BigInteger& channels, int defaultnum_channels)
     {
         if (deviceName.isEmpty())
         {
             channels.clear();
         }
-        else if (defaultNumChannels != -1)
+        else if (defaultnum_channels != -1)
         {
             channels.clear();
-            channels.setRange (0, defaultNumChannels, true);
+            channels.setRange (0, defaultnum_channels, true);
         }
     };
 
@@ -1127,23 +1127,23 @@ void AudioDeviceManager::setDefaultMidiOutputDevice (const String& identifier)
 //==============================================================================
 AudioDeviceManager::LevelMeter::LevelMeter() noexcept : level() {}
 
-void AudioDeviceManager::LevelMeter::updateLevel (const float* const* channelData, int numChannels, int numSamples) noexcept
+void AudioDeviceManager::LevelMeter::updateLevel (const float* const* channelData, int num_channels, int numSamples) noexcept
 {
     if (getReferenceCount() <= 1)
         return;
 
     auto localLevel = level.get();
 
-    if (numChannels > 0)
+    if (num_channels > 0)
     {
         for (int j = 0; j < numSamples; ++j)
         {
             float s = 0;
 
-            for (int i = 0; i < numChannels; ++i)
+            for (int i = 0; i < num_channels; ++i)
                 s += std::abs (channelData[i][j]);
 
-            s /= (float) numChannels;
+            s /= (float) num_channels;
 
             const float decayFactor = 0.99992f;
 

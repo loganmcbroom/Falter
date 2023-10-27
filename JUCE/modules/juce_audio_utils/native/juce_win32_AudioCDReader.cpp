@@ -1022,7 +1022,7 @@ AudioCDReader::AudioCDReader (void* handle_)
 
     sampleRate = 44100.0;
     bitsPerSample = 16;
-    numChannels = 2;
+    num_channels = 2;
     usesFloatingPointData = false;
 
     buffer.setSize (4 * bytesPerFrame, true);

@@ -56,10 +56,10 @@ template <typename SampleType>
 void FirstOrderTPTFilter<SampleType>::prepare (const ProcessSpec& spec)
 {
     jassert (spec.sampleRate > 0);
-    jassert (spec.numChannels > 0);
+    jassert (spec.num_channels > 0);
 
     sampleRate = spec.sampleRate;
-    s1.resize (spec.numChannels);
+    s1.resize (spec.num_channels);
 
     update();
     reset();

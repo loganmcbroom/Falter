@@ -16,8 +16,8 @@ public:
 	std::shared_ptr<Component> addItem( std::shared_ptr<Component> item );
 	std::shared_ptr<Component> insertItem( std::shared_ptr<Component> item, size_t index );
 	int getIndex( Component * item );
-	void erase( int index );
-	void erase( Component * item );
+	virtual void erase( int index );
+	virtual void erase( Component * item );
 	void clear();
 	void swap( int a, int b );
 	std::shared_ptr<Component> getItem( int index );

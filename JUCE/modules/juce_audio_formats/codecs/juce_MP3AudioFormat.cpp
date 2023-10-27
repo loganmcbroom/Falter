@@ -481,7 +481,7 @@ struct MP3Frame
         static const AllocationTable* const tables[] = { allocTable0, allocTable1, allocTable2, allocTable3, allocTable4 };
         static constexpr int8 limits[] = { 27, 30, 8, 12, 30 };
 
-        const int index = lsf ? 4 : translate[sampleRateIndex][2 - numChannels][bitrateIndex];
+        const int index = lsf ? 4 : translate[sampleRateIndex][2 - num_channels][bitrateIndex];
         layer2SubBandLimit = limits[index];
         allocationTable = tables[index];
     }
@@ -511,7 +511,7 @@ struct MP3Frame
         //copyright         = (header >> 3) & 1;
         //original          = (header >> 2) & 1;
         //emphasis          = header & 3;
-        numChannels         = (mode == 3) ? 1 : 2;
+        num_channels         = (mode == 3) ? 1 : 2;
 
         static constexpr int frameSizes[2][3][16] =
         {
@@ -543,7 +543,7 @@ struct MP3Frame
         return ParseSuccessful::yes;
     }
 
-    int layer, frameSize, numChannels, single;
+    int layer, frameSize, num_channels, single;
     int lsf;     // 0 = mpeg-1, 1 = mpeg-2/LSF
     bool mpeg25; // true = mpeg-2.5, false = mpeg-1/2
     bool crc16FollowsHeader;
@@ -1441,8 +1441,8 @@ struct MP3Stream
             headerParsed = true;
             frameSize = frame.frameSize;
             isFreeFormat = (frameSize == 0);
-            sideInfoSize = frame.lsf != 0 ? ((frame.numChannels == 1) ? 9 : 17)
-                                          : ((frame.numChannels == 1) ? 17 : 32);
+            sideInfoSize = frame.lsf != 0 ? ((frame.num_channels == 1) ? 9 : 17)
+                                          : ((frame.num_channels == 1) ? 17 : 32);
 
             if (frame.crc16FollowsHeader)
                 sideInfoSize += 2;
@@ -1719,9 +1719,9 @@ private:
                 const uint32 lsf             = mpeg25 ? 1 : ((header & (1 << 19)) ? 0 : 1);
                 const uint32 sampleRateIndex = mpeg25 ? (6 + ((header >> 10) & 3)) : (((header >> 10) & 3) + (lsf * 3));
                 const uint32 mode            = (header >> 6) & 3;
-                const uint32 numChannels     = (mode == 3) ? 1 : 2;
+                const uint32 num_channels     = (mode == 3) ? 1 : 2;
 
-                if (numChannels == (uint32) frame.numChannels && lsf == (uint32) frame.lsf
+                if (num_channels == (uint32) frame.num_channels && lsf == (uint32) frame.lsf
                       && mpeg25 == frame.mpeg25 && sampleRateIndex == (uint32) frame.sampleRateIndex)
                     break;
             }
@@ -1763,7 +1763,7 @@ private:
         float fraction[2][32];
         SideInfoLayer1 si;
         layer1Step1 (si);
-        auto single = (frame.numChannels == 1 || frame.single == 3) ? 0 : frame.single;
+        auto single = (frame.num_channels == 1 || frame.single == 3) ? 0 : frame.single;
 
         if (single >= 0)
         {
@@ -1789,7 +1789,7 @@ private:
         frame.selectLayer2Table();
         SideInfoLayer2 si;
         layer2Step1 (si);
-        auto single = (frame.numChannels == 1 || frame.single == 3) ? 0 : frame.single;
+        auto single = (frame.num_channels == 1 || frame.single == 3) ? 0 : frame.single;
 
         if (single >= 0)
         {
@@ -1818,8 +1818,8 @@ private:
         if (! rollBackBufferPointer ((int) sideinfo.mainDataStart))
             return;
 
-        const int single = frame.numChannels == 1 ? 0 : frame.single;
-        const int numChans = (frame.numChannels == 1 || single >= 0) ? 1 : 2;
+        const int single = frame.num_channels == 1 ? 0 : frame.single;
+        const int numChans = (frame.num_channels == 1 || single >= 0) ? 1 : 2;
         const bool msStereo = (frame.mode == 1) && (frame.modeExt & 2) != 0;
         const bool iStereo  = (frame.mode == 1) && (frame.modeExt & 1) != 0;
         const int granules = frame.lsf ? 1 : 2;
@@ -1836,7 +1836,7 @@ private:
                     return;
             }
 
-            if (frame.numChannels == 2)
+            if (frame.num_channels == 2)
             {
                 auto& granule = sideinfo.ch[1].gr[gr];
                 auto part2bits = frame.lsf ? getLayer3ScaleFactors2 (scaleFactors[1], granule, iStereo)
@@ -1913,21 +1913,21 @@ private:
 
     int decodeLayer3SideInfo() noexcept
     {
-        const int numChannels = frame.numChannels;
+        const int num_channels = frame.num_channels;
         const int sampleRate = frame.sampleRateIndex;
-        const int single = (numChannels == 1) ? 0 : frame.single;
+        const int single = (num_channels == 1) ? 0 : frame.single;
         const bool msStereo = (frame.mode == 1) && (frame.modeExt & 2) != 0;
         const int granules = frame.lsf ? 1 : 2;
 
         if (frame.lsf == 0)
-            getLayer3SideInfo1 (numChannels, msStereo, sampleRate, single);
+            getLayer3SideInfo1 (num_channels, msStereo, sampleRate, single);
         else
-            getLayer3SideInfo2 (numChannels, msStereo, sampleRate, single);
+            getLayer3SideInfo2 (num_channels, msStereo, sampleRate, single);
 
         int databits = 0;
 
         for (int gr = 0; gr < granules; ++gr)
-            for (int ch = 0; ch < numChannels; ++ch)
+            for (int ch = 0; ch < num_channels; ++ch)
                 databits += (int) sideinfo.ch[ch].gr[gr].part2_3Length;
 
         return databits - 8 * (int) sideinfo.mainDataStart;
@@ -1938,7 +1938,7 @@ private:
         zerostruct (si);
         int i, jsbound = (frame.mode == 1) ? (frame.modeExt << 2) + 4 : 32;
 
-        if (frame.numChannels == 2)
+        if (frame.num_channels == 2)
         {
             for (i = 0; i < jsbound; ++i)
             {
@@ -1967,7 +1967,7 @@ private:
 
     void layer1Step2 (SideInfoLayer1& si, float fraction[2][32]) noexcept
     {
-        if (frame.numChannels == 2)
+        if (frame.num_channels == 2)
         {
             int i, jsbound = (frame.mode == 1) ? (frame.modeExt << 2) + 4 : 32;
 
@@ -2016,7 +2016,7 @@ private:
         auto* allocTable = frame.allocationTable;
         uint8 scfsi[32][2];
 
-        if (frame.numChannels == 2)
+        if (frame.num_channels == 2)
         {
             for (int i = 0; i < jsbound; ++i)
             {
@@ -2056,7 +2056,7 @@ private:
 
         for (int i = 0; i < sblimit; ++i)
         {
-            for (int ch = 0; ch < frame.numChannels; ++ch)
+            for (int ch = 0; ch < frame.num_channels; ++ch)
             {
                 uint8 s0 = 0, s1 = 0, s2 = 0;
 
@@ -2102,7 +2102,7 @@ private:
         {
             auto step = allocTable->bits;
 
-            for (int ch = 0; ch < frame.numChannels; ++ch)
+            for (int ch = 0; ch < frame.num_channels; ++ch)
             {
                 if (auto ba = si.allocation[i][ch])
                 {
@@ -2153,7 +2153,7 @@ private:
                     auto v1 = (int) getBits (k);
                     auto v2 = (int) getBits (k);
 
-                    for (int ch = 0; ch < frame.numChannels; ++ch)
+                    for (int ch = 0; ch < frame.num_channels; ++ch)
                     {
                         auto x1 = jmin ((uint8) 63, si.scaleFactor[i][ch][gr]);
                         const double cm = constants.muls[k][x1];
@@ -2169,7 +2169,7 @@ private:
                     auto k1 = tab[1];
                     auto k2 = tab[2];
 
-                    for (int ch = 0; ch < frame.numChannels; ++ch)
+                    for (int ch = 0; ch < frame.num_channels; ++ch)
                     {
                         auto x1 = jmin ((uint8) 63, si.scaleFactor[i][ch][gr]);
                         fraction[ch][0][i] = (float) constants.muls[k0][x1];
@@ -2187,7 +2187,7 @@ private:
             allocTable += (static_cast<intptr_t> (1) << step);
         }
 
-        for (int ch = 0; ch < frame.numChannels; ++ch)
+        for (int ch = 0; ch < frame.num_channels; ++ch)
             for (int i = frame.layer2SubBandLimit; i < 32; ++i)
                 fraction[ch][0][i] = fraction[ch][1][i] = fraction[ch][2][i] = 0;
     }
@@ -2970,7 +2970,7 @@ public:
             bitsPerSample = 32;
             usesFloatingPointData = true;
             sampleRate = stream.frame.getFrequency();
-            numChannels = (unsigned int) stream.frame.numChannels;
+            num_channels = (unsigned int) stream.frame.num_channels;
             lengthInSamples = findLength (streamPos);
         }
     }
@@ -3037,7 +3037,7 @@ public:
             memcpy (dst[0] + startOffsetInDestBuffer, decoded0 + decodedStart, (size_t) numToCopy * sizeof (float));
 
             if (numDestChannels > 1 && dst[1] != nullptr)
-                memcpy (dst[1] + startOffsetInDestBuffer, (numChannels < 2 ? decoded0 : decoded1) + decodedStart, (size_t) numToCopy * sizeof (float));
+                memcpy (dst[1] + startOffsetInDestBuffer, (num_channels < 2 ? decoded0 : decoded1) + decodedStart, (size_t) numToCopy * sizeof (float));
 
             startOffsetInDestBuffer += numToCopy;
             decodedStart += numToCopy;

@@ -78,10 +78,8 @@ void FalterList::erase( Component * item )
 
 void FalterList::clear()
 	{
-		{
-		const ScopedWriteLock scoperLock( changingItemsLock );
-		items.clear();
-		}
+	for( int i = items.size() - 1; i >= 0; --i )
+		erase( i );
 	}
 
 void FalterList::swap( int a, int b )

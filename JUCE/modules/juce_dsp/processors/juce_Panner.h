@@ -80,8 +80,8 @@ public:
         const auto& inputBlock = context.getInputBlock();
         auto& outputBlock      = context.getOutputBlock();
 
-        const auto numInputChannels  = inputBlock.getNumChannels();
-        const auto numOutputChannels = outputBlock.getNumChannels();
+        const auto numInputChannels  = inputBlock.get_num_channels();
+        const auto numOutputChannels = outputBlock.get_num_channels();
         const auto numSamples        = outputBlock.getNumSamples();
 
         jassertquiet (inputBlock.getNumSamples() == numSamples);

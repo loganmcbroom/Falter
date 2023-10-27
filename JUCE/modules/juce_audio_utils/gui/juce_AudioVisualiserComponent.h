@@ -47,13 +47,13 @@ class JUCE_API AudioVisualiserComponent  : public Component,
 {
 public:
     /** Creates a visualiser with the given number of channels. */
-    AudioVisualiserComponent (int initialNumChannels);
+    AudioVisualiserComponent (int initialnum_channels);
 
     /** Destructor. */
     ~AudioVisualiserComponent() override;
 
     /** Changes the number of channels that the visualiser stores. */
-    void setNumChannels (int numChannels);
+    void setnum_channels (int num_channels);
 
     /** Changes the number of samples that the visualiser keeps in its history.
         Note that this value refers to the number of averaged sample blocks, and each
@@ -87,13 +87,13 @@ public:
         The number of channels provided here is expected to match the number of channels
         that this AudioVisualiserComponent has been told to use.
     */
-    void pushBuffer (const float** channelData, int numChannels, int numSamples);
+    void pushBuffer (const float** channelData, int num_channels, int numSamples);
 
     /** Pushes a single sample (per channel).
         The number of channels provided here is expected to match the number of channels
         that this AudioVisualiserComponent has been told to use.
     */
-    void pushSample (const float* samplesForEachChannel, int numChannels);
+    void pushSample (const float* samplesForEachChannel, int num_channels);
 
     /** Sets the colours used to paint the */
     void setColours (Colour backgroundColour, Colour waveformColour) noexcept;

@@ -161,14 +161,14 @@ public:
                             ok for this to be beyond the start or end of the stream.
         @param numSamples   how many samples to read
         @param results      this array will be filled with Range values for each channel.
-                            The array must contain numChannels elements.
-        @param numChannelsToRead  the number of channels of data to scan. This must be
+                            The array must contain num_channels elements.
+        @param num_channelsToRead  the number of channels of data to scan. This must be
                             more than zero, but not more than the total number of channels
                             that the reader contains
         @see read
     */
     virtual void readMaxLevels (int64 startSample, int64 numSamples,
-                                Range<float>* results, int numChannelsToRead);
+                                Range<float>* results, int num_channelsToRead);
 
     /** Finds the highest and lowest sample levels from a section of the audio stream.
 
@@ -231,7 +231,7 @@ public:
     int64 lengthInSamples = 0;
 
     /** The total number of channels in the audio stream. */
-    unsigned int numChannels = 0;
+    unsigned int num_channels = 0;
 
     /** Indicates whether the data is floating-point or fixed. */
     bool usesFloatingPointData = false;

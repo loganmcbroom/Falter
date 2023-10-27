@@ -105,7 +105,7 @@ public:
     void reset() override                                                         { inner->reset(); }
     void setNonRealtime (bool b) noexcept override                                { inner->setNonRealtime (b); }
     void refreshParameterList() override                                          { inner->refreshParameterList(); }
-    void numChannelsChanged() override                                            { inner->numChannelsChanged(); }
+    void num_channelsChanged() override                                            { inner->num_channelsChanged(); }
     void numBusesChanged() override                                               { inner->numBusesChanged(); }
     void processorLayoutsChanged() override                                       { inner->processorLayoutsChanged(); }
     void setPlayHead (AudioPlayHead* p) override                                  { inner->setPlayHead (p); }
@@ -295,7 +295,7 @@ private:
                     {
                         const float currentSample = (float) (sin (currentAngle) * level * tailOff);
 
-                        for (int i = outputBuffer.getNumChannels(); --i >= 0;)
+                        for (int i = outputBuffer.get_num_channels(); --i >= 0;)
                             outputBuffer.addSample (i, startSample, currentSample);
 
                         currentAngle += angleDelta;
@@ -319,7 +319,7 @@ private:
                     {
                         const float currentSample = (float) (sin (currentAngle) * level);
 
-                        for (int i = outputBuffer.getNumChannels(); --i >= 0;)
+                        for (int i = outputBuffer.get_num_channels(); --i >= 0;)
                             outputBuffer.addSample (i, startSample, currentSample);
 
                         currentAngle += angleDelta;
@@ -370,16 +370,16 @@ public:
 
     void processBlock (AudioBuffer<float>& buffer, MidiBuffer&) override
     {
-        auto numChannels = buffer.getNumChannels();
+        auto num_channels = buffer.get_num_channels();
 
-        if (numChannels == 1)
+        if (num_channels == 1)
             reverb.processMono (buffer.getWritePointer (0), buffer.getNumSamples());
         else
             reverb.processStereo (buffer.getWritePointer (0),
                                   buffer.getWritePointer (1),
                                   buffer.getNumSamples());
 
-        for (int ch = 2; ch < numChannels; ++ch)
+        for (int ch = 2; ch < num_channels; ++ch)
             buffer.clear (ch, 0, buffer.getNumSamples());
     }
 

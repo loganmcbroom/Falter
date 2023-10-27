@@ -135,8 +135,8 @@ public:
         jassert (outBlock.getNumSamples() <= static_cast<size_t> (rampBuffer.size()));
 
         auto len           = outBlock.getNumSamples();
-        auto numChannels   = outBlock.getNumChannels();
-        auto inputChannels = inBlock.getNumChannels();
+        auto NumChannels   = outBlock.get_NumChannels();
+        auto inputChannels = inBlock.get_NumChannels();
         auto baseIncrement = MathConstants<NumericType>::twoPi / sampleRate;
 
         if (context.isBypassed)
@@ -156,7 +156,7 @@ public:
 
                 if (context.usesSeparateInputAndOutputBlocks())
                 {
-                    for (ch = 0; ch < jmin (numChannels, inputChannels); ++ch)
+                    for (ch = 0; ch < jmin (NumChannels, inputChannels); ++ch)
                     {
                         auto* dst = outBlock.getChannelPointer (ch);
                         auto* src = inBlock.getChannelPointer (ch);
@@ -167,7 +167,7 @@ public:
                 }
                 else
                 {
-                    for (ch = 0; ch < jmin (numChannels, inputChannels); ++ch)
+                    for (ch = 0; ch < jmin (NumChannels, inputChannels); ++ch)
                     {
                         auto* dst = outBlock.getChannelPointer (ch);
 
@@ -176,7 +176,7 @@ public:
                     }
                 }
 
-                for (; ch < numChannels; ++ch)
+                for (; ch < NumChannels; ++ch)
                 {
                     auto* dst = outBlock.getChannelPointer (ch);
 
@@ -201,7 +201,7 @@ public:
 
                 if (context.usesSeparateInputAndOutputBlocks())
                 {
-                    for (ch = 0; ch < jmin (numChannels, inputChannels); ++ch)
+                    for (ch = 0; ch < jmin (NumChannels, inputChannels); ++ch)
                     {
                         p = phase;
                         auto* dst = outBlock.getChannelPointer (ch);
@@ -213,7 +213,7 @@ public:
                 }
                 else
                 {
-                    for (ch = 0; ch < jmin (numChannels, inputChannels); ++ch)
+                    for (ch = 0; ch < jmin (NumChannels, inputChannels); ++ch)
                     {
                         p = phase;
                         auto* dst = outBlock.getChannelPointer (ch);
@@ -223,7 +223,7 @@ public:
                     }
                 }
 
-                for (; ch < numChannels; ++ch)
+                for (; ch < NumChannels; ++ch)
                 {
                     p = phase;
                     auto* dst = outBlock.getChannelPointer (ch);

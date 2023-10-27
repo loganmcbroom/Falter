@@ -43,7 +43,7 @@ public:
 
         if (auto out = tempWav.getFile().createOutputStream())
         {
-            writer.reset (wavFormat.createWriterFor (out.release(), sampleRateIn, numChannels,
+            writer.reset (wavFormat.createWriterFor (out.release(), sampleRateIn, num_channels,
                                                      bitsPerSampleIn, metadata, 0));
 
             args.add (appFile.getFullPathName());

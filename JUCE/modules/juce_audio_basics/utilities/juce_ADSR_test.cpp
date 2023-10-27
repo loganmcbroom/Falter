@@ -189,7 +189,7 @@ struct ADSRTests  : public UnitTest
     {
         AudioBuffer<float> buffer { 2, roundToInt (lengthInSeconds * sampleRate) };
 
-        for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
+        for (int channel = 0; channel < buffer.get_num_channels(); ++channel)
             for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
                 buffer.setSample (channel, sample, 1.0f);
 
@@ -198,9 +198,9 @@ struct ADSRTests  : public UnitTest
 
     static bool isIncreasing (const AudioBuffer<float>& b)
     {
-        jassert (b.getNumChannels() > 0 && b.getNumSamples() > 0);
+        jassert (b.get_num_channels() > 0 && b.getNumSamples() > 0);
 
-        for (int channel = 0; channel < b.getNumChannels(); ++channel)
+        for (int channel = 0; channel < b.get_num_channels(); ++channel)
         {
             float previousSample = -1.0f;
 
@@ -220,9 +220,9 @@ struct ADSRTests  : public UnitTest
 
     static bool isDecreasing (const AudioBuffer<float>& b)
     {
-        jassert (b.getNumChannels() > 0 && b.getNumSamples() > 0);
+        jassert (b.get_num_channels() > 0 && b.getNumSamples() > 0);
 
-        for (int channel = 0; channel < b.getNumChannels(); ++channel)
+        for (int channel = 0; channel < b.get_num_channels(); ++channel)
         {
             float previousSample = std::numeric_limits<float>::max();
 
@@ -242,9 +242,9 @@ struct ADSRTests  : public UnitTest
 
     static bool isSustained (const AudioBuffer<float>& b, float sustainLevel)
     {
-        jassert (b.getNumChannels() > 0 && b.getNumSamples() > 0);
+        jassert (b.get_num_channels() > 0 && b.getNumSamples() > 0);
 
-        for (int channel = 0; channel < b.getNumChannels(); ++channel)
+        for (int channel = 0; channel < b.get_num_channels(); ++channel)
             if (b.findMinMax (channel, 0, b.getNumSamples()) != Range<float> { sustainLevel, sustainLevel })
                 return false;
 

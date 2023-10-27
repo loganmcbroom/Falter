@@ -69,10 +69,10 @@ public:
     {
         const auto& inputBlock = context.getInputBlock();
         auto& outputBlock      = context.getOutputBlock();
-        const auto numChannels = outputBlock.getNumChannels();
+        const auto num_channels = outputBlock.getNumChannels();
         const auto numSamples  = outputBlock.getNumSamples();
 
-        jassert (inputBlock.getNumChannels() == numChannels);
+        jassert (inputBlock.getNumChannels() == num_channels);
         jassert (inputBlock.getNumSamples()  == numSamples);
 
         if (context.isBypassed)
@@ -81,7 +81,7 @@ public:
             return;
         }
 
-        for (size_t channel = 0; channel < numChannels; ++channel)
+        for (size_t channel = 0; channel < num_channels; ++channel)
         {
             auto* inputSamples  = inputBlock .getChannelPointer (channel);
             auto* outputSamples = outputBlock.getChannelPointer (channel);

@@ -127,7 +127,7 @@ public:
 
         if (isSmoothing())
         {
-            if (buffer.getNumChannels() == 1)
+            if (buffer.get_num_channels() == 1)
             {
                 auto* samples = buffer.getWritePointer (0);
 
@@ -140,7 +140,7 @@ public:
                 {
                     auto gain = getNextSmoothedValue();
 
-                    for (int channel = 0; channel < buffer.getNumChannels(); channel++)
+                    for (int channel = 0; channel < buffer.get_num_channels(); channel++)
                         buffer.setSample (channel, i, buffer.getSample (channel, i) * gain);
                 }
             }

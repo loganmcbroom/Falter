@@ -63,10 +63,10 @@ public:
     {
         const auto& inputBlock = context.getInputBlock();
         auto& outputBlock      = context.getOutputBlock();
-        const auto numChannels = outputBlock.getNumChannels();
+        const auto NumChannels = outputBlock.get_NumChannels();
         const auto numSamples  = outputBlock.getNumSamples();
 
-        jassert (inputBlock.getNumChannels() == numChannels);
+        jassert (inputBlock.get_NumChannels() == NumChannels);
         jassert (inputBlock.getNumSamples()  == numSamples);
 
         if (context.isBypassed)
@@ -82,7 +82,7 @@ public:
 
         outputBlock.multiplyBy (outputVolume);
 
-        for (size_t channel = 0; channel < numChannels; ++channel)
+        for (size_t channel = 0; channel < NumChannels; ++channel)
         {
             FloatVectorOperations::clip (outputBlock.getChannelPointer (channel), outputBlock.getChannelPointer (channel),
                                          (SampleType) -1.0, (SampleType) 1.0, (int) numSamples);

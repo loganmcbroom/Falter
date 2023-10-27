@@ -432,21 +432,21 @@ void AudioDataConverters::convertFormatToFloat (DataFormat sourceFormat, const v
 }
 
 //==============================================================================
-void AudioDataConverters::interleaveSamples (const float** source, float* dest, int numSamples, int numChannels)
+void AudioDataConverters::interleaveSamples (const float** source, float* dest, int numSamples, int num_channels)
 {
     using Format = AudioData::Format<AudioData::Float32, AudioData::NativeEndian>;
 
-    AudioData::interleaveSamples (AudioData::NonInterleavedSource<Format> { source, numChannels },
-                                  AudioData::InterleavedDest<Format>      { dest,   numChannels },
+    AudioData::interleaveSamples (AudioData::NonInterleavedSource<Format> { source, num_channels },
+                                  AudioData::InterleavedDest<Format>      { dest,   num_channels },
                                   numSamples);
 }
 
-void AudioDataConverters::deinterleaveSamples (const float* source, float** dest, int numSamples, int numChannels)
+void AudioDataConverters::deinterleaveSamples (const float* source, float** dest, int numSamples, int num_channels)
 {
     using Format = AudioData::Format<AudioData::Float32, AudioData::NativeEndian>;
 
-    AudioData::deinterleaveSamples (AudioData::InterleavedSource<Format>  { source, numChannels },
-                                    AudioData::NonInterleavedDest<Format> { dest,   numChannels },
+    AudioData::deinterleaveSamples (AudioData::InterleavedSource<Format>  { source, num_channels },
+                                    AudioData::NonInterleavedDest<Format> { dest,   num_channels },
                                     numSamples);
 }
 
@@ -583,44 +583,44 @@ public:
 
         beginTest ("Interleaving");
         {
-            constexpr auto numChannels = 4;
+            constexpr auto num_channels = 4;
             constexpr auto numSamples = 512;
 
-            AudioBuffer<float> sourceBuffer { numChannels, numSamples },
-                               destBuffer   { 1, numChannels * numSamples };
+            AudioBuffer<float> sourceBuffer { num_channels, numSamples },
+                               destBuffer   { 1, num_channels * numSamples };
 
-            for (int ch = 0; ch < numChannels; ++ch)
+            for (int ch = 0; ch < num_channels; ++ch)
                 for (int i = 0; i < numSamples; ++i)
                     sourceBuffer.setSample (ch, i, r.nextFloat());
 
-            AudioData::interleaveSamples (AudioData::NonInterleavedSource<Format> { sourceBuffer.getArrayOfReadPointers(), numChannels },
-                                          AudioData::InterleavedDest<Format>      { destBuffer.getWritePointer (0),        numChannels },
+            AudioData::interleaveSamples (AudioData::NonInterleavedSource<Format> { sourceBuffer.getArrayOfReadPointers(), num_channels },
+                                          AudioData::InterleavedDest<Format>      { destBuffer.getWritePointer (0),        num_channels },
                                           numSamples);
 
-            for (int ch = 0; ch < numChannels; ++ch)
+            for (int ch = 0; ch < num_channels; ++ch)
                 for (int i = 0; i < numSamples; ++i)
-                    expect (destBuffer.getSample (0, ch + (i * numChannels)) == sourceBuffer.getSample (ch, i));
+                    expect (destBuffer.getSample (0, ch + (i * num_channels)) == sourceBuffer.getSample (ch, i));
         }
 
         beginTest ("Deinterleaving");
         {
-            constexpr auto numChannels = 4;
+            constexpr auto num_channels = 4;
             constexpr auto numSamples = 512;
 
-            AudioBuffer<float> sourceBuffer { 1, numChannels * numSamples },
-                               destBuffer   { numChannels, numSamples };
+            AudioBuffer<float> sourceBuffer { 1, num_channels * numSamples },
+                               destBuffer   { num_channels, numSamples };
 
-            for (int ch = 0; ch < numChannels; ++ch)
+            for (int ch = 0; ch < num_channels; ++ch)
                 for (int i = 0; i < numSamples; ++i)
-                    sourceBuffer.setSample (0, ch + (i * numChannels), r.nextFloat());
+                    sourceBuffer.setSample (0, ch + (i * num_channels), r.nextFloat());
 
-            AudioData::deinterleaveSamples (AudioData::InterleavedSource<Format>  { sourceBuffer.getReadPointer (0),      numChannels },
-                                            AudioData::NonInterleavedDest<Format> { destBuffer.getArrayOfWritePointers(), numChannels },
+            AudioData::deinterleaveSamples (AudioData::InterleavedSource<Format>  { sourceBuffer.getReadPointer (0),      num_channels },
+                                            AudioData::NonInterleavedDest<Format> { destBuffer.getArrayOfWritePointers(), num_channels },
                                             numSamples);
 
-            for (int ch = 0; ch < numChannels; ++ch)
+            for (int ch = 0; ch < num_channels; ++ch)
                 for (int i = 0; i < numSamples; ++i)
-                    expect (sourceBuffer.getSample (0, ch + (i * numChannels)) == destBuffer.getSample (ch, i));
+                    expect (sourceBuffer.getSample (0, ch + (i * num_channels)) == destBuffer.getSample (ch, i));
         }
     }
 };

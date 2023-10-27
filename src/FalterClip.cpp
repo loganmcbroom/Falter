@@ -2,7 +2,7 @@
 
 #include <Windows.h>
 
-#include <flan/Audio.h>
+#include <flan/Audio/audio.h>
 
 #include "FalterClipList.h"
 #include "FalterLookandFeel.h"
@@ -10,17 +10,17 @@
 #include "Settings.h"
 #include "DragAndDropTypes.h"
 
-static std::vector<const float *> getFlanChanPointers( flan::Audio a )
+static std::vector<const float *> getFlanChanPointers( std::shared_ptr<flan::Audio> a )
 	{
 	std::vector<const float *> ps;
-	for( flan::Channel channel = 0; channel < a.getNumChannels(); ++channel )
+	for( flan::Channel channel = 0; channel < a->get_num_channels(); ++channel )
 		{
-		ps.emplace_back( a.getSamplePointer( channel, 0 ) );
+		ps.emplace_back( a->get_sample_pointer( channel, 0 ) );
 		}
 	return ps;
 	}
 
-FalterClip::FalterClip( flan::Audio _audio
+FalterClip::FalterClip( std::shared_ptr<flan::Audio> _audio
 			, FalterPlayer & _player
 			, AudioThumbnailCache &_thumbnailCache
 			, const String & name
@@ -29,7 +29,7 @@ FalterClip::FalterClip( flan::Audio _audio
 	, player( _player )
 	, audio( _audio )
 	, flanAudioChanPointers( getFlanChanPointers( audio ) )
-	, juceAudio( (float * const *) &flanAudioChanPointers[0], audio.getNumChannels(), audio.getNumFrames() )
+	, juceAudio( (float * const *) &flanAudioChanPointers[0], audio->get_num_channels(), audio->get_num_frames() )
 	, audioSource( juceAudio, false )
 	, thumbnail( 512, player.getFormatManager(), _thumbnailCache )
 	, busButton  ( "4", &FalterLookAndFeel::getLNF().fontWebdings, 18 ) 
@@ -39,8 +39,8 @@ FalterClip::FalterClip( flan::Audio _audio
 
 	// Waveform thumbnail setup
 	thumbnail.addChangeListener( this );
-	thumbnail.reset( audio.getNumChannels(), audio.getSampleRate(), audio.getNumFrames() );
-	thumbnail.addBlock( 0, juceAudio, 0, audio.getNumFrames() );
+	thumbnail.reset( audio->get_num_channels(), audio->get_sample_rate(), audio->get_num_frames() );
+	thumbnail.addBlock( 0, juceAudio, 0, audio->get_num_frames() );
 
 	addAndMakeVisible( busButton   );
 	addAndMakeVisible( saveButton  );
@@ -86,7 +86,7 @@ void FalterClip::paintButton(Graphics &g, bool isMouseOverButton, bool )
 
 	g.fillAll( lnf.shadow );
 	
-	if( audio.getNumFrames() > 0 )
+	if( audio->get_num_frames() > 0 )
 		{
 		// Draw audio thumbnail
 		g.setColour( isMouseOverButton? lnf.accent1.withAlpha( .3f ) : lnf.accent1 );
@@ -100,7 +100,7 @@ void FalterClip::paintButton(Graphics &g, bool isMouseOverButton, bool )
 
 			// Write audio length
 			auto r2dec = []( float x ){ return std::round( x * 1000 ) / 1000.0f; };
-			const float length = audio.getLength();
+			const float length = audio->get_length();
 			String lengthText = length > 60?
 				String( r2dec( length / 60.0f ) ) + " min" :
 				String( r2dec( length ) ) + " sec";
@@ -167,7 +167,7 @@ void FalterClip::buttonClicked( Button * button )
 		if( chooser.browseForFileToSave( true ) )
 			{
 			File choice = chooser.getResult();
-			audio.save( choice.getFullPathName().toStdString() );
+			audio->save( choice.getFullPathName().toStdString() );
 			}
 		setName( chooser.getResult().getFileName() );
 		repaint();
@@ -181,7 +181,7 @@ void FalterClip::timerCallback()
 	// The weird computation handles some buttons being stuck on top of the component
 	const float s = getHeight() / 2.0f;
 	const float e = static_cast<float>( getWidth() );
-	const float r = static_cast<float>( source.getCurrentPosition() ) / static_cast<float>( audio.getLength() );
+	const float r = static_cast<float>( source.getCurrentPosition() ) / static_cast<float>( audio->get_length() );
 	const float initialX = s + ( e - s ) * r;
 	
 	// Draw white line to show current playback position

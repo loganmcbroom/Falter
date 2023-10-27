@@ -117,14 +117,14 @@ public:
 									UInt32 inBytesPerFrame,		UInt32 inChannelsPerFrame,
 									UInt32 inBitsPerChannel,	UInt32 inFormatFlags);
 
-	CAStreamBasicDescription(	double inSampleRate, UInt32 inNumChannels, CommonPCMFormat pcmf, bool inIsInterleaved) {
+	CAStreamBasicDescription(	double inSampleRate, UInt32 innum_channels, CommonPCMFormat pcmf, bool inIsInterleaved) {
 		unsigned wordsize;
 
 		mSampleRate = inSampleRate;
 		mFormatID = kAudioFormatLinearPCM;
 		mFormatFlags = kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsPacked;
 		mFramesPerPacket = 1;
-		mChannelsPerFrame = inNumChannels;
+		mChannelsPerFrame = innum_channels;
 		mBytesPerFrame = mBytesPerPacket = 0;
 		mReserved = 0;
 
@@ -150,7 +150,7 @@ public:
 		}
 		mBitsPerChannel = wordsize * 8;
 		if (inIsInterleaved)
-			mBytesPerFrame = mBytesPerPacket = wordsize * inNumChannels;
+			mBytesPerFrame = mBytesPerPacket = wordsize * innum_channels;
 		else {
 			mFormatFlags |= kAudioFormatFlagIsNonInterleaved;
 			mBytesPerFrame = mBytesPerPacket = wordsize;

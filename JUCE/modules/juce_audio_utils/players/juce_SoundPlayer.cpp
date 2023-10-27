@@ -124,8 +124,8 @@ public:
 
         if (samplesToCopy > 0)
         {
-            int maxInChannels = buffer->getNumChannels();
-            int maxOutChannels = bufferToFill.buffer->getNumChannels();
+            int maxInChannels = buffer->get_num_channels();
+            int maxOutChannels = bufferToFill.buffer->get_num_channels();
 
             if (! playAcrossAllChannels)
                 maxOutChannels = jmin (maxOutChannels, maxInChannels);

@@ -160,14 +160,14 @@ public:
                                      int startSample, int numSamples);
 
     /** Writes some samples from a set of float data channels. */
-    bool writeFromFloatArrays (const float* const* channels, int numChannels, int numSamples);
+    bool writeFromFloatArrays (const float* const* channels, int num_channels, int numSamples);
 
     //==============================================================================
     /** Returns the sample rate being used. */
     double getSampleRate() const noexcept       { return sampleRate; }
 
     /** Returns the number of channels being written. */
-    int getNumChannels() const noexcept         { return (int) numChannels; }
+    int get_num_channels() const noexcept         { return (int) num_channels; }
 
     /** Returns the bit-depth of the data being written. */
     int getBitsPerSample() const noexcept       { return (int) bitsPerSample; }
@@ -218,7 +218,7 @@ public:
             IncomingDataReceiver() = default;
             virtual ~IncomingDataReceiver() = default;
 
-            virtual void reset (int numChannels, double sampleRate, int64 totalSamplesInSource) = 0;
+            virtual void reset (int num_channels, double sampleRate, int64 totalSamplesInSource) = 0;
             virtual void addBlock (int64 sampleNumberInSource, const AudioBuffer<float>& newData,
                                    int startOffsetInBuffer, int numSamples) = 0;
         };
@@ -248,7 +248,7 @@ protected:
     double sampleRate;
 
     /** The number of channels being written to the stream. */
-    unsigned int numChannels;
+    unsigned int num_channels;
 
     /** The bit depth of the file. */
     unsigned int bitsPerSample;

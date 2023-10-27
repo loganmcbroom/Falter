@@ -195,10 +195,10 @@ public:
 	}
 
 	/*! @ctor TAUBuffer.1 */
-	TAUBuffer(UInt32 numElems, UInt32 numChannels) :	mMemObject(NULL), mAlignedBuffer(NULL),
+	TAUBuffer(UInt32 numElems, UInt32 num_channels) :	mMemObject(NULL), mAlignedBuffer(NULL),
 														mBufferSizeBytes(0)
 	{
-		Allocate(numElems, numChannels);
+		Allocate(numElems, num_channels);
 	}
 
 	/*! @dtor ~TAUBuffer */

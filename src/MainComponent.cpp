@@ -2,7 +2,7 @@
 
 #include <fstream>
 
-#include <flan/Audio.h>
+#include <flan/Audio/Audio.h>
 
 #include "simplefilewatcher/FileWatcher.h"
 
@@ -26,14 +26,16 @@ MainComponent::MainComponent()
 	, player( std::make_unique<FalterPlayer>() )
 	, recorder( std::make_unique<AudioRecorder>() )
 	, settingsMode( false )
+	, autoProcess( true )
 	, fileWatcher()
 	, recentlyAutoProcessed( false )
 	, watchID( 0 )
 	, mainContainer()
-	, procButton( "P", 			&FalterLookAndFeel::getLNF().fontSymbol 	)
+	, procButton( "N", 			&FalterLookAndFeel::getLNF().fontWingdings 	)
 	, recordButton( "l", 		&FalterLookAndFeel::getLNF().fontWingdings  )
-	, settingsButton( "$", 		&FalterLookAndFeel::getLNF().fontWingdings  )
-	, scriptSelectButton( "3", 	&FalterLookAndFeel::getLNF().fontWingdings 	)
+	, settingsButton( "M", 		&FalterLookAndFeel::getLNF().fontWingdings  )
+	, scriptSelectButton( "0", 	&FalterLookAndFeel::getLNF().fontWingdings 	)
+	, autoProcessButton( "R", 	&FalterLookAndFeel::getLNF().fontWingdings  )
 	, scriptLabel( "" )
 	, sampleBrowser()
 	, inClips( *player.get() )
@@ -52,7 +54,14 @@ MainComponent::MainComponent()
 	addAndMakeVisible( recordButton			);
 	addAndMakeVisible( settingsButton		);
 	addAndMakeVisible( scriptSelectButton 	);
+	addAndMakeVisible( autoProcessButton  	);
 	addAndMakeVisible( scriptLabel    		);
+
+	procButton         .down_text = "S";
+	recordButton       .down_text = ">";     
+	settingsButton     .down_text = "O";       
+	scriptSelectButton .down_text = "1";           
+	autoProcessButton  .down_text = "Q";          
 
 	addAndMakeVisible( &mainContainer );
 		mainContainer.addAndMakeVisible( sampleBrowser 			);
@@ -71,6 +80,7 @@ MainComponent::MainComponent()
 	settingsButton		.addListener( this );
 	scriptSelectButton	.addListener( this );
 	sampleBrowser		.addListener( this );
+	autoProcessButton	.addListener( this );
 
 	inClips	.setName( "Inputs" 	);
 	threads	.setName( "Threads" );
@@ -108,7 +118,7 @@ void MainComponent::resized()
 	const int u = FalterLookAndFeel::getLNF().unit;
 	const int w = getWidth();
 	const int h = getHeight();
-	const int numButtons = 4;
+	const int numButtons = 5;
 
 	Rectangle<int> containerRect( 
 		0, 
@@ -126,7 +136,8 @@ void MainComponent::resized()
 	boundButton( 0, &procButton );
 	boundButton( 1, &recordButton );
 	boundButton( 2, &settingsButton );
-	boundButton( 3, &scriptSelectButton );
+	boundButton( 3, &autoProcessButton );
+	boundButton( 4, &scriptSelectButton );
 
 	scriptLabel.setBounds( 
 		numButtons * ( u + m ) + m, 
@@ -166,6 +177,7 @@ void MainComponent::buttonClicked( Button* button )
 	else if( button == &recordButton		) recordButtonClicked();		
 	else if( button == &settingsButton		) settingsButtonClicked();		
 	else if( button == &scriptSelectButton	) scriptSelectButtonClicked(); 	
+	else if( button == &autoProcessButton	) autoProcessButtonClicked(); 	
 	}
 
 void MainComponent::importFile( File file )
@@ -184,7 +196,7 @@ void MainComponent::procButtonClicked()
 	auto retrieveFiles = [&]( AudioVec & as, const String & threadName )
 		{
 		for( int i = 0; i < as.size(); ++i )
-			if( ! as[i].isNull() )
+			if( ! as[i]->is_null() )
 				outClips.insertClipFromAudio( as[i], -1, String( "Output " ) + String( i + 1 ) + String( " of: " ) + threadName );
 		};
 
@@ -199,8 +211,8 @@ void MainComponent::recordButtonClicked()
 	{
 	if( recorder->isRecording() )
 		{
-		std::unique_ptr<flan::Audio> recording = recorder->stopRecording();
-		inClips.insertClipFromAudio( *recording.release(), -1, String( "Recording " ) + String( recorder->getNumRecords() ) );
+		std::shared_ptr<flan::Audio> recording = recorder->stopRecording();
+		inClips.insertClipFromAudio( recording, -1, String( "Recording " ) + String( recorder->getNumRecords() ) );
 		recordButton.setButtonText( "l" );
 		}
 	else
@@ -212,7 +224,13 @@ void MainComponent::recordButtonClicked()
 
 void MainComponent::settingsButtonClicked()
 	{
-	settingsMode = ! settingsMode;
+	settingsMode = !settingsMode;
+
+	if( settingsMode )
+		settingsButton.setButtonText( "$" );
+	else
+		settingsButton.setButtonText( "M" );
+
 	mainContainer.setVisible( ! settingsMode );
 	settingsContainer.setVisible( settingsMode );
 	}
@@ -230,6 +248,16 @@ void MainComponent::scriptSelectButtonClicked()
 		// Start watching new script for changes
 		addWatchProtected();
 		}
+	}
+
+void MainComponent::autoProcessButtonClicked()
+	{
+	autoProcess = !autoProcess;
+
+	if( autoProcess )
+		autoProcessButton.setButtonText( "R" );
+	else
+		autoProcessButton.setButtonText( "T" );
 	}
 
 void MainComponent::filesDropped( const StringArray & files, int, int )
@@ -275,7 +303,7 @@ void MainComponent::browserRootChanged( const File & dir )
 
 void MainComponent::handleFileAction( FW::WatchID otherWatchID, const FW::String &, const FW::String & filename, FW::Action action )
 	{
-	if( otherWatchID == watchID && filename == File( scriptLabel.getText() ).getFileName().toStdString() )
+	if( autoProcess && otherWatchID == watchID && filename == File( scriptLabel.getText() ).getFileName().toStdString() )
 		{
 		if( action == FW::Action::Modified && ! recentlyAutoProcessed )
 			{

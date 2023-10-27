@@ -289,7 +289,7 @@ public:
             bytesPerBuffer = (bufferSizeSamples * (bitDepth >> 2)) & ~15;
             ticksPerBuffer = bytesPerBuffer * Time::getHighResolutionTicksPerSecond() / (sampleRate * (bitDepth >> 2));
             totalBytesPerBuffer = (blocksPerOverallBuffer * bytesPerBuffer) & ~15;
-            const int numChannels = 2;
+            const int num_channels = 2;
 
             hr = pDirectSound->SetCooperativeLevel (GetDesktopWindow(), 2 /* DSSCL_PRIORITY */);
             JUCE_DS_LOG_ERROR (hr);
@@ -312,7 +312,7 @@ public:
                 {
                     WAVEFORMATEX wfFormat;
                     wfFormat.wFormatTag       = WAVE_FORMAT_PCM;
-                    wfFormat.nChannels        = (unsigned short) numChannels;
+                    wfFormat.nChannels        = (unsigned short) num_channels;
                     wfFormat.nSamplesPerSec   = (DWORD) sampleRate;
                     wfFormat.wBitsPerSample   = (unsigned short) bitDepth;
                     wfFormat.nBlockAlign      = (unsigned short) (wfFormat.nChannels * wfFormat.wBitsPerSample / 8);
@@ -592,13 +592,13 @@ public:
 
         if (SUCCEEDED (hr))
         {
-            const int numChannels = 2;
+            const int num_channels = 2;
             bytesPerBuffer = (bufferSizeSamples * (bitDepth >> 2)) & ~15;
             totalBytesPerBuffer = (blocksPerOverallBuffer * bytesPerBuffer) & ~15;
 
             WAVEFORMATEX wfFormat;
             wfFormat.wFormatTag       = WAVE_FORMAT_PCM;
-            wfFormat.nChannels        = (unsigned short)numChannels;
+            wfFormat.nChannels        = (unsigned short)num_channels;
             wfFormat.nSamplesPerSec   = (DWORD) sampleRate;
             wfFormat.wBitsPerSample   = (unsigned short) bitDepth;
             wfFormat.nBlockAlign      = (unsigned short) (wfFormat.nChannels * (wfFormat.wBitsPerSample / 8));
@@ -1017,9 +1017,9 @@ public:
             if (isStarted)
             {
                 callback->audioDeviceIOCallbackWithContext (inputBuffers.getArrayOfReadPointers(),
-                                                            inputBuffers.getNumChannels(),
+                                                            inputBuffers.get_num_channels(),
                                                             outputBuffers.getArrayOfWritePointers(),
-                                                            outputBuffers.getNumChannels(),
+                                                            outputBuffers.get_num_channels(),
                                                             bufferSizeSamples,
                                                             {});
             }

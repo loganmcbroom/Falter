@@ -125,7 +125,7 @@ protected:
     */
     bool prepareToPlayForARA (double sampleRate,
                               int samplesPerBlock,
-                              int numChannels,
+                              int num_channels,
                               AudioProcessor::ProcessingPrecision precision);
 
     /** Implementation helper for AudioProcessor::releaseResources().

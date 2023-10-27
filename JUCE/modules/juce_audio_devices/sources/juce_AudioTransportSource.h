@@ -73,13 +73,13 @@ public:
                                                 rate of the source, and playback will be sample-rate
                                                 adjusted to maintain playback at the correct pitch. If
                                                 this is 0, no sample-rate adjustment will be performed
-        @param maxNumChannels                   the maximum number of channels that may need to be played
+        @param maxnum_channels                   the maximum number of channels that may need to be played
     */
     void setSource (PositionableAudioSource* newSource,
                     int readAheadBufferSize = 0,
                     TimeSliceThread* readAheadThread = nullptr,
                     double sourceSampleRateToCorrectFor = 0.0,
-                    int maxNumChannels = 2);
+                    int maxnum_channels = 2);
 
     //==============================================================================
     /** Changes the current playback position in the source stream.

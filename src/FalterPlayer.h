@@ -14,7 +14,7 @@ public:
 	AudioFormatManager & getFormatManager();
 	AudioTransportSource & getTransportSource();
 
-	void prepareToPlay( int samplesPerBlockExpected, double sampleRate ) override;
+	void prepareToPlay( int samplesPerBlockExpected, double sample_rate ) override;
     void getNextAudioBlock( const AudioSourceChannelInfo& bufferToFill ) override;
     void releaseResources() override;
 	//bool isPlaying() const { return transportSource->isPlaying(); }

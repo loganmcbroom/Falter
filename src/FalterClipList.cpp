@@ -35,7 +35,7 @@ void FalterClipList::clear()
 	thumbnailCache.clear();
 	}
 
-void FalterClipList::insertClipFromAudio( flan::Audio a, int index, const String & name )
+void FalterClipList::insertClipFromAudio( std::shared_ptr<flan::Audio> a, int index, const String & name )
 	{
 	insertItem( std::make_shared<FalterClip>( a, player, thumbnailCache, name ), index == -1 ? getNumItems() : index );
 	}
@@ -102,6 +102,6 @@ void FalterClipList::exitSignalSent()
 
 	const MessageManagerLock mml;
 	if( mml.lockWasGained() )
-		insertClipFromAudio( *job->output.release(), -1, job->file.getFileName() );
+		insertClipFromAudio( std::move( job->output ), -1, job->file.getFileName() );
 	}
 

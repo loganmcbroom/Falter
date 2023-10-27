@@ -588,9 +588,9 @@ template <typename FloatType>
 class ScratchBuffer
 {
 public:
-    void setSize (int numChannels, int blockSize)
+    void setSize (int num_channels, int blockSize)
     {
-        buffer.setSize (numChannels, blockSize);
+        buffer.setSize (num_channels, blockSize);
     }
 
     void clear() { channelCounter = 0; }
@@ -609,7 +609,7 @@ static int countValidBuses (Steinberg::Vst::AudioBusBuffers* buffers, int32 num)
 {
     return (int) std::distance (buffers, std::find_if (buffers, buffers + num, [] (auto& buf)
     {
-        return getAudioBusPointer (detail::Tag<FloatType>{}, buf) == nullptr && buf.numChannels > 0;
+        return getAudioBusPointer (detail::Tag<FloatType>{}, buf) == nullptr && buf.num_channels > 0;
     }));
 }
 
@@ -624,10 +624,10 @@ static bool validateLayouts (Iterator first, Iterator last, const std::vector<Dy
     for (auto it = first; it != last; ++it, ++mapIterator)
     {
         auto** busPtr = getAudioBusPointer (detail::Tag<FloatType>{}, *it);
-        const auto anyChannelIsNull = std::any_of (busPtr, busPtr + it->numChannels, [] (auto* ptr) { return ptr == nullptr; });
+        const auto anyChannelIsNull = std::any_of (busPtr, busPtr + it->num_channels, [] (auto* ptr) { return ptr == nullptr; });
 
         // Null channels are allowed if the bus is inactive
-        if ((mapIterator->isHostActive() && anyChannelIsNull) || ((int) mapIterator->size() != it->numChannels))
+        if ((mapIterator->isHostActive() && anyChannelIsNull) || ((int) mapIterator->size() != it->num_channels))
             return false;
     }
 
@@ -651,10 +651,10 @@ template <typename FloatType>
 class ClientBufferMapperData
 {
 public:
-    void prepare (int numChannels, int blockSize)
+    void prepare (int num_channels, int blockSize)
     {
-        scratchBuffer.setSize (numChannels, blockSize);
-        channels.reserve ((size_t) jmin (128, numChannels));
+        scratchBuffer.setSize (num_channels, blockSize);
+        channels.reserve ((size_t) jmin (128, num_channels));
     }
 
     AudioBuffer<FloatType> getMappedBuffer (Steinberg::Vst::ProcessData& data,
@@ -813,7 +813,7 @@ public:
 
     void prepare (int blockSize)
     {
-        const auto findNumChannelsWhenAllBusesEnabled = [] (const auto& map)
+        const auto findnum_channelsWhenAllBusesEnabled = [] (const auto& map)
         {
             return std::accumulate (map.cbegin(), map.cend(), 0, [] (auto acc, const auto& item)
             {
@@ -821,11 +821,11 @@ public:
             });
         };
 
-        const auto numChannels = jmax (findNumChannelsWhenAllBusesEnabled (inputMap),
-                                       findNumChannelsWhenAllBusesEnabled (outputMap));
+        const auto num_channels = jmax (findnum_channelsWhenAllBusesEnabled (inputMap),
+                                       findnum_channelsWhenAllBusesEnabled (outputMap));
 
-        floatData .prepare (numChannels, blockSize);
-        doubleData.prepare (numChannels, blockSize);
+        floatData .prepare (num_channels, blockSize);
+        doubleData.prepare (num_channels, blockSize);
     }
 
     void updateActiveClientBuses (const AudioProcessor::BusesLayout& clientBuses)
@@ -972,7 +972,7 @@ private:
         std::for_each (data.outputs, data.outputs + vstOutputs, [this] (auto& bus)
         {
             auto** busPtr = getAudioBusPointer (detail::Tag<FloatType>{}, bus);
-            std::for_each (busPtr, busPtr + bus.numChannels, [this] (auto* ptr)
+            std::for_each (busPtr, busPtr + bus.num_channels, [this] (auto* ptr)
             {
                 if (ptr != nullptr)
                     FloatVectorOperations::clear (ptr, (int) data.numSamples);
@@ -1049,7 +1049,7 @@ private:
         }
 
         assignRawPointer (vstBuffers, bus.data());
-        vstBuffers.numChannels      = (Steinberg::int32) busMap.size();
+        vstBuffers.num_channels      = (Steinberg::int32) busMap.size();
         vstBuffers.silenceFlags     = busMap.isActive() ? 0 : std::numeric_limits<Steinberg::uint64>::max();
     }
 

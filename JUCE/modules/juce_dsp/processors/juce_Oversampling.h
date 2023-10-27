@@ -69,15 +69,15 @@ public:
         Note: This creates a "dummy" oversampling stage, which needs to be removed
         before adding proper oversampling stages.
 
-        @param numChannels    the number of channels to process with this object
+        @param num_channels    the number of channels to process with this object
 
         @see clearOversamplingStages, addOversamplingStage
     */
-    explicit Oversampling (size_t numChannels = 1);
+    explicit Oversampling (size_t num_channels = 1);
 
     /** Constructor.
 
-        @param numChannels          the number of channels to process with this object
+        @param num_channels          the number of channels to process with this object
         @param factor               the processing will perform 2 ^ factor times oversampling
         @param type                 the type of filter design employed for filtering during
                                     oversampling
@@ -88,7 +88,7 @@ public:
                                     end of the signal path to ensure that the overall latency of
                                     the oversampling is an integer
     */
-    Oversampling (size_t numChannels,
+    Oversampling (size_t num_channels,
                   size_t factor,
                   FilterType type,
                   bool isMaxQuality = true,
@@ -189,7 +189,7 @@ public:
 
     //===============================================================================
     size_t factorOversampling = 1;
-    size_t numChannels = 1;
+    size_t num_channels = 1;
 
    #ifndef DOXYGEN
     struct OversamplingStage;

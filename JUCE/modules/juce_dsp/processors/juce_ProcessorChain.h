@@ -106,7 +106,7 @@ private:
     template <typename Context, typename Proc, size_t Ix, std::enable_if_t<! detail::UseContextDirectly<Context, Ix>::value, int> = 0>
     void processOne (const Context& context, Proc& proc, std::integral_constant<size_t, Ix>) noexcept
     {
-        jassert (context.getOutputBlock().getNumChannels() == context.getInputBlock().getNumChannels());
+        jassert (context.getOutputBlock().get_num_channels() == context.getInputBlock().get_num_channels());
         ProcessContextReplacing<typename Context::SampleType> replacingContext (context.getOutputBlock());
         replacingContext.isBypassed = (bypassed[Ix] || context.isBypassed);
 

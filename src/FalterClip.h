@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include <flan/Audio.h>
+#include <flan/Audio/Audio.h>
 
 #include <JuceHeader.h>
 
@@ -20,7 +20,7 @@ friend class FalterClipList;
 friend class FalterPlayer;
 
 public:
-	FalterClip( flan::Audio audio
+	FalterClip( std::shared_ptr<flan::Audio> audio
 			 , FalterPlayer & player
 			 , AudioThumbnailCache & thumbnailCache
 			 , const String & name = "-"
@@ -29,7 +29,7 @@ public:
 
 	AudioThumbnail & getThumbnail();
 
-	flan::Audio getAudio() { return audio; };
+	std::shared_ptr<flan::Audio> getAudio() { return audio; };
 
 	void playPressed();
 	void stopPressed();
@@ -45,7 +45,7 @@ private:
 
 	FalterPlayer & player;
 	
-	flan::Audio audio;
+	std::shared_ptr<flan::Audio> audio;
 	std::vector<const float *> flanAudioChanPointers; // Needed to wrap flan buffer in Juce object
 	AudioBuffer<float> juceAudio; // Juce buffer wrapper for flan Audio
 	MemoryAudioSource audioSource; // Juce AudioSource wrapper for Juce buffer

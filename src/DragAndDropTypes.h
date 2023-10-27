@@ -6,7 +6,7 @@ class DragAndDropTypes
 {
 public:
 	static std::string AudioClip;
-	static std::string PVOCClip;
+	static std::string PVClip;
 	static std::string FalterFile;
 	static std::string ExternalFile;
 };

@@ -93,11 +93,11 @@ public:
     {
         const auto& inputBlock = context.getInputBlock();
         auto& outputBlock      = context.getOutputBlock();
-        const auto numChannels = outputBlock.getNumChannels();
+        const auto NumChannels = outputBlock.getNumChannels();
         const auto numSamples  = outputBlock.getNumSamples();
 
         jassert (inputBlock.getNumChannels() <= getNumChannels());
-        jassert (inputBlock.getNumChannels() == numChannels);
+        jassert (inputBlock.getNumChannels() == NumChannels);
         jassert (inputBlock.getNumSamples()  == numSamples);
 
         if (! enabled || context.isBypassed)
@@ -110,7 +110,7 @@ public:
         {
             updateSmoothers();
 
-            for (size_t ch = 0; ch < numChannels; ++ch)
+            for (size_t ch = 0; ch < NumChannels; ++ch)
                 outputBlock.getChannelPointer (ch)[n] = processSample (inputBlock.getChannelPointer (ch)[n], ch);
         }
     }

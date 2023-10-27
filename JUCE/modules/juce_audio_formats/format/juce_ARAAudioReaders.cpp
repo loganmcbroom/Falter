@@ -35,9 +35,9 @@ ARAAudioSourceReader::ARAAudioSourceReader (ARAAudioSource* audioSource)
     bitsPerSample = 32;
     usesFloatingPointData = true;
     sampleRate = audioSourceBeingRead->getSampleRate();
-    numChannels = (unsigned int) audioSourceBeingRead->getChannelCount();
+    num_channels = (unsigned int) audioSourceBeingRead->getChannelCount();
     lengthInSamples = audioSourceBeingRead->getSampleCount();
-    tmpPtrs.resize (numChannels);
+    tmpPtrs.resize (num_channels);
 
     audioSourceBeingRead->addListener (this);
 
@@ -175,7 +175,7 @@ ARAPlaybackRegionReader::ARAPlaybackRegionReader (double rate, int numChans,
     positionInfo.setIsPlaying (true);
 
     sampleRate = rate;
-    numChannels = (unsigned int) numChans;
+    num_channels = (unsigned int) numChans;
     bitsPerSample = 32;
     usesFloatingPointData = true;
 

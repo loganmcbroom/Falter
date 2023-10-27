@@ -78,8 +78,8 @@ public:
     {
         const auto& inputBlock = context.getInputBlock();
         auto& outputBlock = context.getOutputBlock();
-        const auto numInChannels = inputBlock.getNumChannels();
-        const auto numOutChannels = outputBlock.getNumChannels();
+        const auto numInChannels = inputBlock.get_NumChannels();
+        const auto numOutChannels = outputBlock.get_NumChannels();
         const auto numSamples = outputBlock.getNumSamples();
 
         jassert (inputBlock.getNumSamples() == numSamples);

@@ -12,6 +12,7 @@ extern "C"
 }
 
 #include "FalterLookandFeel.h"
+#include "FalterThreadList.h"
 
 #include "Lua/Utility.h"
 #include "Lua/Usertypes.h"
@@ -43,7 +44,6 @@ FalterThread::FalterThread( int threadID, const String & _script, const FalterTh
 	, L( lua_open() )
 	, startTime( )
 	, endTime( )
-	, cdpDir( )
 	, workingDir( )
 	, threadSuccess( false )
 	, allProcessesSetUp( true )
@@ -99,12 +99,7 @@ FalterThread::FalterThread( int threadID, const String & _script, const FalterTh
 
 FalterThread::~FalterThread()
 	{
-	if( isThreadRunning() )
-		{
-		stopThread( -1 );
-		log( "Error: script couldn't be completed, thread was ended early." );
-		}
-
+	jassert( !isThreadRunning() );
 	lua_close( L );
 	}
 
@@ -156,7 +151,7 @@ void FalterThread::run()
 
 	log( "[PROCESSING START]" );
 
-	// ...Make the call
+	// Make the call
 	if( ! lua_pcall( L, 0, LUA_MULTRET, 0 ) ) // if call succeeds
 		{
 		log( String( "[PROCESSING END] Time elapsed: " ) + getElapsedTimeString() + "\n" );
@@ -167,11 +162,11 @@ void FalterThread::run()
 		const int numLuaOutputs = lua_gettop( L );
 		for( int i = 1; i <= numLuaOutputs; ++i )
 			{
-			AudioVec currentReturn = luaF_checkAsArray<flan::Audio>( L, i );
+			AudioVec currentReturn = luaF_checkAsArray<std::shared_ptr<flan::Audio>>( L, i );
 			outputs.insert( outputs.end(), currentReturn.begin(), currentReturn.end() );
 			}
 		}
-	else
+	else // Thread is exiting here, but something has gone wrong
 		{
 		// We can't do this stuff if the failure is due to the user exiting the thread early
 		if( ! threadShouldExit() ) 
@@ -211,6 +206,8 @@ String FalterThread::getElapsedTimeString() const
 
 void FalterThread::exitSignalSent() 
 	{
+	if( canceller == true ) 
+		return;
 	canceller = true; 
 	stopTimer();
 	endTime = Time::getCurrentTime();

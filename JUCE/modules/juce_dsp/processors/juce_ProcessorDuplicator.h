@@ -49,13 +49,13 @@ struct ProcessorDuplicator
 
     void prepare (const ProcessSpec& spec)
     {
-        processors.removeRange ((int) spec.numChannels, processors.size());
+        processors.removeRange ((int) spec.num_channels, processors.size());
 
-        while (static_cast<size_t> (processors.size()) < spec.numChannels)
+        while (static_cast<size_t> (processors.size()) < spec.num_channels)
             processors.add (new MonoProcessorType (state));
 
         auto monoSpec = spec;
-        monoSpec.numChannels = 1;
+        monoSpec.num_channels = 1;
 
         for (auto* p : processors)
             p->prepare (monoSpec);
@@ -66,13 +66,13 @@ struct ProcessorDuplicator
     template <typename ProcessContext>
     void process (const ProcessContext& context) noexcept
     {
-        jassert ((int) context.getInputBlock().getNumChannels()  <= processors.size());
-        jassert ((int) context.getOutputBlock().getNumChannels() <= processors.size());
+        jassert ((int) context.getInputBlock().get_num_channels()  <= processors.size());
+        jassert ((int) context.getOutputBlock().get_num_channels() <= processors.size());
 
-        auto numChannels = static_cast<size_t> (jmin (context.getInputBlock().getNumChannels(),
-                                                      context.getOutputBlock().getNumChannels()));
+        auto num_channels = static_cast<size_t> (jmin (context.getInputBlock().get_num_channels(),
+                                                      context.getOutputBlock().get_num_channels()));
 
-        for (size_t chan = 0; chan < numChannels; ++chan)
+        for (size_t chan = 0; chan < num_channels; ++chan)
             processors[(int) chan]->process (MonoProcessContext<ProcessContext> (context, chan));
     }
 

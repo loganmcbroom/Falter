@@ -1296,13 +1296,13 @@ struct iOSAudioIODevice::Pimpl      : public AsyncUpdater
                 return result;
             }
 
-            static Array<int> getInactiveChannelIndices (const Array<int>& activeIndices, int numChannels)
+            static Array<int> getInactiveChannelIndices (const Array<int>& activeIndices, int num_channels)
             {
                 Array<int> result;
 
                 auto nextActiveChannel = activeIndices.begin();
 
-                for (int i = 0; i < numChannels; ++i)
+                for (int i = 0; i < num_channels; ++i)
                     if (nextActiveChannel != activeIndices.end() && i == *nextActiveChannel)
                         ++nextActiveChannel;
                     else
@@ -1329,7 +1329,7 @@ struct iOSAudioIODevice::Pimpl      : public AsyncUpdater
 
         void setFloatBufferSize (const int newSize)
         {
-            audioData.setSize (audioData.getNumChannels(), newSize);
+            audioData.setSize (audioData.get_num_channels(), newSize);
         }
 
         bool areInputChannelsAvailable() const

@@ -1045,7 +1045,7 @@ public:
                 AudioUnitGetProperty (audioUnit, kAudioUnitProperty_SampleRate, scope, static_cast<UInt32> (i), &sampleRate, &sampleRateSize);
 
                 const AudioChannelSet& set = layouts.getChannelSet (isInput, i);
-                const int requestedNumChannels = set.size();
+                const int requestednum_channels = set.size();
 
                 {
                     AudioStreamBasicDescription stream;
@@ -1055,9 +1055,9 @@ public:
                     if (err != noErr || dataSize < sizeof (stream))
                         return false;
 
-                    const int actualNumChannels = static_cast<int> (stream.mChannelsPerFrame);
+                    const int actualnum_channels = static_cast<int> (stream.mChannelsPerFrame);
 
-                    if (actualNumChannels != requestedNumChannels)
+                    if (actualnum_channels != requestednum_channels)
                     {
                         layoutHasChanged = true;
                         zerostruct (stream); // (can't use "= { 0 }" on this object because it's typedef'ed as a C struct)
@@ -1068,7 +1068,7 @@ public:
                         stream.mBytesPerPacket   = 4;
                         stream.mBytesPerFrame    = 4;
                         stream.mBitsPerChannel   = 32;
-                        stream.mChannelsPerFrame = static_cast<UInt32> (requestedNumChannels);
+                        stream.mChannelsPerFrame = static_cast<UInt32> (requestednum_channels);
 
                         err = AudioUnitSetProperty (audioUnit, kAudioUnitProperty_StreamFormat, scope, static_cast<UInt32> (i), &stream, sizeof (stream));
                         if (err != noErr) return false;
@@ -1400,7 +1400,7 @@ public:
         }
 
         // If these are hit, we might allocate in the process block!
-        jassert (buffer.getNumChannels() <= preparedChannels);
+        jassert (buffer.get_num_channels() <= preparedChannels);
         jassert (buffer.getNumSamples()  <= preparedSamples);
         // Copy the input buffer to guard against the case where a bus has more output channels
         // than input channels, so rendering the output for that bus might stamp over the input
@@ -2244,7 +2244,7 @@ private:
                              UInt32 inNumberFrames,
                              AudioBufferList* ioData)
     {
-        if (inputBuffer.getNumChannels() <= 0)
+        if (inputBuffer.get_num_channels() <= 0)
         {
             jassertfalse;
             return noErr;
@@ -2261,11 +2261,11 @@ private:
                           ? getBusBuffer (inputBuffer, true, static_cast<int> (inBusNumber))
                           : AudioBuffer<float>();
 
-        for (int juceChannel = 0; juceChannel < buffer.getNumChannels(); ++juceChannel)
+        for (int juceChannel = 0; juceChannel < buffer.get_num_channels(); ++juceChannel)
         {
             const auto auChannel = (int) inMapping.getAuIndexForJuceChannel (inBusNumber, (size_t) juceChannel);
 
-            if (auChannel < buffer.getNumChannels())
+            if (auChannel < buffer.get_num_channels())
                 memcpy (ioData->mBuffers[auChannel].mData, buffer.getReadPointer (juceChannel), sizeof (float) * inNumberFrames);
             else
                 zeromem (ioData->mBuffers[auChannel].mData, sizeof (float) * inNumberFrames);
@@ -2549,14 +2549,14 @@ private:
             UInt32 propertySize = 0;
             Boolean writable;
 
-            if (AudioUnitGetPropertyInfo (audioUnit, kAudioUnitProperty_SupportedNumChannels, kAudioUnitScope_Global, 0, &propertySize, &writable) == noErr
+            if (AudioUnitGetPropertyInfo (audioUnit, kAudioUnitProperty_Supportednum_channels, kAudioUnitScope_Global, 0, &propertySize, &writable) == noErr
                 && propertySize > 0)
             {
                 numChannelInfos = propertySize / sizeof (AUChannelInfo);
                 channelInfos.malloc (static_cast<size_t> (numChannelInfos));
                 propertySize = static_cast<UInt32> (sizeof (AUChannelInfo) * static_cast<size_t> (numChannelInfos));
 
-                if (AudioUnitGetProperty (audioUnit, kAudioUnitProperty_SupportedNumChannels, kAudioUnitScope_Global, 0, channelInfos.get(), &propertySize) != noErr)
+                if (AudioUnitGetProperty (audioUnit, kAudioUnitProperty_Supportednum_channels, kAudioUnitScope_Global, 0, channelInfos.get(), &propertySize) != noErr)
                     numChannelInfos = 0;
             }
             else

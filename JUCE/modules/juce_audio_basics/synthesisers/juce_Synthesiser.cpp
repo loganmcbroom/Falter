@@ -64,7 +64,7 @@ void SynthesiserVoice::renderNextBlock (AudioBuffer<double>& outputBuffer,
                                         int startSample, int numSamples)
 {
     AudioBuffer<double> subBuffer (outputBuffer.getArrayOfWritePointers(),
-                                   outputBuffer.getNumChannels(),
+                                   outputBuffer.get_num_channels(),
                                    startSample, numSamples);
 
     tempBuffer.makeCopyOf (subBuffer, true);
@@ -161,7 +161,7 @@ void Synthesiser::processNextBlock (AudioBuffer<floatType>& outputAudio,
 {
     // must set the sample rate before using this!
     jassert (sampleRate != 0);
-    const int targetChannels = outputAudio.getNumChannels();
+    const int targetChannels = outputAudio.get_num_channels();
 
     auto midiIterator = midiData.findNextSamplePosition (startSample);
 

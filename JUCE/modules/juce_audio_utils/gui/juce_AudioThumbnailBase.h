@@ -96,7 +96,7 @@ public:
 
     //==============================================================================
     /** Returns the number of channels in the file. */
-    virtual int getNumChannels() const noexcept = 0;
+    virtual int get_num_channels() const noexcept = 0;
 
     /** Returns the length of the audio file, in seconds. */
     virtual double getTotalLength() const noexcept = 0;

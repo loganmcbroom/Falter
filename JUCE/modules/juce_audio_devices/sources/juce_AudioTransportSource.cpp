@@ -35,7 +35,7 @@ AudioTransportSource::~AudioTransportSource()
 
 void AudioTransportSource::setSource (PositionableAudioSource* const newSource,
                                       int readAheadSize, TimeSliceThread* readAheadThread,
-                                      double sourceSampleRateToCorrectFor, int maxNumChannels)
+                                      double sourceSampleRateToCorrectFor, int maxnum_channels)
 {
     if (source == newSource)
     {
@@ -66,14 +66,14 @@ void AudioTransportSource::setSource (PositionableAudioSource* const newSource,
 
             newPositionableSource = newBufferingSource
                 = new BufferingAudioSource (newPositionableSource, *readAheadThread,
-                                            false, readAheadSize, maxNumChannels);
+                                            false, readAheadSize, maxnum_channels);
         }
 
         newPositionableSource->setNextReadPosition (0);
 
         if (sourceSampleRateToCorrectFor > 0)
             newMasterSource = newResamplerSource
-                = new ResamplingAudioSource (newPositionableSource, false, maxNumChannels);
+                = new ResamplingAudioSource (newPositionableSource, false, maxnum_channels);
         else
             newMasterSource = newPositionableSource;
 
@@ -253,7 +253,7 @@ void AudioTransportSource::getNextAudioBlock (const AudioSourceChannelInfo& info
         if (! playing)
         {
             // just stopped playing, so fade out the last block..
-            for (int i = info.buffer->getNumChannels(); --i >= 0;)
+            for (int i = info.buffer->get_num_channels(); --i >= 0;)
                 info.buffer->applyGainRamp (i, info.startSample, jmin (256, info.numSamples), 1.0f, 0.0f);
 
             if (info.numSamples > 256)
@@ -268,7 +268,7 @@ void AudioTransportSource::getNextAudioBlock (const AudioSourceChannelInfo& info
 
         stopped = ! playing;
 
-        for (int i = info.buffer->getNumChannels(); --i >= 0;)
+        for (int i = info.buffer->get_num_channels(); --i >= 0;)
             info.buffer->applyGainRamp (i, info.startSample, info.numSamples, lastGain, gain);
     }
     else

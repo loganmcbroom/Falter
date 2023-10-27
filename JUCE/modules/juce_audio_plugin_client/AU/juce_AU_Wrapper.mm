@@ -367,7 +367,7 @@ public:
         return noErr;
     }
 
-    UInt32 SupportedNumChannels (const AUChannelInfo** outInfo) override
+    UInt32 Supportednum_channels (const AUChannelInfo** outInfo) override
     {
         if (outInfo != nullptr)
             *outInfo = channelInfo.getRawDataPointer();
@@ -873,10 +873,10 @@ public:
         if (const AUIOElement* ioElement = GetIOElement (info.isInput ? kAudioUnitScope_Input : kAudioUnitScope_Output, element))
         {
             const AudioChannelSet newChannelSet = CoreAudioLayouts::fromCoreAudio (*inLayout);
-            const int currentNumChannels = static_cast<int> (ioElement->GetStreamFormat().NumberChannels());
+            const int currentnum_channels = static_cast<int> (ioElement->GetStreamFormat().NumberChannels());
             const int newChannelNum = newChannelSet.size();
 
-            if (currentNumChannels != newChannelNum)
+            if (currentnum_channels != newChannelNum)
                 return kAudioUnitErr_InvalidPropertyValue;
 
             // check if the new layout could be potentially set
@@ -1251,10 +1251,10 @@ public:
         if (info.kind == BusKind::wrapperOnly)
             return true;
 
-        const int newNumChannels = static_cast<int> (format.NumberChannels());
-        const int oldNumChannels = juceFilter->getChannelCountOfBus (info.isInput, info.busNr);
+        const int newnum_channels = static_cast<int> (format.NumberChannels());
+        const int oldnum_channels = juceFilter->getChannelCountOfBus (info.isInput, info.busNr);
 
-        if (newNumChannels == oldNumChannels)
+        if (newnum_channels == oldnum_channels)
             return true;
 
         if (AudioProcessor::Bus* bus = juceFilter->getBus (info.isInput, info.busNr))
@@ -1266,9 +1266,9 @@ public:
             short configs[][2] = {JucePlugin_PreferredChannelConfigurations};
 
             ignoreUnused (bus);
-            return AudioUnitHelpers::isLayoutSupported (*juceFilter, info.isInput, info.busNr, newNumChannels, configs);
+            return AudioUnitHelpers::isLayoutSupported (*juceFilter, info.isInput, info.busNr, newnum_channels, configs);
            #else
-            return bus->isNumberOfChannelsSupported (newNumChannels);
+            return bus->isNumberOfChannelsSupported (newnum_channels);
            #endif
         }
 
@@ -1285,13 +1285,13 @@ public:
 
         AudioChannelLayoutTag& currentTag = getCurrentLayout (info.isInput, info.busNr);
 
-        const int newNumChannels = static_cast<int> (format.NumberChannels());
-        const int oldNumChannels = juceFilter->getChannelCountOfBus (info.isInput, info.busNr);
+        const int newnum_channels = static_cast<int> (format.NumberChannels());
+        const int oldnum_channels = juceFilter->getChannelCountOfBus (info.isInput, info.busNr);
 
        #ifdef JucePlugin_PreferredChannelConfigurations
         short configs[][2] = {JucePlugin_PreferredChannelConfigurations};
 
-        if (! AudioUnitHelpers::isLayoutSupported (*juceFilter, info.isInput, info.busNr, newNumChannels, configs))
+        if (! AudioUnitHelpers::isLayoutSupported (*juceFilter, info.isInput, info.busNr, newnum_channels, configs))
             return kAudioUnitErr_FormatNotSupported;
        #endif
 
@@ -1299,10 +1299,10 @@ public:
         const auto set = [&]
         {
             if (info.kind == BusKind::wrapperOnly)
-                return AudioChannelSet::discreteChannels (newNumChannels);
+                return AudioChannelSet::discreteChannels (newnum_channels);
 
-            if (newNumChannels != oldNumChannels)
-                return juceFilter->getBus (info.isInput, info.busNr)->supportedLayoutWithChannels (newNumChannels);
+            if (newnum_channels != oldnum_channels)
+                return juceFilter->getBus (info.isInput, info.busNr)->supportedLayoutWithChannels (newnum_channels);
 
             return juceFilter->getChannelLayoutOfBus (info.isInput, info.busNr);
         }();
@@ -1339,17 +1339,17 @@ public:
 
         // set buffer pointers to minimize copying
         {
-            int chIdx = 0, numChannels = 0;
+            int chIdx = 0, num_channels = 0;
             bool interleaved = false;
             AudioBufferList* buffer = nullptr;
 
             // use output pointers
             for (int busIdx = 0; busIdx < numOutputBuses; ++busIdx)
             {
-                GetAudioBufferList (false, busIdx, buffer, interleaved, numChannels);
+                GetAudioBufferList (false, busIdx, buffer, interleaved, num_channels);
                 const int* outLayoutMap = mapper.get (false, busIdx);
 
-                for (int ch = 0; ch < numChannels; ++ch)
+                for (int ch = 0; ch < num_channels; ++ch)
                     audioBuffer.setBuffer (chIdx++, interleaved ? nullptr : static_cast<float*> (buffer->mBuffers[outLayoutMap[ch]].mData));
             }
 
@@ -1360,7 +1360,7 @@ public:
                 const bool badData = ! pulledSucceeded[busIdx];
 
                 if (! badData)
-                    GetAudioBufferList (true, busIdx, buffer, interleaved, numChannels);
+                    GetAudioBufferList (true, busIdx, buffer, interleaved, num_channels);
 
                 const int* inLayoutMap = mapper.get (true, busIdx);
 
@@ -2024,7 +2024,7 @@ private:
         send();
     }
 
-    void GetAudioBufferList (bool isInput, int busIdx, AudioBufferList*& bufferList, bool& interleaved, int& numChannels)
+    void GetAudioBufferList (bool isInput, int busIdx, AudioBufferList*& bufferList, bool& interleaved, int& num_channels)
     {
         AUIOElement* element = GetElement (isInput ? kAudioUnitScope_Input : kAudioUnitScope_Output, static_cast<UInt32> (busIdx))->AsIOElement();
         jassert (element != nullptr);
@@ -2034,7 +2034,7 @@ private:
         jassert (bufferList->mNumberBuffers > 0);
 
         interleaved = AudioUnitHelpers::isAudioBufferInterleaved (*bufferList);
-        numChannels = static_cast<int> (interleaved ? bufferList->mBuffers[0].mNumberChannels : bufferList->mNumberBuffers);
+        num_channels = static_cast<int> (interleaved ? bufferList->mBuffers[0].mNumberChannels : bufferList->mNumberBuffers);
     }
 
     //==============================================================================
@@ -2275,12 +2275,12 @@ private:
             for (int busIdx = 0; busIdx < n; ++busIdx)
             {
                 const AUIOElement* element = (busIdx < numAUElements ? GetIOElement (isInput ? kAudioUnitScope_Input :  kAudioUnitScope_Output, (UInt32) busIdx) : nullptr);
-                const int numChannels = (element != nullptr ? static_cast<int> (element->GetStreamFormat().NumberChannels()) : 0);
+                const int num_channels = (element != nullptr ? static_cast<int> (element->GetStreamFormat().NumberChannels()) : 0);
 
                 AudioChannelLayoutTag currentLayoutTag = isInput ? currentInputLayout[busIdx] : currentOutputLayout[busIdx];
-                const int tagNumChannels = currentLayoutTag & 0xffff;
+                const int tagnum_channels = currentLayoutTag & 0xffff;
 
-                if (numChannels != tagNumChannels)
+                if (num_channels != tagnum_channels)
                     return kAudioUnitErr_FormatNotSupported;
 
                 requestedBuses.add (CoreAudioLayouts::fromCoreAudio (currentLayoutTag));
@@ -2306,12 +2306,12 @@ private:
 
     OSStatus syncAudioUnitWithChannelSet (bool isInput, int busNr, const AudioChannelSet& channelSet)
     {
-        const int numChannels = channelSet.size();
+        const int num_channels = channelSet.size();
 
         getCurrentLayout (isInput, busNr) = CoreAudioLayouts::toCoreAudio (channelSet);
 
         // is this bus activated?
-        if (numChannels == 0)
+        if (num_channels == 0)
             return noErr;
 
         if (AUIOElement* element = GetIOElement (isInput ? kAudioUnitScope_Input :  kAudioUnitScope_Output, (UInt32) busNr))
@@ -2321,7 +2321,7 @@ private:
             CAStreamBasicDescription streamDescription;
             streamDescription.mSampleRate = getSampleRate();
 
-            streamDescription.SetCanonical ((UInt32) numChannels, false);
+            streamDescription.SetCanonical ((UInt32) num_channels, false);
             return element->SetStreamFormat (streamDescription);
         }
         else

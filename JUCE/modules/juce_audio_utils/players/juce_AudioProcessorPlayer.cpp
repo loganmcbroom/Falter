@@ -30,11 +30,11 @@ template <typename Value>
 struct ChannelInfo
 {
     ChannelInfo() = default;
-    ChannelInfo (Value** dataIn, int numChannelsIn)
-        : data (dataIn), numChannels (numChannelsIn)  {}
+    ChannelInfo (Value** dataIn, int num_channelsIn)
+        : data (dataIn), num_channels (num_channelsIn)  {}
 
     Value** data = nullptr;
-    int numChannels = 0;
+    int num_channels = 0;
 };
 
 /** Sets up `channels` so that it contains channel pointers suitable for passing to
@@ -75,10 +75,10 @@ static void initialiseIoBuffers (ChannelInfo<const float> ins,
 
     const auto prepareInputChannel = [&] (int index)
     {
-        if (ins.numChannels == 0)
+        if (ins.num_channels == 0)
             zeromem (channels[totalNumChans], numBytes);
         else
-            memcpy (channels[totalNumChans], ins.data[index % ins.numChannels], numBytes);
+            memcpy (channels[totalNumChans], ins.data[index % ins.num_channels], numBytes);
     };
 
     if (processorIns > processorOuts)
@@ -86,7 +86,7 @@ static void initialiseIoBuffers (ChannelInfo<const float> ins,
         // If there aren't enough output channels for the number of
         // inputs, we need to use some temporary extra ones (can't
         // use the input data in case it gets written to).
-        jassert (tempBuffer.getNumChannels() >= processorIns - processorOuts);
+        jassert (tempBuffer.get_num_channels() >= processorIns - processorOuts);
         jassert (tempBuffer.getNumSamples() >= numSamples);
 
         for (int i = 0; i < processorOuts; ++i)
@@ -98,7 +98,7 @@ static void initialiseIoBuffers (ChannelInfo<const float> ins,
 
         for (auto i = processorOuts; i < processorIns; ++i)
         {
-            channels[totalNumChans] = tempBuffer.getWritePointer (i - outs.numChannels);
+            channels[totalNumChans] = tempBuffer.getWritePointer (i - outs.num_channels);
             prepareInputChannel (i);
             ++totalNumChans;
         }
@@ -133,12 +133,12 @@ AudioProcessorPlayer::~AudioProcessorPlayer()
 }
 
 //==============================================================================
-AudioProcessorPlayer::NumChannels AudioProcessorPlayer::findMostSuitableLayout (const AudioProcessor& proc) const
+AudioProcessorPlayer::num_channels AudioProcessorPlayer::findMostSuitableLayout (const AudioProcessor& proc) const
 {
     if (proc.isMidiEffect())
         return {};
 
-    std::vector<NumChannels> layouts { deviceChannels };
+    std::vector<num_channels> layouts { deviceChannels };
 
     if (deviceChannels.ins == 0 || deviceChannels.ins == 1)
     {
@@ -146,7 +146,7 @@ AudioProcessorPlayer::NumChannels AudioProcessorPlayer::findMostSuitableLayout (
         layouts.emplace_back (deviceChannels.outs, deviceChannels.outs);
     }
 
-    const auto it = std::find_if (layouts.begin(), layouts.end(), [&] (const NumChannels& chans)
+    const auto it = std::find_if (layouts.begin(), layouts.end(), [&] (const num_channels& chans)
     {
         return proc.checkBusesLayoutSupported (chans.toLayout());
     });
@@ -175,7 +175,7 @@ void AudioProcessorPlayer::setProcessor (AudioProcessor* const processorToPlay)
 
     if (processorToPlay != nullptr && sampleRate > 0 && blockSize > 0)
     {
-        defaultProcessorChannels = NumChannels { processorToPlay->getBusesLayout() };
+        defaultProcessorChannels = num_channels { processorToPlay->getBusesLayout() };
         actualProcessorChannels  = findMostSuitableLayout (*processorToPlay);
 
         if (processorToPlay->isMidiEffect())
@@ -258,8 +258,8 @@ void AudioProcessorPlayer::audioDeviceIOCallbackWithContext (const float** const
                          tempBuffer,
                          channels);
 
-    const auto totalNumChannels = jmax (actualProcessorChannels.ins, actualProcessorChannels.outs);
-    AudioBuffer<float> buffer (channels.data(), (int) totalNumChannels, numSamples);
+    const auto totalnum_channels = jmax (actualProcessorChannels.ins, actualProcessorChannels.outs);
+    AudioBuffer<float> buffer (channels.data(), (int) totalnum_channels, numSamples);
 
     if (processor != nullptr)
     {
@@ -427,8 +427,8 @@ struct AudioProcessorPlayerTests  : public UnitTest
                     AudioBuffer<float> tempBuffer (jmax (layout.numIns, layout.numOuts), numSamples);
                     std::vector<float*> channels ((size_t) jmax (layout.numIns, layout.numOuts), nullptr);
 
-                    initialiseIoBuffers ({ systemIns.getArrayOfReadPointers(),   systemIns.getNumChannels() },
-                                         { systemOuts.getArrayOfWritePointers(), systemOuts.getNumChannels() },
+                    initialiseIoBuffers ({ systemIns.getArrayOfReadPointers(),   systemIns.get_num_channels() },
+                                         { systemOuts.getArrayOfWritePointers(), systemOuts.get_num_channels() },
                                          numSamples,
                                          layout.numIns,
                                          layout.numOuts,
@@ -464,11 +464,11 @@ struct AudioProcessorPlayerTests  : public UnitTest
         }
     }
 
-    static AudioBuffer<float> getTestBuffer (int numChannels, int numSamples)
+    static AudioBuffer<float> getTestBuffer (int num_channels, int numSamples)
     {
-        AudioBuffer<float> result (numChannels, numSamples);
+        AudioBuffer<float> result (num_channels, numSamples);
 
-        for (int i = 0; i < result.getNumChannels(); ++i)
+        for (int i = 0; i < result.get_num_channels(); ++i)
             FloatVectorOperations::fill (result.getWritePointer (i), (float) i + 1, result.getNumSamples());
 
         return result;

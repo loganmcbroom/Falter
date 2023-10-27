@@ -70,7 +70,7 @@ public:
                       int64 startSampleInFile, int numSamples) override;
 
     void readMaxLevels (int64 startSample, int64 numSamples,
-                        Range<float>* results, int numChannelsToRead) override;
+                        Range<float>* results, int num_channelsToRead) override;
 
     using AudioFormatReader::readMaxLevels;
 

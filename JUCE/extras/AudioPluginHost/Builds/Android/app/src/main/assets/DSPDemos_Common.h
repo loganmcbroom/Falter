@@ -678,7 +678,7 @@ private:
 
     double currentSampleRate = 44100.0;
     uint32 currentBlockSize = 512;
-    uint32 currentNumChannels = 2;
+    uint32 currentnum_channels = 2;
 
     std::unique_ptr<AudioFormatReader> reader;
     std::unique_ptr<AudioFormatReaderSource> readerSource;

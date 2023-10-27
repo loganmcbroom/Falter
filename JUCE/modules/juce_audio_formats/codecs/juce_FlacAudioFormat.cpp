@@ -215,9 +215,9 @@ public:
         sampleRate = info.sample_rate;
         bitsPerSample = info.bits_per_sample;
         lengthInSamples = (unsigned int) info.total_samples;
-        numChannels = info.channels;
+        num_channels = info.channels;
 
-        reservoir.setSize ((int) numChannels, 2 * (int) info.max_blocksize, false, false, true);
+        reservoir.setSize ((int) num_channels, 2 * (int) info.max_blocksize, false, false, true);
     }
 
     bool readSamples (int** destSamples, int numDestChannels, int startOffsetInDestBuffer,
@@ -233,7 +233,7 @@ public:
             const auto bufferIndices = rangeToRead - bufferedRange.getStart();
             const auto writePos = (int64) startOffsetInDestBuffer + (rangeToRead.getStart() - startSampleInFile);
 
-            for (int i = jmin (numDestChannels, reservoir.getNumChannels()); --i >= 0;)
+            for (int i = jmin (numDestChannels, reservoir.get_num_channels()); --i >= 0;)
             {
                 if (destSamples[i] != nullptr)
                 {
@@ -289,11 +289,11 @@ public:
         else
         {
             if (numSamples > reservoir.getNumSamples())
-                reservoir.setSize ((int) numChannels, numSamples, false, false, true);
+                reservoir.setSize ((int) num_channels, numSamples, false, false, true);
 
             auto bitsToShift = 32 - bitsPerSample;
 
-            for (int i = 0; i < (int) numChannels; ++i)
+            for (int i = 0; i < (int) num_channels; ++i)
             {
                 auto* src = buffer[i];
                 int n = i;
@@ -387,9 +387,9 @@ public:
         if (qualityOptionIndex > 0)
             FLAC__stream_encoder_set_compression_level (encoder, (uint32) jmin (8, qualityOptionIndex));
 
-        FLAC__stream_encoder_set_do_mid_side_stereo (encoder, numChannels == 2);
-        FLAC__stream_encoder_set_loose_mid_side_stereo (encoder, numChannels == 2);
-        FLAC__stream_encoder_set_channels (encoder, numChannels);
+        FLAC__stream_encoder_set_do_mid_side_stereo (encoder, num_channels == 2);
+        FLAC__stream_encoder_set_loose_mid_side_stereo (encoder, num_channels == 2);
+        FLAC__stream_encoder_set_channels (encoder, num_channels);
         FLAC__stream_encoder_set_bits_per_sample (encoder, jmin ((unsigned int) 24, bitsPerSample));
         FLAC__stream_encoder_set_sample_rate (encoder, (unsigned int) sampleRate);
         FLAC__stream_encoder_set_blocksize (encoder, 0);
@@ -429,10 +429,10 @@ public:
 
         if (bitsToShift > 0)
         {
-            temp.malloc (numChannels * (size_t) numSamples);
-            channels.calloc (numChannels + 1);
+            temp.malloc (num_channels * (size_t) numSamples);
+            channels.calloc (num_channels + 1);
 
-            for (unsigned int i = 0; i < numChannels; ++i)
+            for (unsigned int i = 0; i < num_channels; ++i)
             {
                 if (samplesToWrite[i] == nullptr)
                     break;

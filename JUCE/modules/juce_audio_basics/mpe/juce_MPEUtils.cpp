@@ -26,19 +26,19 @@ namespace juce
 MPEChannelAssigner::MPEChannelAssigner (MPEZoneLayout::Zone zoneToUse)
     : zone                    (new MPEZoneLayout::Zone (zoneToUse)),
       channelIncrement        (zone->isLowerZone() ? 1 : -1),
-      numChannels             (zone->numMemberChannels),
+      num_channels             (zone->numMemberChannels),
       firstChannel            (zone->getFirstMemberChannel()),
       lastChannel             (zone->getLastMemberChannel()),
       midiChannelLastAssigned (firstChannel - channelIncrement)
 {
     // must be an active MPE zone!
-    jassert (numChannels > 0);
+    jassert (num_channels > 0);
 }
 
 MPEChannelAssigner::MPEChannelAssigner (Range<int> channelRange)
     : isLegacy                (true),
       channelIncrement        (1),
-      numChannels             (channelRange.getLength()),
+      num_channels             (channelRange.getLength()),
       firstChannel            (channelRange.getStart()),
       lastChannel             (channelRange.getEnd() - 1),
       midiChannelLastAssigned (firstChannel - channelIncrement)
@@ -49,7 +49,7 @@ MPEChannelAssigner::MPEChannelAssigner (Range<int> channelRange)
 
 int MPEChannelAssigner::findMidiChannelForNewNote (int noteNumber) noexcept
 {
-    if (numChannels <= 1)
+    if (num_channels <= 1)
         return firstChannel;
 
     for (int ch = firstChannel; (isLegacy || zone->isLowerZone() ? ch <= lastChannel : ch >= lastChannel); ch += channelIncrement)

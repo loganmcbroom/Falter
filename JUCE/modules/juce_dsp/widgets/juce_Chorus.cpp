@@ -87,7 +87,7 @@ template <typename SampleType>
 void Chorus<SampleType>::prepare (const ProcessSpec& spec)
 {
     jassert (spec.sampleRate > 0);
-    jassert (spec.numChannels > 0);
+    jassert (spec.num_channels > 0);
 
     sampleRate = spec.sampleRate;
 
@@ -97,8 +97,8 @@ void Chorus<SampleType>::prepare (const ProcessSpec& spec)
     delay.prepare (spec);
 
     dryWet.prepare (spec);
-    feedbackVolume.resize (spec.numChannels);
-    lastOutput.resize (spec.numChannels);
+    feedbackVolume.resize (spec.num_channels);
+    lastOutput.resize (spec.num_channels);
 
     osc.prepare (spec);
     bufferDelayTimes.setSize (1, (int) spec.maximumBlockSize, false, false, true);

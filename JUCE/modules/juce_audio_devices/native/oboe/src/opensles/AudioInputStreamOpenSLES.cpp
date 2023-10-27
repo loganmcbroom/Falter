@@ -105,7 +105,7 @@ Result AudioInputStreamOpenSLES::open() {
     // Define the audio data format.
     SLDataFormat_PCM format_pcm = {
             SL_DATAFORMAT_PCM,       // formatType
-            static_cast<SLuint32>(mChannelCount),           // numChannels
+            static_cast<SLuint32>(mChannelCount),           // num_channels
             static_cast<SLuint32>(mSampleRate * kMillisPerSecond), // milliSamplesPerSec
             bitsPerSample,                      // bitsPerSample
             bitsPerSample,                      // containerSize;

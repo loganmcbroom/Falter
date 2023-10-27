@@ -145,7 +145,7 @@ AudioCDReader::AudioCDReader (const File& volume)
 {
      sampleRate = 44100.0;
      bitsPerSample = 16;
-     numChannels = 2;
+     num_channels = 2;
      usesFloatingPointData = false;
 
      refreshTrackLengths();

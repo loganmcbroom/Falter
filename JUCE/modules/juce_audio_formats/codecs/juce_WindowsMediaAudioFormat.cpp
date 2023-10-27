@@ -174,7 +174,7 @@ public:
         clearSamplesBeyondAvailableLength (destSamples, numDestChannels, startOffsetInDestBuffer,
                                            startSampleInFile, numSamples, lengthInSamples);
 
-        const auto stride = (int) (numChannels * sizeof (int16));
+        const auto stride = (int) (num_channels * sizeof (int16));
 
         while (numSamples > 0)
         {
@@ -234,14 +234,14 @@ public:
                 JUCE_BEGIN_IGNORE_WARNINGS_MSVC (28182)
                 jassert (destSamples[i] != nullptr);
 
-                auto srcChan = jmin (i, (int) numChannels - 1);
+                auto srcChan = jmin (i, (int) num_channels - 1);
                 const int16* src = rawData + srcChan;
                 int* const dst = destSamples[i] + startOffsetInDestBuffer;
 
                 for (int j = 0; j < numToDo; ++j)
                 {
                     dst[j] = (int) (((uint32) *src) << 16);
-                    src += numChannels;
+                    src += num_channels;
                 }
                 JUCE_END_IGNORE_WARNINGS_MSVC
             }
@@ -297,7 +297,7 @@ private:
                             auto* inputFormat = reinterpret_cast<WAVEFORMATEX*> (mediaType->pbFormat);
 
                             sampleRate = inputFormat->nSamplesPerSec;
-                            numChannels = inputFormat->nChannels;
+                            num_channels = inputFormat->nChannels;
                             bitsPerSample = inputFormat->wBitsPerSample != 0 ? inputFormat->wBitsPerSample : 16;
                             lengthInSamples = (lengthInNanoseconds * (QWORD) sampleRate) / 10000000;
                         }

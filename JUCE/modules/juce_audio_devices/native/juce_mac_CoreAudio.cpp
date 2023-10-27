@@ -1597,7 +1597,7 @@ private:
     {
         auto numSamples = currentBufferSize;
 
-        AudioBuffer<float> buffer (fifos.getNumChannels(), numSamples);
+        AudioBuffer<float> buffer (fifos.get_num_channels(), numSamples);
         buffer.clear();
 
         Array<const float*> inputChans;
@@ -1617,7 +1617,7 @@ private:
 
         auto blockSizeMs = jmax (1, (int) (1000 * numSamples / currentSampleRate));
 
-        jassert (numInputChans + numOutputChans == buffer.getNumChannels());
+        jassert (numInputChans + numOutputChans == buffer.get_num_channels());
 
         threadInitialised.signal();
 
@@ -2098,8 +2098,8 @@ public:
                     if (AudioObjectGetPropertyData (devs[i], &pa, 0, nullptr, &size, name) == noErr)
                     {
                         auto nameString = String::fromUTF8 (name, (int) strlen (name));
-                        auto numIns  = getNumChannels (devs[i], true);
-                        auto numOuts = getNumChannels (devs[i], false);
+                        auto numIns  = get_num_channels (devs[i], true);
+                        auto numOuts = get_num_channels (devs[i], false);
 
                         if (numIns > 0)
                         {
@@ -2241,7 +2241,7 @@ private:
         audioDeviceListChanged();
     }
 
-    static int getNumChannels (AudioDeviceID deviceID, bool input)
+    static int get_num_channels (AudioDeviceID deviceID, bool input)
     {
         int total = 0;
         UInt32 size;

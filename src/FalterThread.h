@@ -2,7 +2,7 @@
 
 #include <functional>
 
-#include <flan/Audio.h>
+#include <flan/Audio/Audio.h>
 
 #include <JuceHeader.h>
 
@@ -22,7 +22,8 @@ public:
 		int threadID,
 		const String & script, 
 		const FalterThreadCallback & callback,
-		const AudioVec & files = AudioVec() );
+		const AudioVec & files = AudioVec()
+		);
 	~FalterThread();
 
 	void log( const String & s ); // Passes to Logger with added thread info and lock
@@ -44,11 +45,10 @@ private:
 	lua_State * L;
 	juce::Time startTime;
 	juce::Time endTime;
-	String cdpDir;
 	File workingDir;
 	bool threadSuccess;
 	bool allProcessesSetUp;
 	std::atomic<bool> canceller;
 
-	std::vector<flan::Audio> outputs;
+	AudioVec outputs;
 };

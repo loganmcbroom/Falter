@@ -14,5 +14,6 @@ public:
 	const Font * font;
 	size_t fontHeight;
 	bool circle;
+	String down_text;
 };
 

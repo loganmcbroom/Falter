@@ -43,7 +43,7 @@ class FileAudioSource
         properties.persistentID = formatReader->getFile().getFullPathName().toRawUTF8();
         properties.sampleCount = formatReader->lengthInSamples;
         properties.sampleRate = formatReader->sampleRate;
-        properties.channelCount = (int) formatReader->numChannels;
+        properties.channelCount = (int) formatReader->num_channels;
         properties.merits64BitSamples = false;
         return properties;
     }
@@ -67,7 +67,7 @@ public:
         if (numSamples > std::numeric_limits<int>::max())
             return false;
 
-        return formatReader->read (buffers, (int) formatReader->numChannels, startSample, (int) (numSamples));
+        return formatReader->read (buffers, (int) formatReader->num_channels, startSample, (int) (numSamples));
     }
 
     bool readAudioSamples (double* const* buffers, int64 startSample, int64 numSamples)
@@ -1312,10 +1312,10 @@ public:
         inner->refreshParameterList();
     }
 
-    void numChannelsChanged() override
+    void num_channelsChanged() override
     {
         std::lock_guard<std::mutex> lock (innerMutex);
-        inner->numChannelsChanged();
+        inner->num_channelsChanged();
     }
 
     void numBusesChanged() override

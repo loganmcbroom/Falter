@@ -43,14 +43,14 @@ struct ProcessSpec
     uint32 maximumBlockSize;
 
     /** The number of channels that the process() method will be expected to handle. */
-    uint32 numChannels;
+    uint32 num_channels;
 };
 
 constexpr bool operator== (const ProcessSpec& a, const ProcessSpec& b)
 {
     return a.sampleRate         == b.sampleRate
         && a.maximumBlockSize   == b.maximumBlockSize
-        && a.numChannels        == b.numChannels;
+        && a.num_channels        == b.num_channels;
 }
 
 constexpr bool operator!= (const ProcessSpec& a, const ProcessSpec& b) { return ! (a == b); }

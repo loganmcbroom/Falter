@@ -43,7 +43,7 @@ SamplerSound::SamplerSound (const String& soundName,
         length = jmin ((int) source.lengthInSamples,
                        (int) (maxSampleLengthSeconds * sourceSampleRate));
 
-        data.reset (new AudioBuffer<float> (jmin (2, (int) source.numChannels), length + 4));
+        data.reset (new AudioBuffer<float> (jmin (2, (int) source.num_channels), length + 4));
 
         source.read (data.get(), 0, length + 4, 0, true, true);
 
@@ -120,10 +120,10 @@ void SamplerVoice::renderNextBlock (AudioBuffer<float>& outputBuffer, int startS
     {
         auto& data = *playingSound->data;
         const float* const inL = data.getReadPointer (0);
-        const float* const inR = data.getNumChannels() > 1 ? data.getReadPointer (1) : nullptr;
+        const float* const inR = data.get_num_channels() > 1 ? data.getReadPointer (1) : nullptr;
 
         float* outL = outputBuffer.getWritePointer (0, startSample);
-        float* outR = outputBuffer.getNumChannels() > 1 ? outputBuffer.getWritePointer (1, startSample) : nullptr;
+        float* outR = outputBuffer.get_num_channels() > 1 ? outputBuffer.getWritePointer (1, startSample) : nullptr;
 
         while (--numSamples >= 0)
         {

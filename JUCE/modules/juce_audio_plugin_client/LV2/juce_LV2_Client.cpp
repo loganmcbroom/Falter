@@ -486,7 +486,7 @@ public:
     {
         float** sampleData = ab.getArrayOfWritePointers();
 
-        for (int c = ab.getNumChannels(); --c >= 0;)
+        for (int c = ab.get_num_channels(); --c >= 0;)
             for (int s = ab.getNumSamples(); --s >= 0;)
                 fn (sampleData[c][s]);
     }
@@ -747,11 +747,11 @@ private:
         processor->setRateAndBufferSizeDetails (sampleRate, maxBlockSize);
         processor->prepareToPlay (sampleRate, maxBlockSize);
 
-        const auto numChannels = jmax (processor->getTotalNumInputChannels(),
+        const auto num_channels = jmax (processor->getTotalNumInputChannels(),
                                        processor->getTotalNumOutputChannels());
 
         midi.ensureSize (8192);
-        audio.setSize (numChannels, maxBlockSize);
+        audio.setSize (num_channels, maxBlockSize);
         audio.clear();
     }
 
