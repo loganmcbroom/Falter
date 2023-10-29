@@ -1,7 +1,5 @@
 #include "FalterClip.h"
 
-#include <Windows.h>
-
 #include <flan/Audio/audio.h>
 
 #include "FalterClipList.h"
