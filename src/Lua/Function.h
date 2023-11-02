@@ -12,7 +12,7 @@ flan::Function<I, O> wrapFuncAxB( const std::shared_ptr<F> & spf )
     {
     return flan::Function<I, O>( [spf]( I in )
         {
-        using FI = F::ArgType;
+        using FI = typename F::ArgType;
         const auto fi = static_cast<FI>( in );
         const auto fo = (*spf)( fi );
         const auto o = static_cast<O>( fo );

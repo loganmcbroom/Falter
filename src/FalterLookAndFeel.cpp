@@ -15,8 +15,8 @@ FalterLookAndFeel::FalterLookAndFeel()
     , dark          ( Colour::fromHSV( .58f, .08f, .08f, 1 ) )
     , mid           ( Colour::fromHSV( .58f, .09f, .12f, 1 ) )
     , light         ( Colour::fromHSV( 0, 0, .80f, 1 ) )
-    , accent1       ( Colour::fromHSL( .00f, .50f, .50f, 1 ) ) // Redish
-    , accent2       ( Colour::fromHSL( .33f, .50f, .40f, 1 ) ) // Green
+    , accent1       ( Colour::fromHSL( .97f, .65f, .48f, 1 ) ) // Redish
+    , accent2       ( Colour::fromHSL( .33f, .50f, .42f, 1 ) ) // Green
     , fontDefault   ( Font::getDefaultSansSerifFontName(), fontSize, Font::plain )
     , fontWingdings ( "Wingdings", fontSize, Font::bold )
 	, fontWebdings  ( "Webdings" , fontSize, Font::bold )

@@ -35,9 +35,9 @@ template<> bool luaF_isFunc<pFunc2x2>( lua_State * L, int i )
 template<typename T>
 T luaF_checkFunc_base( lua_State * L, int i )
     {
-    using F = T::element_type;
-    using I = F::ArgType;
-    using O = F::ReturnType;
+    using F = typename T::element_type;
+    using I = typename F::ArgType;
+    using O = typename F::ReturnType;
 
     if( luaF_is<O>( L, i ) )
         return std::make_shared<F>( luaF_check<O>( L, i ) );
@@ -118,9 +118,9 @@ struct F_Func1x1_ADSR { pFunc1x1 operator()(
 template<typename T>
 static int luaF_Func_call( lua_State * L )
     {
-    using F = T::element_type;
-    using I = F::ArgType;
-    using O = F::ReturnType;
+    using F = typename T::element_type;
+    using I = typename F::ArgType;
+    using O = typename F::ReturnType;
 
     const std::string name = luaF_getUsertypeName<T>();
 
@@ -171,15 +171,15 @@ static int luaF_Func_call( lua_State * L )
 template<typename T>
 struct F_Func_constant_ctor 
     {
-    using F = T::element_type;
-    using O = F::ReturnType;
+    using F = typename T::element_type;
+    using O = typename F::ReturnType;
     T operator()( O out ){ return std::make_shared<F>( out ); } 
     };
 
 template<typename T>
 static int luaF_Func_ctor_selector( lua_State * L )
     {
-    using O = T::element_type::ReturnType;
+    using O = typename T::element_type::ReturnType;
 
     if( lua_gettop( L ) < 2 ) // Default ctor
         return luaF_Usertype_new<T>( L );

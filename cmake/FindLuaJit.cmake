@@ -14,15 +14,19 @@ find_path( LUAJIT_INCLUDE_DIR
 	PATH_SUFFIXES
 		src
 		luajit/src
+		luajit-2.1
   )
   
 find_library( LUAJIT_LIBRARY_DIR
     NAME
+		libluajit-5.1.a
 		libluajit-5.1.dll.a
 		libluajit-5.1.dll.lib
 	PATH_SUFFIXES
 		src
+		lib
 		luajit/src
+		luajit-2.1
   )
   
 include( FindPackageHandleStandardArgs )
