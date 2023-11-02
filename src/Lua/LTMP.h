@@ -123,9 +123,6 @@ static int luaF_LTMP_dispatched( lua_State* L )
     {
     auto & canceller = getThreadCanceller( L );
 
-    if constexpr( numArgs == 0 )
-        static_assert( ! sizeof( Functor * ), "numArgs cannot be 0." );
-
     // Get args as a tuple of vectors
     auto vecTuple = luaF_wrapFunctor_checkArgs<Functor, numArgs>( L );
 

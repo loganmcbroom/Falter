@@ -47,24 +47,33 @@ static std::vector<const T *> sharedPvecToPvec( const std::vector<std::shared_pt
 // Construction
 //============================================================================================================================================================
 
-struct F_Audio_string_ctor { pAudio operator()( const std::string & s )
-    { std::cout << "flan::Audio( const std::string & )"; 
-    return std::make_shared<flan::Audio>( s ); } };
+// struct F_Audio_string_ctor { pAudio operator()( const std::string & s )
+//     { std::cout << "flan::Audio( const std::string & )"; 
+//     return std::make_shared<flan::Audio>( s ); } };
 
-static int luaF_Audio_ctor_selector( lua_State * L )
-    {
-    // arg 1 is the Audio global table
-    if( lua_gettop( L ) < 2 ) // Default ctor
-        {
-        std::cout << "flan::Audio()"; 
-        return luaF_Usertype_new<pAudio>( L );
-        }
-    else if( luaF_is<std::string>( L, 2 ) || luaF_isArrayOfType<std::string>( L, 2 ) ) 
-        { 
-        return luaF_LTMP<F_Audio_string_ctor, 1>( L );
-        }
-    else return luaL_error( L, "Audio couldn't be constructed from the given arguments." );
-    }
+// static int luaF_Audio_ctor_selector( lua_State * L )
+//     {
+//     // arg 1 is the Audio global table
+//     if( lua_gettop( L ) < 2 ) // Default ctor
+//         {
+//         std::cout << "flan::Audio()"; 
+//         return luaF_Usertype_new<pAudio>( L );
+//         }
+//     else if( luaF_is<std::string>( L, 2 ) || luaF_isArrayOfType<std::string>( L, 2 ) ) 
+//         { 
+//         return luaF_LTMP<F_Audio_string_ctor, 1>( L );
+//         }
+//     else return luaL_error( L, "Audio couldn't be constructed from the given arguments." );
+//     }
+
+struct F_Audio_create_null { pAudio operator()()
+    { std::cout << "flan::Audio::create_null";
+    return std::make_shared<flan::Audio>( Audio::create_null() ); } };
+
+struct F_Audio_load_from_file { pAudio operator()(
+    const std::string & filename )
+    { std::cout << "flan::Audio::load_from_file";
+    return std::make_shared<flan::Audio>( Audio::load_from_file( filename ) ); } };
 
 struct F_Audio_create_empty_with_length { pAudio operator()(
     Second length, 
@@ -693,10 +702,11 @@ void luaF_register_Audio( lua_State * L )
     // Create Lua Audio type
     lua_newtable( L ); // Create global Audio table
         lua_newtable( L ); // Create Audio metatable
-            lua_pushcfunction( L, luaF_Audio_ctor_selector ); lua_setfield( L, -2, "__call" );
         lua_setmetatable( L, -2 );
 
         // Register all static flan::Audio methods as functions in global Lua Audio table.
+        lua_pushcclosure( L, luaF_LTMP<F_Audio_create_null,              0>, 0 ); lua_setfield( L, -2, "create_null"   ); 
+        lua_pushcclosure( L, luaF_LTMP<F_Audio_load_from_file,           1>, 0 ); lua_setfield( L, -2, "load_from_file"   ); 
         lua_pushcclosure( L, luaF_LTMP<F_Audio_create_empty_with_length, 1>, 0 ); lua_setfield( L, -2, "create_empty_with_length"   ); 
         lua_pushcclosure( L, luaF_LTMP<F_Audio_create_empty_with_frames, 1>, 0 ); lua_setfield( L, -2, "create_empty_with_frames"   );  
         lua_pushcclosure( L, luaF_LTMP<F_Audio_combine_channels,         1>, 0 ); lua_setfield( L, -2, "combine_channels"           );  
