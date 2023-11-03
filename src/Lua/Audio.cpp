@@ -652,10 +652,9 @@ struct F_Audio_synthesize_grains_with_feedback_mod { pAudio operator()( pAudio a
     pFunc1x1 grains_per_second, 
     pFunc1x1 time_scatter, 
     pAudioMod mod,
-    bool mod_feedback, 
     FrameRate sample_rate = 48000 )
     { std::cout << "flan::Audio::synthesize_grains_with_feedback_mod";
-    return std::make_shared<flan::Audio>( a->synthesize_grains_with_feedback_mod( length, *grains_per_second, *time_scatter, *mod, mod_feedback, sample_rate ) ); } };
+    return std::make_shared<flan::Audio>( a->synthesize_grains_with_feedback_mod( length, *grains_per_second, *time_scatter, *mod, true, sample_rate ) ); } };
 
 // Grain Compositions ===================================================================================================================
 
@@ -750,10 +749,10 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_get_total_energy,                      1>( L, "get_total_energy"                       );
             luaF_register_helper<F_Audio_get_energy_difference,                 2>( L, "get_energy_difference"                  );                   
             luaF_register_helper<F_Audio_get_local_wavelength,                  3>( L, "get_local_wavelength"                   );
-            luaF_register_helper<F_Audio_get_local_wavelengths,                 2>( L, "get_local_wavelengths"                  );
-            luaF_register_helper<F_Audio_get_average_wavelength,                2>( L, "get_average_wavelength"                 );
+            //luaF_register_helper<F_Audio_get_local_wavelengths,                 2>( L, "get_local_wavelengths"                  );
+            //luaF_register_helper<F_Audio_get_average_wavelength,                2>( L, "get_average_wavelength"                 );
             luaF_register_helper<F_Audio_get_local_frequency,                   2>( L, "get_local_frequency"                    );
-            luaF_register_helper<F_Audio_get_local_frequencies,                 2>( L, "get_local_frequencies"                  );
+            //luaF_register_helper<F_Audio_get_local_frequencies,                 2>( L, "get_local_frequencies"                  );
             luaF_register_helper<F_Audio_get_amplitude_envelope,                1>( L, "get_amplitude_envelope"                 );                        
             luaF_register_helper<F_Audio_get_frequency_envelope,                1>( L, "get_frequency_envelope"                 );                        
 
@@ -796,7 +795,7 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_filter_1pole_split,                    2>( L, "filter_1pole_split"                     );                     
             luaF_register_helper<F_Audio_filter_1pole_lowshelf,                 3>( L, "filter_1pole_lowshelf"                  );                        
             luaF_register_helper<F_Audio_filter_1pole_highshelf,                3>( L, "filter_1pole_highshelf"                 );                             
-            luaF_register_helper<F_Audio_filter_1pole_repeat,                   3>( L, "filter_1pole_repeat"                    );                      
+            //luaF_register_helper<F_Audio_filter_1pole_repeat,                   3>( L, "filter_1pole_repeat"                    );                      
             luaF_register_helper<F_Audio_filter_2pole_lowpass,                  3>( L, "filter_2pole_lowpass"                   );                       
             luaF_register_helper<F_Audio_filter_2pole_bandpass,                 3>( L, "filter_2pole_bandpass"                  );                        
             luaF_register_helper<F_Audio_filter_2pole_highpass,                 3>( L, "filter_2pole_highpass"                  );                        
@@ -814,7 +813,7 @@ void luaF_register_Audio( lua_State * L )
 
             // Synthesis
             luaF_register_helper<F_Audio_synthesize_grains_repeat,              5>( L, "synthesize_grains_repeat"               );                          
-            luaF_register_helper<F_Audio_synthesize_grains_with_feedback_mod,   6>( L, "synthesize_grains_with_feedback_mod"    );                                                 
+            luaF_register_helper<F_Audio_synthesize_grains_with_feedback_mod,   5>( L, "synthesize_grains_with_feedback_mod"    );                                                 
             luaF_register_helper<F_Audio_synthesize_granulation,                6>( L, "synthesize_granulation"                 );                        
             luaF_register_helper<F_Audio_synthesize_psola,                      3>( L, "synthesize_psola"                       );          
 

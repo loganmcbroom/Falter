@@ -13,4 +13,8 @@ Maybe todo:
         Function periodize suffers the same fate, can't capture the function passed in
  
 Task:
+    Add synthesize_grains
+    AudioMod working on lua side requires some sort of change
+
     help lua linter know functions
+        can f[] be type marked?

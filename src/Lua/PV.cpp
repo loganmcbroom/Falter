@@ -20,23 +20,18 @@ extern "C"
 
 using namespace flan;
 
-// // Methods ======================================================================================================================
+//============================================================================================================================================================
+// Constructors
+//============================================================================================================================================================
 
-struct F_PV_string_ctor { pPV operator()( const std::string & s )
-    { std::cout << "flan::PV( const std::string & )";
-    return std::make_shared<PV>( s ); } };
-static int luaF_PV_ctor_selector( lua_State * L )
-    {
-    // arg 1 is the global table
-    if( lua_gettop( L ) < 2 ) // Default ctor
-        {
-        std::cout << "flan::PV()";
-        return luaF_Usertype_new<pPV>( L );
-        }
-    else if( luaF_is<std::string>( L, 2 ) || luaF_isArrayOfType<std::string>( L, 2 ) )
-        return luaF_LTMP<F_PV_string_ctor, 1>( L );
-    else return luaL_error( L, "PV couldn't be constructed from the given arguments." );
-    }
+struct F_PV_create_null { pPV operator()()
+    { std::cout << "flan::PV::create_null";
+    return std::make_shared<flan::PV>( PV::create_null() ); } };
+
+struct F_PV_load_from_file { pPV operator()( const std::string & filename )
+    { std::cout << "flan::PV::load_from_file";
+    return std::make_shared<flan::PV>( PV::load_from_file( filename ) ); } };
+
 
 //============================================================================================================================================================
 // Conversions
@@ -250,9 +245,10 @@ void luaF_register_PV( lua_State * L )
     // Create LUA_FLAN_PV type
     lua_newtable( L );
         lua_newtable( L );
-            lua_pushcfunction( L, luaF_PV_ctor_selector ); lua_setfield( L, -2, "__call" );
         lua_setmetatable( L, -2 );
-        lua_pushcclosure( L, luaF_LTMP<F_PV_synthesize, 2>, 0 ); lua_setfield( L, -2, "synthesize" ); 
+        lua_pushcclosure( L, luaF_LTMP<F_PV_create_null,    0>, 0 ); lua_setfield( L, -2, "create_null" ); 
+        lua_pushcclosure( L, luaF_LTMP<F_PV_load_from_file, 1>, 0 ); lua_setfield( L, -2, "load_from_file" ); 
+        lua_pushcclosure( L, luaF_LTMP<F_PV_synthesize,     2>, 0 ); lua_setfield( L, -2, "synthesize" ); 
     lua_setglobal( L, luaF_getUsertypeName<pPV>().c_str() );
 	luaL_newmetatable( L, luaF_getUsertypeName<pPV>().c_str() );
     lua_pushvalue( L, -1 ); lua_setfield( L, -2, "__index" ); // I need to look up why this works this way 
