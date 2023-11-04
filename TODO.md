@@ -14,7 +14,11 @@ Maybe todo:
  
 Task:
     Add synthesize_grains
-    AudioMod working on lua side requires some sort of change
 
-    help lua linter know functions
-        can f[] be type marked?
+    do non ltmp calls return Vec types?
+        if so update user guide
+    write user guide
+    icon
+    publish lls addon
+
+

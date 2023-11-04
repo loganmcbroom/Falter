@@ -74,10 +74,10 @@ FalterThread::FalterThread( int threadID, const String & _script, const FalterTh
 	lua_settop( L, 0 ); //Clear the stack
 	luaF_register_Usertypes( L );
 
-	// Create global "f" with all the input file paths and metatable to stop bad array access
+	// Create global "inputs" with all the input file paths and metatable to stop bad array access
 	luaF_push( L, inputs );
 
-	lua_setglobal( L, "f" );
+	lua_setglobal( L, "inputs" );
 
 	// Load the supplied script
 	if( luaL_loadfile( L, script.getCharPointer() ) )
@@ -99,7 +99,6 @@ FalterThread::FalterThread( int threadID, const String & _script, const FalterTh
 
 FalterThread::~FalterThread()
 	{
-	jassert( !isThreadRunning() );
 	lua_close( L );
 	}
 

@@ -202,7 +202,10 @@ void MainComponent::procButtonClicked()
 
 	AudioVec inAudio;
 	for( int i = 0; i < inClips.getNumItems(); ++i )
-		inAudio.emplace_back( dynamic_pointer_cast<FalterClip>( inClips.getItem( i ) )->getAudio() );
+		{
+		flan::Audio input_copy = dynamic_pointer_cast<FalterClip>( inClips.getItem( i ) )->getAudio()->copy();
+		inAudio.push_back( std::make_shared<flan::Audio>( std::move( input_copy ) ) );
+		}
 		
 	threads.addThread( scriptLabel.getText(), retrieveFiles, inAudio );
 	}

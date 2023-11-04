@@ -338,14 +338,15 @@ struct F_Audio_rearrange { pAudio operator()( pAudio a,
 // Volume
 //============================================================================================================================================================
 
-struct F_Audio_modify_volume { pAudio operator()(pAudio a, 
-    pFunc1x1 b = std::make_shared<Func1x1>( 1 ) )
+struct F_Audio_modify_volume { pAudio operator()( pAudio a, 
+    pFunc1x1 b )
     { std::cout << "flan::Audio::modify_volume";
     return std::make_shared<flan::Audio>( a->modify_volume( *b ) ); } };
 
-// struct F_Audio_modify_volume_in_place { void operator()( pAudio a,
-//     pFunc1x1 gain )
-//     { a->modify_volume_in_place( *gain ); } };
+struct F_Audio_modify_volume_in_place { void operator()( pAudio a, 
+    pFunc1x1 b )
+    { std::cout << "flan::Audio::modify_volume_in_place";
+    a->modify_volume_in_place( *b ); } };
 
 struct F_Audio_set_volume { pAudio operator()(pAudio a, 
     pFunc1x1 b = std::make_shared<Func1x1>( 1 ) )
@@ -359,11 +360,12 @@ struct F_Audio_fade { pAudio operator()( pAudio a,
     { std::cout << "flan::Audio::fade";
     return std::make_shared<flan::Audio>( a->fade( b, c, index2interpolator( d ) ) ); } };
 
-// struct F_Audio_fade_in_place { void operator()( pAudio a,
-//     Second start = 16.0f/48000.0f, 
-//     Second end = 16.0f/48000.0f,
-//     InterpolatorIndex interp = InterpolatorIndex::sqrt )
-//     { a->fade_in_place( start, end, index2interpolator( interp ) ); } };
+struct F_Audio_fade_in_place { void operator()( pAudio a, 
+    flan::Second b = 16.0f/48000.0f, 
+    flan::Second c = 16.0f/48000.0f, 
+    InterpolatorIndex d = InterpolatorIndex::sqrt )
+    { std::cout << "flan::Audio::fade_in_place";
+    a->fade_in_place( b, c, index2interpolator( d ) ); } };
 
 struct F_Audio_fade_frames { pAudio operator()( pAudio a, 
     Frame b = 16, 
@@ -372,11 +374,12 @@ struct F_Audio_fade_frames { pAudio operator()( pAudio a,
     { std::cout << "flan::Audio::fade_frames";
     return std::make_shared<flan::Audio>( a->fade_frames( b, c, index2interpolator( d ) ) ); } };
 
-// struct F_Audio_fade_frames_in_place { void operator()( pAudio a,
-//     Frame start = 16, 
-//     Frame end = 16, 
-//     InterpolatorIndex interp = InterpolatorIndex::sqrt )
-//     { a->fade_frames_in_place( start, end, index2interpolator( interp ) ) ; } };
+struct F_Audio_fade_frames_in_place { void operator()( pAudio a, 
+    Frame b = 16, 
+    Frame c = 16, 
+    InterpolatorIndex d = InterpolatorIndex::sqrt )
+    { std::cout << "flan::Audio::fade_frames_in_place";
+    a->fade_frames_in_place( b, c, index2interpolator( d ) ); } };
 
 struct F_Audio_invert_phase { pAudio operator()( pAudio a )
     { std::cout << "flan::Audio::invert_phase";
@@ -427,10 +430,10 @@ struct F_Audio_pan { pAudio operator()( pAudio a,
     { std::cout << "flan::Audio::pan";
     return std::make_shared<flan::Audio>( a->pan( *b ) ); } };
 
-// struct F_Audio_pan_in_place { void operator()( pAudio a,
-//     pFunc1x1 pan_position  )
-//     { std::cout << "flan::Audio::pan_in_place";
-//     a->pan_in_place( *pan_position ); } };
+struct F_Audio_pan_in_place { void operator()( pAudio a, 
+    pFunc1x1 b = std::make_shared<Func1x1>( 0 ) )
+    { std::cout << "flan::Audio::pan_in_place";
+    a->pan_in_place( *b ); } };
 
 struct F_Audio_widen { pAudio operator()( pAudio a, 
     pFunc1x1 b = std::make_shared<Func1x1>( 1 ) )
@@ -614,10 +617,10 @@ struct F_Audio_synthesize_waveform { pAudio operator()(
     pFunc1x1 waveform, 
     Second length, 
     pFunc1x1 freq, 
-    size_t samplerate = 48000, 
+    FrameRate sample_rate = 48000, 
     size_t oversample = 16 )
     { std::cout << "flan::Audio::synthesize_waveform";
-    return std::make_shared<flan::Audio>( Audio::synthesize_waveform( *waveform, length, *freq, samplerate, oversample ) ); } };
+    return std::make_shared<flan::Audio>( Audio::synthesize_waveform( *waveform, length, *freq, sample_rate, oversample ) ); } };
 
 struct F_Audio_synthesize_impulse { pAudio operator()(
     Frequency base_freq,
@@ -735,7 +738,7 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_save_spectrum_to_bmp,                  2>( L, "save_spectrum_to_bmp"                   );                           
             luaF_register_helper<F_Audio_convert_to_PV,                         1>( L, "convert_to_PV"                          );
             luaF_register_helper<F_Audio_convert_to_ms_PV,                      1>( L, "convert_to_ms_PV"                       );          
-            luaF_register_helper<F_Audio_convert_to_PV_selector,                1>( L, "__call"                                 );
+            //luaF_register_helper<F_Audio_convert_to_PV_selector,                1>( L, "__call"                                 );
             luaF_register_helper<F_Audio_convertToMidSide,                      1>( L, "convertToMidSide"                       );
             luaF_register_helper<F_Audio_convert_to_left_right,                 1>( L, "convert_to_left_right"                  );
             luaF_register_helper<F_Audio_convert_to_stereo,                     1>( L, "convert_to_stereo"                      );
@@ -771,12 +774,12 @@ void luaF_register_Audio( lua_State * L )
 
             // Volume
             luaF_register_helper<F_Audio_modify_volume,                         2>( L, "modify_volume"                          );
-            //luaF_register_helper<F_Audio_modify_volume_in_place,                2>( L, "modify_volume_in_place"                 );                                        
+            luaF_register_helper<F_Audio_modify_volume_in_place,                2>( L, "modify_volume_in_place"                 );                                        
             luaF_register_helper<F_Audio_set_volume,                            2>( L, "set_volume"                             );
             luaF_register_helper<F_Audio_fade,                                  1>( L, "fade"                                   );
-            //luaF_register_helper<F_Audio_fade_in_place,                         1>( L, "fade_in_place"                          );   
+            luaF_register_helper<F_Audio_fade_in_place,                         1>( L, "fade_in_place"                          );   
             luaF_register_helper<F_Audio_fade_frames,                           1>( L, "fade_frames"                            );
-            //luaF_register_helper<F_Audio_fade_frames_in_place,                  1>( L, "fade_frames_in_place"                   );                                      
+            luaF_register_helper<F_Audio_fade_frames_in_place,                  1>( L, "fade_frames_in_place"                   );                                      
             luaF_register_helper<F_Audio_invert_phase,                          1>( L, "invert_phase"                           );
             luaF_register_helper<F_Audio_waveshape,                             2>( L, "waveshape"                              );
             luaF_register_helper<F_Audio_add_moisture,                          1>( L, "add_moisture"                           );  
@@ -786,7 +789,7 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_stereo_spatialize_variable,            2>( L, "stereo_spatialize_variable"             );                               
             luaF_register_helper<F_Audio_stereo_spatialize,                     2>( L, "stereo_spatialize"                      );                               
             luaF_register_helper<F_Audio_pan,                                   2>( L, "pan"                                    );
-            //luaF_register_helper<F_Audio_pan_in_place,                          2>( L, "pan_in_place"                           );  
+            luaF_register_helper<F_Audio_pan_in_place,                          2>( L, "pan_in_place"                           );  
             luaF_register_helper<F_Audio_widen,                                 2>( L, "widen"                                  );
 
             // Filters

@@ -221,8 +221,7 @@ struct F_PV_resonate { pPV operator()( pPV a,
 struct F_PV_synthesize { pPV operator()( 
     flan::Second a = 5, 
     pFunc1x1 freq = std::make_shared<Func1x1>( 220 ), 
-	pFunc2x1 harmonic_weights = std::make_shared<Func2x1>( []( vec2 sh ){ std::cout << "flan::PV::";
-    return 1.0f / ( 1.0f + sh.y() ); } ),
+	pFunc2x1 harmonic_weights = std::make_shared<Func2x1>( []( vec2 sh ){ return 1.0f / ( 1.0f + sh.y() ); } ),
     pFunc1x1 harmonic_bandwidth = std::make_shared<Func1x1>( 60 ),
     pFunc2x1 harmonic_frequency_std_dev = std::make_shared<Func2x1>( 60 ) )
     { 
@@ -242,7 +241,7 @@ struct F_PV_synthesize { pPV operator()(
 
 void luaF_register_PV( lua_State * L )
     {
-    // Create LUA_FLAN_PV type
+    // Create PV type
     lua_newtable( L );
         lua_newtable( L );
         lua_setmetatable( L, -2 );
@@ -253,7 +252,7 @@ void luaF_register_PV( lua_State * L )
 	luaL_newmetatable( L, luaF_getUsertypeName<pPV>().c_str() );
     lua_pushvalue( L, -1 ); lua_setfield( L, -2, "__index" ); // I need to look up why this works this way 
 
-    // Create LUA_FLAN_PV_VEC type
+    // Create PV vec type
     lua_register( L, luaF_getUsertypeName<PVVec>().c_str(), luaF_Usertype_vec_new<pPV> );
 	luaL_newmetatable( L, luaF_getUsertypeName<PVVec>().c_str() );
     lua_pushvalue( L, -1 ); lua_setfield( L, -2, "__index" );
@@ -263,7 +262,7 @@ void luaF_register_PV( lua_State * L )
     // Conversions
     luaF_register_helper<F_PV_convert_to_audio,             1>( L, "convert_to_audio" );
     luaF_register_helper<F_PV_convert_to_lr_audio,          1>( L, "convert_to_lr_audio" );
-    luaF_register_helper<F_Audio_convert_to_audio_selector, 1>( L, "__call" );
+    // luaF_register_helper<F_Audio_convert_to_audio_selector, 1>( L, "__call" );
     // luaF_register_helper<F_PV_convertToGraph, flan::Graph, PV, Rect, Pixel, Pixel, float>( L, "convertToGraph" );
     luaF_register_helper<F_PV_save_to_bmp,                  2>( L, "save_to_bmp" );
 
