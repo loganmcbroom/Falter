@@ -11,7 +11,7 @@ can get it working there.
 ## User Guide
 
 Hello, here is my little user guide for making sounds in Falter. Falter is a gui program that handles files, threads, computation logging,
-recording, and most importantly, watching a Lua script. When processing is triggered, the Lua script being watched is run over a Lua context  
+recording, and most importantly, watching a Lua script. When processing is triggered, the Lua script being watched is run over a Lua context
 containing nearly all flan functions. Any audios returned from the script are collected to be saved, or processed further. Unlike some other
 audio processing softwares, Falter has no qualms about throwing away data generated. You should expect to end up with a lot of outputs, and
 if you want anything to persist after closing the program, make sure to save it! We'll start with an overview of the gui itself, and then 
@@ -21,19 +21,14 @@ talk about what can be accomplished on the script side.
 
 #### Buttons
 In the top left of the gui there are five buttons.
-* Process
-    The skull and crossbones button triggers processing, creating a new thread, copying the input audios into it, and running the script on them.
-* Record
-    The circle button starts recording. Click it again to stop recording, and whatever sounds you made will be placed in the input clip list.
-* Settings
-    The bomb/glasses button toggles a menu with some basic I/O settings.
-* Temperature
-    The temperature button has two modes: hot and cold. Cold mode does nothing, so feel free to think about it as nothing mode. In hot mode,
+* The skull and crossbones button triggers processing, creating a new thread, copying the input audios into it, and running the script on them.
+* The circle button starts recording. Click it again to stop recording, and whatever sounds you made will be placed in the input clip list.
+* The bomb/glasses button toggles a menu with some basic I/O settings.
+* The temperature button has two modes: hot and cold. Cold mode does nothing, so feel free to think about it as nothing mode. In hot mode,
     the currently active script is watched for changes. When you hit ctrl-s and some changes are saved to disk, it detects this, and automatically
     retriggers processing as though you had clicked the skull.
-* Script Select
-    You will probably not want to just throw out your scripts every time, right? Well, just create a new one and use this button to select it.
-    The currently active script will have its name displayed next to the script select button
+* The folder button selects the active script. You will probably not want to just throw out your scripts every time, right? Well, just create a 
+    new one and use this button to select it. The currently active script will have its name displayed next to the script select button
 
 #### File Browser
 I don't think a really have much to say about this. It's a file browser. Double clicking a folder will set it as the browser root, and this is
@@ -53,6 +48,8 @@ thread also has an ID that can identify its outputs in the logger. This list cou
 #### Logger
 At the bottom of the gui is the logger. The logger spits out data about which flan processes are being run, what thread is running them, along with
 any errors that might have caused a script to fail. Should I make it a little taller? Call now to vote.
+
+- - - -
 
 Woah that's everything! It feels like something is missing though... the text editor! Well, I don't think I can make a better text editor that
 the great ones that are aleady out there, so you'll need to have an editor open along with Falter. Falter has a Lua Language Server addon that
