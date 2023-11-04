@@ -69,12 +69,12 @@ addon folder, or, if you're using vscode, the following can be added to settings
 ### Scripting
 
 Writing about how to click a gui is easy, telling someone how to program not so much. Maybe I should first tell you, I'm not going to teach you
-how to program in Lua here. It's expected that you either know a tiny bit about coding, or are willing to google stuff while you work. The sky
+how to program in Lua here. It's expected that you either know a bit about coding, or are willing to google stuff while you work. The sky
 is the limit on what you can do, but here are the basic things you'll need to know. The first is that whatever inputs you passed into the script 
 are stored in an array called "inputs". The second is that Lua is one-indexed, so don't go trying to access inputs[0]. The inputs object is not
-just a plain array of Audios by the way, it is an "AudioVec" typed object, which I will explain in a minute. You can apply algorithms to the inputs
+just a plain array of Audios by the way, it is an "AudioVec" type object, which I will explain in a minute. You can apply algorithms to the inputs
 however you see fit, or you can pass in no inputs and generate your sounds entirely within the script using Audio.synthesize or PV.synthesize.
-When you are done processing, return any number out Audio objects from the script, and they will appear in the output clip list. If anything goes
+When you are done processing, return any number of Audio objects from the script, and they will appear in the output clip list. If anything goes
 wrong in the script, an error will be dumped to the logger, and the thread will turn red.
 
 #### Types
@@ -110,7 +110,7 @@ or you can just let it return from the script and get all the outputs in the gui
 When more than one method argument is substituted with an array, the LTMP is "overloaded". There are two logical ways for this to be handled, as
 far as I can tell. One is to run the given process for every combination of inputs in each substitution vector. The other is to process a number
 of times equal to the largest size among the substitution vectors, and access the smaller vectors modulo their size. Falter uses the latter strategy,
-as I thing the former behaviour is easy enough to manually add as a Lua utility function.
+as I think the former behaviour is easy enough to manually add as a Lua utility function.
 
 One final issue with the LTMP is that it causes the LLS information to be imperfect. I am trying to get this sorted out, but there are some 
 complex edge cases, so if you spot an incorrect type let me know.
