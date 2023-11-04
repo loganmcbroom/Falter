@@ -1,14 +1,14 @@
-#Falter
+# Falter
 Lua-based almost-livecoding frontend for the flan audio processing library.
 
-##Building From Source
+## Building From Source
 The provided cmake script has been tested on both Windows and Mac systems, so it's pretty likely to just work. Falter relies on
 flan and LuaJIT. It also relies on JUCE, but all the needed JUCE files are included. I haven't tested on Linux, but if that's 
 you, ya'know, you kinda signed up for figuring out how to compile stuff right? Okay, okay, if it doesn't work email me and we
 can get it working there.
 
 
-##User Guide
+## User Guide
 
 Hello, here is my little user guide for making sounds in Falter. Falter is a gui program that handles files, threads, computation logging,
 recording, and most importantly, watching a Lua script. When processing is triggered, the Lua script being watched is run over a Lua context  
@@ -17,40 +17,40 @@ audio processing softwares, Falter has no qualms about throwing away data genera
 if you want anything to persist after closing the program, make sure to save it! We'll start with an overview of the gui itself, and then 
 talk about what can be accomplished on the script side.
 
-###GUI
+### GUI
 
-####Buttons
+#### Buttons
 In the top left of the gui there are five buttons.
--Process
+* Process
     The skull and crossbones button triggers processing, creating a new thread, copying the input audios into it, and running the script on them.
--Record
+* Record
     The circle button starts recording. Click it again to stop recording, and whatever sounds you made will be placed in the input clip list.
--Settings
+* Settings
     The bomb/glasses button toggles a menu with some basic I/O settings.
--Temperature
+* Temperature
     The temperature button has two modes: hot and cold. Cold mode does nothing, so feel free to think about it as nothing mode. In hot mode,
     the currently active script is watched for changes. When you hit ctrl-s and some changes are saved to disk, it detects this, and automatically
     retriggers processing as though you had clicked the skull.
--Script Select
+* Script Select
     You will probably not want to just throw out your scripts every time, right? Well, just create a new one and use this button to select it.
     The currently active script will have its name displayed next to the script select button
 
-####File Browser
+#### File Browser
 I don't think a really have much to say about this. It's a file browser. Double clicking a folder will set it as the browser root, and this is
 saved in a settings file. The up arrow goes up one folder level. You can double-click audio files to load them into inputs, or you can drag and drop
 them into a clip list.
 
-####Clip Lists
+#### Clip Lists
 There are two clip lists, labelled "Inputs" and "Outputs". Audio clips within these lists can be dragged and dropped to reorder them, as well as being
 dragged and dropped from one to the other. This is very useful for reprocessing a previous output without having to save it to disk. The buttons on each
 clip should be self-explanatory. The X at the top of each clip list clears the entire list.
 
-####Thread Lists
+#### Thread Lists
 Between the clip lists is the thread list. Any time processing is triggered, a new thread is spawned to manage that processing. Information about each
 processing thread is given here, such as the success/failure of the script, the time at which it was run, and the amount of time it took to run. Each
 thread also has an ID that can identify its outputs in the logger. This list could probably be removed, but I think it's kind of cool.
 
-####Logger
+#### Logger
 At the bottom of the gui is the logger. The logger spits out data about which flan processes are being run, what thread is running them, along with
 any errors that might have caused a script to fail. Should I make it a little taller? Call now to vote.
 
@@ -61,7 +61,7 @@ vscode is a nice free editor with LLS support. Lets get onto scripting!
 
 
 
-###Scripting
+### Scripting
 
 Before I say anything else, download the Lua Language Server addon for Falter. Scripting without this is a waste of time.
 Writing about how to click a gui is easy, telling someone how to program not so much. Maybe I should first tell you, I'm not going to teach you
@@ -73,11 +73,11 @@ however you see fit, or you can pass in no inputs and generate your sounds entir
 When you are done processing, return any number out Audio objects from the script, and they will appear in the output clip list. If anything goes
 wrong in the script, an error will be dumped to the logger, and the thread will turn red.
 
-####Types
--Audio
+#### Types
+* Audio
     Audio is audio. You can do all the normal stuff you'd expect with it, and that is that.
 
--PV
+* PV
     PV is phase vocoder data. This is a time/frequency analysis type that allows manipulation of an audio spectrum over time. It is famous for
     being used in time and pitch stretching algorithms, but it is an incredibly powerful data format. You can get to PV data by calling
     "convert_to_PV" on an Audio, or even better, calling "convert_to_ms_PV" on a stereo Audio. The latter reduces the effect some of the "smearing"
@@ -85,19 +85,19 @@ wrong in the script, an error will be dumped to the logger, and the thread will 
     what I mean. To get back, use "convert_to_Audio" or "convert_to_lr_Audio" respectively. It isn't the most user friendly, but to see
     a hint of the true power of PV data, try the "prism" function.
 
--Wavetable
+* Wavetable
     I won't pretend I gave 100% on Wavetable support alright? This was more an expiriment for me, and it doesn't work in the way most wavetable do.
     That being said, it can't be denied that flan Wavetables can produce some sounds you are unlikely to find anywhere else. You can get a wavetable
     using Wavetable.create_from_audio or Wavetable.create_from_function, and produce output using Wavetable:synthesize. It's recommended you call
     Wavetable:remove_jumps_in_place and Wavetable:add_fades_in_place before synthesizing outputs.
 
--Vec Types
+* Vec Types
     The are also _Vec types for Audio and PV, that is, AudioVec, and PVVec. These are simple userdata wrappers around an array of the type you 
     would expect. Having this type info allows the LTMP to work, which is explained below, along with helping LLS offer the correct autocomplete
     options. They also have some nice utility overloads. For example, given an AudioVec a, rather than calling Audio.mix( a ), we can call
     a:mix(). This is convenient when chaining processes, which is a lot of what you'll want to do in Falter.
 
-####LTMP
+#### LTMP
 Falter would be cool without LTMP, but I take more pride in this feature than any other. I had to learn a bunch of c++ template metaprogramming
 tricks to make this work so I hope you'll use it. The idea is that any time a single (non-array) parameter would be passed into a flan function,
 you can instead pass an array of such arguments to invoke the LTMP. The process will then be executed for each argument in the array, and a _Vec
@@ -113,7 +113,7 @@ as I thing the former behaviour is easy enough to manually add as a Lua utility 
 One final issue with the LTMP is that it causes the LLS information to be imperfect. I am trying to get this sorted out, but there are some 
 complex edge cases, so if you spot an incorrect type let me know.
 
-####Examples
+#### Examples
 
 It's probably best to get started by modifying some example scripts. Examples should already be included with any release package of Falter,
 so find those, load them up, and dissect some sounds!
