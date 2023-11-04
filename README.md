@@ -60,7 +60,7 @@ addon folder, or, if you're using vscode, the following can be added to settings
 
 ```
 "Lua.workspace.library": [
-    "C:/Users/logan/Documents/Source/Falter-LLS/library/"
+    "C:/path/to/folder/Falter-LLS/library/"
 ]
 ```
 
