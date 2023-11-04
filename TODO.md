@@ -17,7 +17,6 @@ Task:
 
     do non ltmp calls return Vec types?
         if so update user guide
-    write user guide
     icon
     publish lls addon
 
