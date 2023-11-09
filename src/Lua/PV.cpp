@@ -70,7 +70,7 @@ struct F_PV_save_to_bmp { void operator()( pPV a, const std::string & b, Rect c 
  struct F_PV_prism { pPV operator()( pPV a, 
     pPrismFunc b, 
     bool c = true )
-    { std::cout << "flan::PV::";
+    { std::cout << "flan::PV::prism";
     return std::make_shared<flan::PV>( a->prism( *b, c ) ); } };
 
 
@@ -100,7 +100,7 @@ struct F_PV_select { pPV operator()( pPV a,
 struct F_PV_freeze { pPV operator()( pPV a, 
     const std::vector<Second> & pause_times,
 	const std::vector<Second> & pause_lengths )
-    { std::cout << "flan::PV::";
+    { std::cout << "flan::PV::freeze";
    return std::make_shared<flan::PV>( a->freeze( pause_times, pause_lengths ) ); } };
 
 
