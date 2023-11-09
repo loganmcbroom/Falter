@@ -83,6 +83,14 @@ public:
            #endif
 
             setVisible (true);
+
+            File file = File::getCurrentWorkingDirectory().getChildFile( "app-icon.png" );
+            if( file.existsAsFile() )
+                {
+                Image image = ImageFileFormat::loadFrom( file );
+                if( ! image.isNull() && getPeer() )
+                    getPeer()->setIcon(image);
+                }
         }
 
         void closeButtonPressed() override
