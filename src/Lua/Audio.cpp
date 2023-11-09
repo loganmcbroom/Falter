@@ -320,15 +320,27 @@ struct F_Audio_delay { pAudio operator()( pAudio a,
     { std::cout << "flan::Audio::delay";
     return std::make_shared<flan::Audio>( a->delay( b, *c, *d, *e ) ); } };
 
-struct F_Audio_chop { AudioVec operator()( pAudio a, 
-    flan::Second b = 1, 
-    flan::Second c = 0.05 )
-    { std::cout << "flan::Audio::chop";
-    return vecToSharedPvec( a->chop( b, c ) ); } };
+struct F_Audio_split_at_times { AudioVec operator()( pAudio a, 
+    std::vector<flan::Second> b, 
+    flan::Second c = 0 )
+    { std::cout << "flan::Audio::split_at_times";
+    return vecToSharedPvec( a->split_at_times( b, c ) ); } };
+
+struct F_Audio_split_with_lengths { AudioVec operator()( pAudio a, 
+    std::vector<flan::Second> b, 
+    flan::Second c = 0 )
+    { std::cout << "flan::Audio::split_with_lengths";
+    return vecToSharedPvec( a->split_with_lengths( b, c ) ); } };
+
+struct F_Audio_split_with_equal_lengths { AudioVec operator()( pAudio a, 
+    flan::Second b, 
+    flan::Second c = 0 )
+    { std::cout << "flan::Audio::split_with_equal_lengths";
+    return vecToSharedPvec( a->split_with_equal_lengths( b, c ) ); } };
 
 struct F_Audio_rearrange { pAudio operator()( pAudio a, 
-    flan::Second b = 1, 
-    flan::Second c = 0.05 )
+    flan::Second b, 
+    flan::Second c = 0 )
     { std::cout << "flan::Audio::rearrange";
     return std::make_shared<flan::Audio>( a->rearrange( b, c ) ); } };
 
@@ -417,7 +429,7 @@ struct F_Audio_compress { pAudio operator()( pAudio a,
 
 struct F_Audio_stereo_spatialize_variable { pAudio operator()( pAudio a,
     pFunc1x2 position )
-    { std::cout << "flan::Audio::stereo_spatialize";
+    { std::cout << "flan::Audio::stereo_spatialize_variable";
     return std::make_shared<flan::Audio>( a->stereo_spatialize_variable( *position ) ); } };
 
 struct F_Audio_stereo_spatialize { pAudio operator()( pAudio a,
@@ -769,7 +781,9 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_repitch,                               2>( L, "repitch"                                );
             luaF_register_helper<F_Audio_iterate,                               2>( L, "iterate"                                );
             luaF_register_helper<F_Audio_delay,                                 3>( L, "delay"                                  );
-            luaF_register_helper<F_Audio_chop,                                  2>( L, "chop"                                   );
+            luaF_register_helper<F_Audio_split_at_times,                        2>( L, "split_at_times"                         );
+            luaF_register_helper<F_Audio_split_with_lengths,                    2>( L, "split_with_lengths"                     );
+            luaF_register_helper<F_Audio_split_with_equal_lengths,              2>( L, "split_with_equal_lengths"               );
             luaF_register_helper<F_Audio_rearrange,                             2>( L, "rearrange"                              );
 
             // Volume
