@@ -53,7 +53,6 @@ FalterClip::FalterClip( std::shared_ptr<flan::Audio> _audio
     addAndMakeVisible( currentPosition );
 	}
 
-
 FalterClip::~FalterClip()
 	{
 	thumbnail.setSource( nullptr );

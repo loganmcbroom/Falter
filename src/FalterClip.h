@@ -25,7 +25,7 @@ public:
 			 , AudioThumbnailCache & thumbnailCache
 			 , const String & name = "-"
 			 );
-	~FalterClip();
+	~FalterClip() override;
 
 	AudioThumbnail & getThumbnail();
 

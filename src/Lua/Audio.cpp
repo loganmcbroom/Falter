@@ -47,25 +47,6 @@ static std::vector<const T *> sharedPvecToPvec( const std::vector<std::shared_pt
 // Construction
 //============================================================================================================================================================
 
-// struct F_Audio_string_ctor { pAudio operator()( const std::string & s )
-//     { std::cout << "flan::Audio( const std::string & )"; 
-//     return std::make_shared<flan::Audio>( s ); } };
-
-// static int luaF_Audio_ctor_selector( lua_State * L )
-//     {
-//     // arg 1 is the Audio global table
-//     if( lua_gettop( L ) < 2 ) // Default ctor
-//         {
-//         std::cout << "flan::Audio()"; 
-//         return luaF_Usertype_new<pAudio>( L );
-//         }
-//     else if( luaF_is<std::string>( L, 2 ) || luaF_isArrayOfType<std::string>( L, 2 ) ) 
-//         { 
-//         return luaF_LTMP<F_Audio_string_ctor, 1>( L );
-//         }
-//     else return luaL_error( L, "Audio couldn't be constructed from the given arguments." );
-//     }
-
 struct F_Audio_create_null { pAudio operator()()
     { std::cout << "flan::Audio::create_null";
     return std::make_shared<flan::Audio>( Audio::create_null() ); } };
@@ -573,11 +554,11 @@ struct F_Audio_filter_2pole_multinotch { pAudio operator()( pAudio a,
 
 struct F_Audio_filter_comb { pAudio operator()( pAudio a,
     pFunc1x1 cutoff,
+    pFunc1x1 feedback,
     pFunc1x1 wet_dry = std::make_shared<Func1x1>( .5 ),
-    pFunc1x1 feedback = std::make_shared<Func1x1>( 1 ),
     bool invert = false )
     { std::cout << "flan::Audio::filter_comb";
-    return std::make_shared<flan::Audio>( a->filter_comb( *cutoff, *wet_dry, *feedback, invert ) ); } };
+    return std::make_shared<flan::Audio>( a->filter_comb( *cutoff, *feedback, *wet_dry, invert ) ); } };
 
 
 
@@ -736,7 +717,7 @@ void luaF_register_Audio( lua_State * L )
     lua_setglobal( L, luaF_getUsertypeName<pAudio>().c_str() );
 
 	luaL_newmetatable( L, luaF_getUsertypeName<pAudio>().c_str() );
-        lua_pushvalue( L, -1 ); lua_setfield( L, -2, "__index" ); // I need to look up why this works this way
+        lua_pushvalue( L, -1 ); lua_setfield( L, -2, "__index" );
         // Create Lua AudioVec type
         lua_register( L, luaF_getUsertypeName<AudioVec>().c_str(), luaF_Usertype_vec_new<pAudio> );
 	    luaL_newmetatable( L, luaF_getUsertypeName<AudioVec>().c_str() );
@@ -822,7 +803,7 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_filter_2pole_highshelf,                4>( L, "filter_2pole_highshelf"                 );                             
             luaF_register_helper<F_Audio_filter_1pole_multinotch,               2>( L, "filter_1pole_multinotch"                );                              
             luaF_register_helper<F_Audio_filter_2pole_multinotch,               3>( L, "filter_2pole_multinotch"                );                              
-            luaF_register_helper<F_Audio_filter_comb,                           2>( L, "filter_comb"                            );      
+            luaF_register_helper<F_Audio_filter_comb,                           3>( L, "filter_comb"                            );      
 
             // Combination
             // luaF_register_helper<F_Audio_mix_in_place,                          2>( L, "mix_in_place"                           );  
