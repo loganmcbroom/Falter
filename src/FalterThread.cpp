@@ -88,7 +88,7 @@ FalterThread::FalterThread( int threadID, const String & _script, const FalterTh
 
 	repaint();
 
-	//Boot it up!
+	// Boot it up!
 	if( ! startupError ) 
 		{
 		startTime = Time::getCurrentTime(); 
@@ -99,7 +99,7 @@ FalterThread::FalterThread( int threadID, const String & _script, const FalterTh
 
 FalterThread::~FalterThread()
 	{
-	lua_close( L );
+	if( L ) lua_close( L ); // This should have been called already, but just in case something goes wrong
 	}
 
 void FalterThread::log( const String & s )
@@ -175,6 +175,8 @@ void FalterThread::run()
 			}
 		}
 	
+	lua_close( L );
+	L = nullptr;
 	signalThreadShouldExit();
 	}
 
@@ -217,6 +219,7 @@ void FalterThread::exitSignalSent()
 		if( mml.lockWasGained() )
 			{
 			callback( outputs, getThreadName() );
+			outputs.clear();
 			repaint();
 			}
 		}
