@@ -55,14 +55,15 @@ Woah that's everything! It feels like something is missing though... the text ed
 the great ones that are aleady out there, so you'll need to have an editor open along with Falter. Falter has a Lua Language Server addon that
 I would not bother using it without, so whatever editor you choose, make sure it can use LLS. If you don't have a favorite picked out already,
 vscode is a nice free editor with LLS support. The LLS addon isn't currently in the main addon repository, although this may change in the
-future. For now, it will need to be manually installed. The Falter release package contains a Falter-LLS folder. This can be copied to the LLS
-addon folder, or, if you're using vscode, the following can be added to settings.json:
+future. For now, it will need to be manually installed. 
 
-```
-"Lua.workspace.library": [
-    "C:/path/to/folder/Falter-LLS/library/"
-]
-```
+To add the addon to vscode, first go to the extensions marketplace and install the Lua Language Server extention. Hit "ctrl+," to open user 
+settings. Click the "Workspace" tab and navigate to "lua.workspace.library" (You can type this in the search bar at the top to jump directly to it). 
+Click "Add Item" and add the absolute path to the addon library folder incuded in the release, e.g., 
+"C:/path/to/folder/Falter_Release_0.1.0/Falter-LLS/library/". Opening an exaple script and hovering your mouse over variables should now give
+a list of available methods, and hovering methods should give a description of what they do and what arguments they take. Not all methods
+and arguments are given descriptions, as many are self-explanitory. If you encounter a missing description that you think is needed, feel
+free to reach out to me so I can update the addon.
 
 
 

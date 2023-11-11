@@ -11,13 +11,10 @@ Maybe todo:
         We would like to just take pFunc1x1 and call it a day
         can't because flan::Function can't be copied, so it can't be captured by std::function, which is needed for interpolate_points
         Function periodize suffers the same fate, can't capture the function passed in
+    Add synthesize_grains
+    how to handle ltmp on functions already outputting vectors?
  
 Task:
-    Add synthesize_grains
-
-    do non ltmp calls return Vec types?
-        if so update user guide
-    icon
     publish lls addon
-
+        wait a bit for new framework developments
 
