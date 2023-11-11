@@ -30,11 +30,7 @@ std::vector<T> luaF_LTMP_check( lua_State * L, int i )
         return { luaF_check<T>( L, i ) };
     else if( luaF_isArrayOfType<T>( L, i ) )
         return luaF_checkArrayOfType<T>( L, i );
-    else 
-        {
-        luaL_error( L, ( std::string( "Expected type " ) + typeid( T ).name() ).c_str() );
-        return {};
-        }
+    else throw std::runtime_error( std::string( "Expected type " ) + typeid( T ).name() );
     }
 
 // Push a vector of T onto the Lua stack.
@@ -45,7 +41,7 @@ template<typename T>
 void luaF_LTMP_push( lua_State* L, const std::vector<T> & os )
     {
     if( os.size() == 0 ) 
-        luaL_error( L, "luaF_LTMP_push was called with an empty output vector" );
+        throw std::runtime_error( "luaF_LTMP_push was called with an empty output vector" );
     if( os.size() == 1 ) 
         luaF_push( L, os[0] );
     else
@@ -128,7 +124,7 @@ static int luaF_LTMP_dispatched( lua_State* L )
 
     const int maxArgLength = getMaxSize_tuple( vecTuple );
     const int minArgLength = getMinSize_tuple( vecTuple );
-    if( minArgLength == 0 ) luaL_error( L, "Flan method recieved an empty argument in LTMP" );
+    if( minArgLength == 0 ) throw std::runtime_error( "Flan method recieved an empty argument in LTMP." );
 
     using R = liph::function_return_type<Functor>;
 
@@ -139,7 +135,7 @@ static int luaF_LTMP_dispatched( lua_State* L )
             auto currentTuple = luaF_LTMP_getCurrentTuple( vecTuple, i );
             std::apply( Functor(), currentTuple );
             if( canceller ) 
-                return luaL_error( L, "Couldn't complete script, thread was cancelled" );
+                throw std::runtime_error( "Couldn't complete script, thread was cancelled." );
             }
         return 0;
         }
@@ -152,7 +148,7 @@ static int luaF_LTMP_dispatched( lua_State* L )
             auto currentTuple = luaF_LTMP_getCurrentTuple( vecTuple, i );
             outputs.push_back( std::apply( Functor(), currentTuple ) );
             if( canceller ) 
-                return luaL_error( L, "Couldn't complete script, thread was cancelled" );
+                throw std::runtime_error( "Couldn't complete script, thread was cancelled" );
             }
         luaF_LTMP_push( L, outputs );
         return 1;
@@ -167,21 +163,27 @@ static int luaF_LTMP_dispatched( lua_State* L )
 template<typename Functor, size_t numNonDefaults, size_t I = liph::function_argument_count<Functor>>
 static int luaF_LTMP( lua_State* L )
     {
-    // Get the number of arguments on the Lua stack
-    const size_t numLuaInputs = static_cast<size_t>( lua_gettop( L ) );
+    try 
+        {
+        // Get the number of arguments on the Lua stack
+        const size_t numLuaInputs = static_cast<size_t>( lua_gettop( L ) );
 
-    if constexpr( I > numNonDefaults ) // If we still have arguments that could be defaulted
-        {
-        if( numLuaInputs == I ) return luaF_LTMP_dispatched<Functor, I>( L );
-        else return luaF_LTMP<Functor, numNonDefaults, I - 1>( L ); // 
+        if constexpr( I > numNonDefaults ) // If we still have arguments that could be defaulted
+            {
+            if( numLuaInputs == I ) return luaF_LTMP_dispatched<Functor, I>( L );
+            else return luaF_LTMP<Functor, numNonDefaults, I - 1>( L );
+            }
+        else if constexpr( I == numNonDefaults )
+            {
+            if( numLuaInputs == I ) return luaF_LTMP_dispatched<Functor, I>( L );
+            else throw std::runtime_error( "Too few arguments passed to flan function." );
+            }
+        // ! sizeof( T * ) is always false and type dependant. Using plain false does not compile.
+        else static_assert( ! sizeof( Functor * ), "Wrong number of non-defaulted arguments passed to a Lua function wrapper." );
         }
-    else if constexpr( I == numNonDefaults )
-        {
-        if( numLuaInputs == I ) return luaF_LTMP_dispatched<Functor, I>( L );
-        else return luaL_error( L, "Too few arguments passed to flan function." );
-        }
-    // ! sizeof( T * ) is always false and type dependant. Using plain false does not compile.
-    else static_assert( ! sizeof( Functor * ), "Wrong number of non-defaulted arguments passed to a Lua function wrapper." );
+    catch( std::exception & e ) { lua_pushstring( L, e.what() ); }
+    lua_error( L );
+    return 0;
     }
 
 // Helper for pushing the correct LTMP method onto both the Lua type and the Lua array type.

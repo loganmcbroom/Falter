@@ -1,5 +1,7 @@
 #include "Utility.h"
 
+#include <exception>
+
 #include <flan/Audio/Audio.h>
 #include <flan/PV/PV.h>
 #include <flan/Function.h>
@@ -70,8 +72,8 @@ template<> float luaF_check( lua_State * L, int i ) { return static_cast<float>(
 template<> bool luaF_check( lua_State * L, int i ) { return static_cast<bool>(  lua_toboolean( L, i ) ); }
 
 template<> flan::Interval luaF_check( lua_State * L, int i ) 
-    { 
-    if( lua_objlen( L, i ) != 2 ) luaL_error( L, "Expected array of size 2" );
+    {  
+    if( lua_objlen( L, i ) != 2 ) throw std::runtime_error( "Expected array of size 2" );
     if( i < 0 ) i = lua_gettop( L ) + 1 + i;
     lua_rawgeti( L, i, 1 );
     lua_rawgeti( L, i, 2 );
@@ -81,7 +83,7 @@ template<> flan::Interval luaF_check( lua_State * L, int i )
     }
 template<> flan::Rect luaF_check( lua_State * L, int i ) 
     { 
-    if( lua_objlen( L, i ) != 4 ) luaL_error( L, "Expected array of size 4" );
+    if( lua_objlen( L, i ) != 4 ) throw std::runtime_error( "Expected array of size 4" );
     if( i < 0 ) i = lua_gettop( L ) + 1 + i;
     lua_rawgeti( L, i, 1 );
     lua_rawgeti( L, i, 2 );

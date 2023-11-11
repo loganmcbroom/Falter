@@ -118,51 +118,54 @@ struct F_Func1x1_ADSR { pFunc1x1 operator()(
 template<typename T>
 static int luaF_Func_call( lua_State * L )
     {
-    using F = typename T::element_type;
-    using I = typename F::ArgType;
-    using O = typename F::ReturnType;
+    try {
+        using F = typename T::element_type;
+        using I = typename F::ArgType;
+        using O = typename F::ReturnType;
 
-    const std::string name = luaF_getUsertypeName<T>();
+        const std::string name = luaF_getUsertypeName<T>();
 
-    T f = luaF_check<T>( L, 1 );
+        T f = luaF_check<T>( L, 1 );
 
-    I in;
+        I in;
 
-    // Check for number of inputs
-    if constexpr( std::is_convertible_v<I, float> == true )
-        {
-        if( lua_gettop( L ) != 2 ) 
-            return luaL_error( L, ( name + " recieved the wrong number of arguments (expected 1): " 
-                + std::to_string( lua_gettop( L ) - 1 ) ).c_str() );
-        in = luaF_check<I>( L, 2 );
+        // Check for number of inputs
+        if constexpr( std::is_convertible_v<I, float> == true )
+            {
+            if( lua_gettop( L ) != 2 ) 
+                throw std::runtime_error( name + " recieved the wrong number of arguments (expected 1): " + std::to_string( lua_gettop( L ) - 1 ) );
+            in = luaF_check<I>( L, 2 );
+            }
+        else if constexpr( std::is_same_v<I, flan::vec2> == true )
+            {
+            if( lua_gettop( L ) != 3 ) 
+                throw std::runtime_error( name + " recieved the wrong number of arguments (expected 2): " + std::to_string( lua_gettop( L ) - 1 ) );
+            in = flan::vec2{ luaF_check<float>( L, 2 ), luaF_check<float>( L, 3 ) };
+            }
+        else throw std::runtime_error( L, "Hold on there buckaroo, how did you get a hold of this sort of function?" );
+
+        // Clear function and args
+        lua_settop( L, 0 ); 
+
+        // Check for number of outputs
+        if constexpr( std::is_convertible_v<O, float> == true )
+            {
+            const float out = (*f)( in );
+            luaF_push( L, out );
+            return 1;
+            }
+        else if constexpr( std::is_same_v<O, flan::vec2> == true )
+            {
+            const vec2 out = (*f)( in );
+            luaF_push( L, out.x() );
+            luaF_push( L, out.y() );
+            return 2;
+            }
+        else throw std::runtime_error( L, "Hold on there buckaroo, how did you get a hold of this sort of function?" );
         }
-    else if constexpr( std::is_same_v<I, flan::vec2> == true )
-        {
-        if( lua_gettop( L ) != 3 ) 
-            return luaL_error( L, ( name + " recieved the wrong number of arguments (expected 2): " 
-                + std::to_string( lua_gettop( L ) - 1 ) ).c_str() );
-        in = flan::vec2{ luaF_check<float>( L, 2 ), luaF_check<float>( L, 3 ) };
-        }
-    else return luaL_error( L, "Hold on there buckaroo, how did you get a hold of this sort of function?" );
-
-    // Clear function and args
-    lua_settop( L, 0 ); 
-
-    // Check for number of outputs
-    if constexpr( std::is_convertible_v<O, float> == true )
-        {
-        const float out = (*f)( in );
-        luaF_push( L, out );
-        return 1;
-        }
-    else if constexpr( std::is_same_v<O, flan::vec2> == true )
-        {
-        const vec2 out = (*f)( in );
-        luaF_push( L, out.x() );
-        luaF_push( L, out.y() );
-        return 2;
-        }
-    else return luaL_error( L, "Hold on there buckaroo, how did you get a hold of this sort of function?" );
+    catch( std::exception & e ) { lua_pushstring( L, e.what() ); }
+    lua_error( L );
+    return 0;
     }
 
 
@@ -179,19 +182,26 @@ struct F_Func_constant_ctor
 template<typename T>
 static int luaF_Func_ctor_selector( lua_State * L )
     {
-    using O = typename T::element_type::ReturnType;
-
-    if( lua_gettop( L ) < 2 ) // Default ctor
-        return luaF_Usertype_new<T>( L );
-    else if( luaF_is<O>( L, 2 ) || luaF_isArrayOfType<O>( L, 2 ) )
-        return luaF_LTMP<F_Func_constant_ctor<T>, 1>( L );
-    else if( lua_isfunction( L, 2 ) )
+    try
         {
-        // Wrap the Lua function in a FuncAxB userdata type and push is back to the stack
-        luaF_push( L, luaF_checkFunc_base<T>( L, 2 ) );
-        return 1;
+        using O = typename T::element_type::ReturnType;
+
+        if( lua_gettop( L ) < 2 )
+            //return luaF_Usertype_new<T>( L );
+            throw std::runtime_error( "Too few arguments to flan::Function constructor." );
+        else if( luaF_is<O>( L, 2 ) || luaF_isArrayOfType<O>( L, 2 ) )
+            return luaF_LTMP<F_Func_constant_ctor<T>, 1>( L );
+        else if( lua_isfunction( L, 2 ) )
+            {
+            // Wrap the Lua function in a FuncAxB userdata type and push is back to the stack
+            luaF_push( L, luaF_checkFunc_base<T>( L, 2 ) );
+            return 1;
+            }
+        else throw std::runtime_error( "A flan::Function couldn't be constructed from the given arguments." );
         }
-    else return luaL_error( L, "A flan::Function couldn't be constructed from the given arguments." );
+    catch( std::exception & e ) { lua_pushstring( L, e.what() ); }
+    lua_error( L );
+    return 0;
     }
 
 struct F_Func1x1_save_to_bmp { void operator()( pFunc1x1 a, 

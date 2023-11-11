@@ -29,13 +29,13 @@ pAudioMod luaF_checkAudioMod( lua_State * L, int i )
             luaF_push<pAudio>( L, fake_shared_ptr );
             lua_pushnumber( L, t );
             lua_call( L, 2, 1 );
-            } );
+            pAudio lua_output = luaF_check<pAudio>( L, -1 );
+            audio = std::move( *lua_output );
+            lua_pop( L, 1 );
+            }, flan::ExecutionPolicy::Linear_Sequenced );
         }
-    else 
-        {
-        luaL_error( L, "Non-function used in place of AudioMod" );
-        return std::make_shared<flan::AudioMod>();
-        }
+    else throw std::runtime_error( "Non-function used in place of AudioMod" );
+    return std::make_shared<flan::AudioMod>();
     }
 
 pPrismFunc luaF_checkPrismFunc( lua_State * L, int i )
@@ -62,13 +62,10 @@ pPrismFunc luaF_checkPrismFunc( lua_State * L, int i )
             const flan::MF out = luaF_check<flan::MF>( L, -1 ); 
             lua_pop( L, 1 );
             return out;
-            } );
+            }, flan::ExecutionPolicy::Linear_Sequenced );
         }
-    else 
-        {
-        luaL_error( L, "Non-function used in place of Prismfunc" );
-        return std::make_shared<flan::PrismFunc>();
-        }
+    else throw std::runtime_error( "Non-function used in place of Prismfunc" );
+    return std::make_shared<flan::PrismFunc>();
     }
 
 // static int luaF_AudioMod_call( lua_State * L )
@@ -76,7 +73,7 @@ pPrismFunc luaF_checkPrismFunc( lua_State * L, int i )
 //     const std::string name = luaF_getUsertypeName<AudioMod>();
 
 //     if( lua_gettop( L ) != 3 ) // 3 = 1 Userdata + 2 args
-//         return luaL_error( L, ( name + " recieved the wrong number of arguments: " + std::to_string( lua_gettop( L ) - 1 ) ).c_str() );
+//         return error( L, ( name + " recieved the wrong number of arguments: " + std::to_string( lua_gettop( L ) - 1 ) ).c_str() );
 
 //     // Get function
 //     void * inputP = luaL_checkudata( L, 1, name.c_str() );
@@ -95,7 +92,7 @@ pPrismFunc luaF_checkPrismFunc( lua_State * L, int i )
 //     luaF_pushUsertype( L, out );
 
 //     if( lua_gettop( L ) != 1 )
-//         return luaL_error( L, ( name + " returned the wrong number of values: " + std::to_string( lua_gettop( L ) ) ).c_str() );
+//         return error( L, ( name + " returned the wrong number of values: " + std::to_string( lua_gettop( L ) ) ).c_str() );
 
 //     return 1;
 //     }

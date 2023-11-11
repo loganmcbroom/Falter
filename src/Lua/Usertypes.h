@@ -58,20 +58,59 @@ template<typename T> T luaF_checkUsertype( lua_State * L, int i )
     return *sap;
     }
 
+// Test if a type is shared_ptr
+//template<typename T> concept is_resetable = requires(T a) { a.reset(); };
+template<typename T> struct is_shared_ptr : std::false_type {};
+template<typename T> struct is_shared_ptr<std::shared_ptr<T>> : std::true_type {};
+
+// Same but for vectors
+//template<typename T> concept is_clearable = requires(T a) { a.clear(); };
+template<typename T> struct is_vector : std::false_type {};
+template<typename T> struct is_vector<std::vector<T>> : std::true_type {};
+
+template<typename T>
+static int usertype_dtor( lua_State * L )
+    {
+    try 
+        {
+        void * userdataP = luaL_checkudata(L, -1, luaF_getUsertypeName<T>().c_str());
+
+        if( userdataP ) 
+            {
+            auto resource = static_cast<T*>( userdataP );
+            if constexpr ( is_shared_ptr<T>::value ) 
+                resource->reset();
+            else if constexpr ( is_vector<T>::value ) 
+                resource->clear();
+            }
+        else throw std::runtime_error( "Couldn't retrieve userdata for deallocation." );
+
+        return 0;
+        }
+    catch( std::exception & e ) { lua_pushstring( L, e.what() ); }
+    lua_error( L );
+    return 0;
+    }
+
 template<typename T>
 void luaF_pushUsertype( lua_State * L, const T & instance )
     {
     // Create output space
     void * outputP = lua_newuserdata( L, sizeof( T ) );
-    if( ! outputP ) luaL_error( L, ( luaF_getUsertypeName<T>() + " userdata couldn't be constructed." ).c_str() );
+    if( ! outputP ) throw std::runtime_error( luaF_getUsertypeName<T>() + " userdata couldn't be constructed." );
+
+    // Make the userdata the type given by name. 
+    // This must happen before the call to new or the dtor of the userdata will never be called by lua and it may leak a resource.
+    luaL_getmetatable( L, luaF_getUsertypeName<T>().c_str() );
+    if( lua_isnil( L, -1 ) )
+        throw std::runtime_error( std::string( "luaF_pushUsertype tried to get a metatable that doesn't exist: " ) + typeid(T).name() );
 
     // Construct Userdata into created space, managing a new object which is move constructed from the method output.
     new(outputP) T( instance );
 
-    // Make the userdata the type given by name
-    luaL_getmetatable( L, luaF_getUsertypeName<T>().c_str() );
-    if( lua_isnil( L, -1 ) )
-        luaL_error( L, ( std::string( "luaF_pushUsertype tried to get a metatable that doesn't exist: " ) + typeid(T).name() ).c_str() );
+    lua_pushcfunction( L, usertype_dtor<T> );
+    lua_setfield( L, -2, "__gc" );
+
     lua_setmetatable( L, -2 );
     }
 
@@ -79,25 +118,31 @@ void luaF_pushUsertype( lua_State * L, const T & instance )
 
 // Metamethods ============================================================================================================================
 
-template<typename T>
-static int luaF_Usertype_new( lua_State* L )
-    {
-    // Allocate Lua space for the Userdata
-    void* userData = lua_newuserdata( L, sizeof( T ) );
-    if( ! userData ) return 0;
+// template<typename T>
+// static int luaF_Usertype_new( lua_State* L )
+//     {
+//     // Allocate Lua space for the Userdata
+//     void* userData = lua_newuserdata( L, sizeof( T ) );
+//     if( ! userData ) return 0;
 
-    // Construct Userdata into the space
-    new(userData) T;
+//     // Construct Userdata into the space
+//     new(userData) T; woahhhhh buddy
 
-    luaL_setmetatable( L, luaF_getUsertypeName<T>().c_str() );
-    return 1;
-    }
+//     luaL_setmetatable( L, luaF_getUsertypeName<T>().c_str() );
+//     return 1;
+//     }
 
 template<typename T>
 static int luaF_Usertype_vec_new( lua_State* L )
     {
-    if( ! luaF_isArrayOfType<T>( L, 1 ) ) return luaL_error( L, "Array type constructor didn't recieve a table of the given type." );
-    //lua_createtable( L, 0, 0 );
-    luaL_setmetatable( L, luaF_getUsertypeName<std::vector<T>>().c_str() );
-    return 1;
+    try 
+        {
+        if( ! luaF_isArrayOfType<T>( L, 1 ) ) throw std::runtime_error( "Array type constructor didn't recieve an array of the given type." );
+        //lua_createtable( L, 0, 0 );
+        luaL_setmetatable( L, luaF_getUsertypeName<std::vector<T>>().c_str() );
+        return 1;
+        }
+    catch( std::exception & e ) { lua_pushstring( L, e.what() ); }
+    lua_error( L );
+    return 0;
     }

@@ -64,8 +64,6 @@ flan::Interpolator underlying2Interpolator( std::underlying_type_t<InterpolatorI
 
 void luaF_register_Interpolators( lua_State * L )
     {
-
-
     luaL_newmetatable( L, luaF_getUsertypeName<InterpolatorIndex>().c_str() );
         lua_pushvalue( L, -1 ); lua_setfield( L, -2, "__index" ); // I need to look up why this works this way
 
