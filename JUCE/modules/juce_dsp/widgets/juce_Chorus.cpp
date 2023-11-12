@@ -23,9 +23,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
-namespace dsp
+namespace juce::dsp
 {
 
 //==============================================================================
@@ -87,7 +85,7 @@ template <typename SampleType>
 void Chorus<SampleType>::prepare (const ProcessSpec& spec)
 {
     jassert (spec.sampleRate > 0);
-    jassert (spec.num_channels > 0);
+    jassert (spec.numChannels > 0);
 
     sampleRate = spec.sampleRate;
 
@@ -97,8 +95,8 @@ void Chorus<SampleType>::prepare (const ProcessSpec& spec)
     delay.prepare (spec);
 
     dryWet.prepare (spec);
-    feedbackVolume.resize (spec.num_channels);
-    lastOutput.resize (spec.num_channels);
+    feedbackVolume.resize (spec.numChannels);
+    lastOutput.resize (spec.numChannels);
 
     osc.prepare (spec);
     bufferDelayTimes.setSize (1, (int) spec.maximumBlockSize, false, false, true);
@@ -137,5 +135,4 @@ void Chorus<SampleType>::update()
 template class Chorus<float>;
 template class Chorus<double>;
 
-} // namespace dsp
-} // namespace juce
+} // namespace juce::dsp

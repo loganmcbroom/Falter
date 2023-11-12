@@ -1,7 +1,5 @@
 Off topic:
     song idea, cut mid video sponsered ads out of youtube videos
-    song idea, something making fun of "top 10 x june 2022" articles
-    juce browser reset bug: https://forum.juce.com/t/filebrowsercomponent-timercallback-resetting-browser/53902
 
 Maybe todo:
     Audio:

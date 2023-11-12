@@ -99,11 +99,23 @@ public:
     */
     void setReader (AudioFormatReader* newReader, int64 hashCode) override;
 
+    /** Sets an AudioBuffer as the source for the thumbnail.
+
+        The buffer contents aren't copied and you must ensure that the lifetime of the buffer is
+        valid for as long as the AudioThumbnail uses it as its source. Calling this function will
+        start reading the audio in a background thread (unless the hash code can be looked-up
+        successfully in the thumbnail cache).
+    */
+    void setSource (const AudioBuffer<float>* newSource, double sampleRate, int64 hashCode);
+
+    /** Same as the other setSource() overload except for int data. */
+    void setSource (const AudioBuffer<int>* newSource, double sampleRate, int64 hashCode);
+
     /** Resets the thumbnail, ready for adding data with the specified format.
         If you're going to generate a thumbnail yourself, call this before using addBlock()
         to add the data.
     */
-    void reset (int num_channels, double sampleRate, int64 totalSamplesInSource = 0) override;
+    void reset (int numChannels, double sampleRate, int64 totalSamplesInSource = 0) override;
 
     /** Adds a block of level data to the thumbnail.
         Call reset() before using this, to tell the thumbnail about the data format.
@@ -129,7 +141,7 @@ public:
 
     //==============================================================================
     /** Returns the number of channels in the file. */
-    int get_num_channels() const noexcept override;
+    int getNumChannels() const noexcept override;
 
     /** Returns the length of the audio file, in seconds. */
     double getTotalLength() const noexcept override;
@@ -207,7 +219,7 @@ private:
     int32 samplesPerThumbSample = 0;
     int64 totalSamples { 0 };
     int64 numSamplesFinished = 0;
-    int32 num_channels = 0;
+    int32 numChannels = 0;
     double sampleRate = 0;
     CriticalSection lock;
 

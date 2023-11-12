@@ -73,7 +73,13 @@ void AudioRecorder::audioDeviceStopped()
 	sample_rate = 0;
 	}
 
-void AudioRecorder::audioDeviceIOCallback( const float ** inputChannelData, int numInputChannels, float ** outputChannelData, int numOutputChannels, int numNewFrames ) 
+void AudioRecorder::audioDeviceIOCallbackWithContext( 
+	const float *const * inputChannelData, 
+	int numInputChannels, 
+	float *const * outputChannelData, 
+	int numOutputChannels, 
+	int numNewFrames, 
+	const AudioIODeviceCallbackContext & ) 
 	{
 	if( outputBuffer )
 		{

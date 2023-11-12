@@ -42,9 +42,8 @@ JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wdeprecated-declarations")
 
 #include <CoreAudioKit/AUViewController.h>
 
-#include <juce_audio_basics/native/juce_mac_CoreAudioTimeConversions.h>
-#include <juce_audio_basics/native/juce_mac_CoreAudioLayouts.h>
-#include <juce_audio_basics/midi/juce_MidiDataConcatenator.h>
+#include <juce_audio_basics/native/juce_CoreAudioTimeConversions_mac.h>
+#include <juce_audio_basics/native/juce_CoreAudioLayouts_mac.h>
 #include "juce_AU_Shared.h"
 
 namespace juce
@@ -179,14 +178,15 @@ namespace AudioUnitFormatHelpers
         return false;
     }
 
-    static bool getComponentDescFromFile (const String& fileOrIdentifier, AudioComponentDescription& desc,
-                                          String& name, String& version, String& manufacturer)
+    static bool getComponentDescFromFile ([[maybe_unused]] const String& fileOrIdentifier,
+                                          [[maybe_unused]] AudioComponentDescription& desc,
+                                          [[maybe_unused]] String& name,
+                                          [[maybe_unused]] String& version,
+                                          [[maybe_unused]] String& manufacturer)
     {
         zerostruct (desc);
 
        #if JUCE_IOS
-        ignoreUnused (fileOrIdentifier, name, version, manufacturer);
-
         return false;
        #else
         const File file (fileOrIdentifier);
@@ -200,7 +200,7 @@ namespace AudioUnitFormatHelpers
         {
             if (auto bundleRef = CFUniquePtr<CFBundleRef> (CFBundleCreate (kCFAllocatorDefault, url.get())))
             {
-                CFTypeRef bundleName = CFBundleGetValueForInfoDictionaryKey (bundleRef.get(), CFSTR("CFBundleName"));
+                CFTypeRef bundleName = CFBundleGetValueForInfoDictionaryKey (bundleRef.get(), CFSTR ("CFBundleName"));
 
                 if (bundleName != nullptr && CFGetTypeID (bundleName) == CFStringGetTypeID())
                     name = String::fromCFString ((CFStringRef) bundleName);
@@ -208,12 +208,12 @@ namespace AudioUnitFormatHelpers
                 if (name.isEmpty())
                     name = file.getFileNameWithoutExtension();
 
-                CFTypeRef versionString = CFBundleGetValueForInfoDictionaryKey (bundleRef.get(), CFSTR("CFBundleVersion"));
+                CFTypeRef versionString = CFBundleGetValueForInfoDictionaryKey (bundleRef.get(), CFSTR ("CFBundleVersion"));
 
                 if (versionString != nullptr && CFGetTypeID (versionString) == CFStringGetTypeID())
                     version = String::fromCFString ((CFStringRef) versionString);
 
-                CFTypeRef manuString = CFBundleGetValueForInfoDictionaryKey (bundleRef.get(), CFSTR("CFBundleGetInfoString"));
+                CFTypeRef manuString = CFBundleGetValueForInfoDictionaryKey (bundleRef.get(), CFSTR ("CFBundleGetInfoString"));
 
                 if (manuString != nullptr && CFGetTypeID (manuString) == CFStringGetTypeID())
                     manufacturer = String::fromCFString ((CFStringRef) manuString);
@@ -332,8 +332,8 @@ namespace AudioUnitFormatHelpers
     using ViewComponentBaseClass = NSViewComponent;
    #endif
 
-    struct AutoResizingNSViewComponent  : public ViewComponentBaseClass,
-                                          private AsyncUpdater
+    struct AutoResizingNSViewComponent final : public ViewComponentBaseClass,
+                                               private AsyncUpdater
     {
         void childBoundsChanged (Component*) override  { triggerAsyncUpdate(); }
         void handleAsyncUpdate() override              { resizeToFitView(); }
@@ -434,7 +434,7 @@ namespace AudioUnitFormatHelpers
     }
 }
 
-static bool hasARAExtension (AudioUnit audioUnit)
+static bool hasARAExtension ([[maybe_unused]] AudioUnit audioUnit)
 {
    #if JUCE_PLUGINHOST_ARA
     UInt32 propertySize = sizeof (ARA::ARAAudioUnitFactory);
@@ -449,8 +449,6 @@ static bool hasARAExtension (AudioUnit audioUnit)
 
     if ((status == noErr) && (propertySize == sizeof (ARA::ARAAudioUnitFactory)) && ! isWriteable)
         return true;
-   #else
-    ignoreUnused (audioUnit);
    #endif
 
     return false;
@@ -465,7 +463,7 @@ using AudioUnitUniquePtr = std::unique_ptr<std::remove_pointer_t<AudioUnit>, Aud
 using AudioUnitSharedPtr = std::shared_ptr<std::remove_pointer_t<AudioUnit>>;
 using AudioUnitWeakPtr = std::weak_ptr<std::remove_pointer_t<AudioUnit>>;
 
-static std::shared_ptr<const ARA::ARAFactory> getARAFactory (AudioUnitSharedPtr audioUnit)
+static std::shared_ptr<const ARA::ARAFactory> getARAFactory ([[maybe_unused]] AudioUnitSharedPtr audioUnit)
 {
    #if JUCE_PLUGINHOST_ARA
     jassert (audioUnit != nullptr);
@@ -491,8 +489,6 @@ static std::shared_ptr<const ARA::ARAFactory> getARAFactory (AudioUnitSharedPtr 
                                           [owningAuPtr = std::move (audioUnit)]() {});
         }
     }
-   #else
-    ignoreUnused (audioUnit);
    #endif
 
     return {};
@@ -510,40 +506,16 @@ using AudioUnitCreationCallback = std::function<void (AudioUnit, OSStatus)>;
 
 static void createAudioUnit (VersionedAudioComponent versionedComponent, AudioUnitCreationCallback callback)
 {
-    struct AUAsyncInitializationCallback
-    {
-        typedef void (^AUCompletionCallbackBlock)(AudioComponentInstance, OSStatus);
-
-        explicit AUAsyncInitializationCallback (AudioUnitCreationCallback inOriginalCallback)
-            : originalCallback (std::move (inOriginalCallback))
-        {
-            block = CreateObjCBlock (this, &AUAsyncInitializationCallback::completion);
-        }
-
-        AUCompletionCallbackBlock getBlock() noexcept       { return block; }
-
-        void completion (AudioComponentInstance audioUnit, OSStatus err)
-        {
-            originalCallback (audioUnit, err);
-
-            delete this;
-        }
-
-        double sampleRate;
-        int framesPerBuffer;
-        AudioUnitCreationCallback originalCallback;
-
-        ObjCBlock<AUCompletionCallbackBlock> block;
-    };
-
-    auto callbackBlock = new AUAsyncInitializationCallback (std::move (callback));
-
     if (versionedComponent.isAUv3)
     {
         if (@available (macOS 10.11, *))
         {
-            AudioComponentInstantiate (versionedComponent.audioComponent, kAudioComponentInstantiation_LoadOutOfProcess,
-                                       callbackBlock->getBlock());
+            AudioComponentInstantiate (versionedComponent.audioComponent,
+                                       kAudioComponentInstantiation_LoadOutOfProcess,
+                                       ^(AudioComponentInstance audioUnit, OSStatus err)
+                                       {
+                                           callback (audioUnit, err);
+                                       });
 
             return;
         }
@@ -551,7 +523,7 @@ static void createAudioUnit (VersionedAudioComponent versionedComponent, AudioUn
 
     AudioComponentInstance audioUnit;
     auto err = AudioComponentInstanceNew (versionedComponent.audioComponent, &audioUnit);
-    callbackBlock->completion (err != noErr ? nullptr : audioUnit, err);
+    callback (err != noErr ? nullptr : audioUnit, err);
 }
 
 struct AudioComponentResult
@@ -703,7 +675,7 @@ public:
         {
             if (! auValueStrings.isEmpty())
             {
-                auto index = roundToInt (jlimit (0.0f, 1.0f, value) * (auValueStrings.size() - 1));
+                auto index = roundToInt (jlimit (0.0f, 1.0f, value) * (float) (auValueStrings.size() - 1));
                 return auValueStrings[index];
             }
 
@@ -742,7 +714,7 @@ public:
                 auto index = auValueStrings.indexOf (text);
 
                 if (index != -1)
-                    return ((float) index) / (auValueStrings.size() - 1);
+                    return ((float) index) / (float) (auValueStrings.size() - 1);
             }
 
             if (valuesHaveStrings)
@@ -866,7 +838,7 @@ public:
 
         if (audioUnit != nullptr)
         {
-            struct AUDeleter : public CallbackMessage
+            struct AUDeleter final : public CallbackMessage
             {
                 AUDeleter (AudioUnitPluginInstance& inInstance, WaitableEvent& inEvent)
                     : auInstance (inInstance), completionSignal (inEvent)
@@ -1029,12 +1001,11 @@ public:
 
             if (getElementCount (scope) != n && isBusCountWritable (isInput))
             {
-                OSStatus err;
                 auto newCount = static_cast<UInt32> (n);
                 layoutHasChanged = true;
 
-                err = AudioUnitSetProperty (audioUnit, kAudioUnitProperty_ElementCount, scope, 0, &newCount, sizeof (newCount));
-                jassertquiet (err == noErr);
+                [[maybe_unused]] auto err = AudioUnitSetProperty (audioUnit, kAudioUnitProperty_ElementCount, scope, 0, &newCount, sizeof (newCount));
+                jassert (err == noErr);
             }
 
             for (int i = 0; i < n; ++i)
@@ -1045,7 +1016,7 @@ public:
                 AudioUnitGetProperty (audioUnit, kAudioUnitProperty_SampleRate, scope, static_cast<UInt32> (i), &sampleRate, &sampleRateSize);
 
                 const AudioChannelSet& set = layouts.getChannelSet (isInput, i);
-                const int requestednum_channels = set.size();
+                const int requestedNumChannels = set.size();
 
                 {
                     AudioStreamBasicDescription stream;
@@ -1055,9 +1026,9 @@ public:
                     if (err != noErr || dataSize < sizeof (stream))
                         return false;
 
-                    const int actualnum_channels = static_cast<int> (stream.mChannelsPerFrame);
+                    const int actualNumChannels = static_cast<int> (stream.mChannelsPerFrame);
 
-                    if (actualnum_channels != requestednum_channels)
+                    if (actualNumChannels != requestedNumChannels)
                     {
                         layoutHasChanged = true;
                         zerostruct (stream); // (can't use "= { 0 }" on this object because it's typedef'ed as a C struct)
@@ -1068,7 +1039,7 @@ public:
                         stream.mBytesPerPacket   = 4;
                         stream.mBytesPerFrame    = 4;
                         stream.mBitsPerChannel   = 32;
-                        stream.mChannelsPerFrame = static_cast<UInt32> (requestednum_channels);
+                        stream.mChannelsPerFrame = static_cast<UInt32> (requestedNumChannels);
 
                         err = AudioUnitSetProperty (audioUnit, kAudioUnitProperty_StreamFormat, scope, static_cast<UInt32> (i), &stream, sizeof (stream));
                         if (err != noErr) return false;
@@ -1137,24 +1108,20 @@ public:
             return false;
 
         // did anything actually change
-        if (layoutHasChanged)
-        {
-            bool success = (AudioUnitInitialize (audioUnit) == noErr);
+        if (! layoutHasChanged)
+            return true;
 
-            // Some plug-ins require the LayoutTag to be set after initialization
-            if (success)
-                success = syncBusLayouts (layouts, true, layoutHasChanged);
+        // Some plug-ins require the LayoutTag to be set after initialization
+        const auto success = (AudioUnitInitialize (audioUnit) == noErr)
+                             && syncBusLayouts (layouts, true, layoutHasChanged);
 
-            AudioUnitUninitialize (audioUnit);
+        AudioUnitUninitialize (audioUnit);
 
-            if (! success)
-                // make sure that the layout is back to it's original state
-                syncBusLayouts (getBusesLayout(), false, layoutHasChanged);
+        if (! success)
+            // make sure that the layout is back to its original state
+            syncBusLayouts (getBusesLayout(), false, layoutHasChanged);
 
-            return success;
-        }
-
-        return true;
+        return success;
     }
 
     //==============================================================================
@@ -1198,7 +1165,7 @@ public:
 
     void getExtensions (ExtensionsVisitor& visitor) const override
     {
-        struct Extensions : public ExtensionsVisitor::AudioUnitClient
+        struct Extensions final : public ExtensionsVisitor::AudioUnitClient
         {
             explicit Extensions (const AudioUnitPluginInstance* instanceIn) : instance (instanceIn) {}
 
@@ -1210,7 +1177,7 @@ public:
         visitor.visitAudioUnitClient (Extensions { this });
 
        #ifdef JUCE_PLUGINHOST_ARA
-        struct ARAExtensions  : public ExtensionsVisitor::ARAClient
+        struct ARAExtensions final : public ExtensionsVisitor::ARAClient
         {
             explicit ARAExtensions (const AudioUnitPluginInstance* instanceIn) : instance (instanceIn) {}
 
@@ -1279,7 +1246,7 @@ public:
 
                     AudioUnitGetProperty (audioUnit, kAudioUnitProperty_SampleRate, scope, static_cast<UInt32> (i), &sampleRate, &sampleRateSize);
 
-                    if (sampleRate != sr)
+                    if (! approximatelyEqual (sampleRate, sr))
                     {
                         if (isAUv3) // setting kAudioUnitProperty_SampleRate fails on AUv3s
                         {
@@ -1400,7 +1367,7 @@ public:
         }
 
         // If these are hit, we might allocate in the process block!
-        jassert (buffer.get_num_channels() <= preparedChannels);
+        jassert (buffer.getNumChannels() <= preparedChannels);
         jassert (buffer.getNumSamples()  <= preparedSamples);
         // Copy the input buffer to guard against the case where a bus has more output channels
         // than input channels, so rendering the output for that bus might stamp over the input
@@ -1636,7 +1603,7 @@ public:
         {
             AUPreset current;
             current.presetNumber = -1;
-            current.presetName = CFSTR("");
+            current.presetName = CFSTR ("");
 
             UInt32 prstsz = sizeof (AUPreset);
 
@@ -1970,7 +1937,7 @@ private:
 
         float getDefaultValue() const override                              { return 0.0f; }
         String getName (int /*maximumStringLength*/) const override         { return "Bypass"; }
-        String getText (float value, int) const override                    { return (value != 0.0f ? TRANS("On") : TRANS("Off")); }
+        String getText (float value, int) const override                    { return (value != 0.0f ? TRANS ("On") : TRANS ("Off")); }
         bool isAutomatable() const override                                 { return true; }
         bool isDiscrete() const override                                    { return true; }
         bool isBoolean() const override                                     { return true; }
@@ -1981,9 +1948,9 @@ private:
         String getParameterID() const override                              { return {}; }
 
         AudioUnitPluginInstance& parent;
-        const StringArray auOnStrings  { TRANS("on"),  TRANS("yes"), TRANS("true") };
-        const StringArray auOffStrings { TRANS("off"), TRANS("no"),  TRANS("false") };
-        const StringArray values { TRANS("Off"), TRANS("On") };
+        const StringArray auOnStrings  { TRANS ("on"),  TRANS ("yes"), TRANS ("true") };
+        const StringArray auOffStrings { TRANS ("off"), TRANS ("no"),  TRANS ("false") };
+        const StringArray values { TRANS ("Off"), TRANS ("On") };
 
         bool currentValue = false;
     };
@@ -2244,7 +2211,7 @@ private:
                              UInt32 inNumberFrames,
                              AudioBufferList* ioData)
     {
-        if (inputBuffer.get_num_channels() <= 0)
+        if (inputBuffer.getNumChannels() <= 0)
         {
             jassertfalse;
             return noErr;
@@ -2261,11 +2228,11 @@ private:
                           ? getBusBuffer (inputBuffer, true, static_cast<int> (inBusNumber))
                           : AudioBuffer<float>();
 
-        for (int juceChannel = 0; juceChannel < buffer.get_num_channels(); ++juceChannel)
+        for (int juceChannel = 0; juceChannel < buffer.getNumChannels(); ++juceChannel)
         {
             const auto auChannel = (int) inMapping.getAuIndexForJuceChannel (inBusNumber, (size_t) juceChannel);
 
-            if (auChannel < buffer.get_num_channels())
+            if (auChannel < buffer.getNumChannels())
                 memcpy (ioData->mBuffers[auChannel].mData, buffer.getReadPointer (juceChannel), sizeof (float) * inNumberFrames);
             else
                 zeromem (ioData->mBuffers[auChannel].mData, sizeof (float) * inNumberFrames);
@@ -2297,43 +2264,43 @@ private:
         if (p != nullptr) *p = value;
     }
 
-    OSStatus getBeatAndTempo (Float64* outCurrentBeat, Float64* outCurrentTempo) const
+    /*  If the AudioPlayHead is available, and has valid PositionInfo, this will return the result
+        of calling the specified getter on that PositionInfo. Otherwise, this will return a
+        default-constructed instance of the same type.
+
+        For getters that return an Optional, this function will return a nullopt if the playhead or
+        position info is invalid.
+
+        For getters that return a bool, this function will return false if the playhead or position
+        info is invalid.
+    */
+    template <typename Result>
+    Result getFromPlayHead (Result (AudioPlayHead::PositionInfo::* member)() const) const
     {
         if (auto* ph = getPlayHead())
-        {
             if (const auto pos = ph->getPosition())
-            {
-                setIfNotNull (outCurrentBeat, pos->getPpqPosition().orFallback (0.0));
-                setIfNotNull (outCurrentTempo, pos->getBpm().orFallback (0.0));
-                return noErr;
-            }
-        }
+                return ((*pos).*member)();
 
-        setIfNotNull (outCurrentBeat, 0);
-        setIfNotNull (outCurrentTempo, 120.0);
+        return {};
+    }
+
+    OSStatus getBeatAndTempo (Float64* outCurrentBeat, Float64* outCurrentTempo) const
+    {
+        setIfNotNull (outCurrentBeat,  getFromPlayHead (&AudioPlayHead::PositionInfo::getPpqPosition).orFallback (0));
+        setIfNotNull (outCurrentTempo, getFromPlayHead (&AudioPlayHead::PositionInfo::getBpm).orFallback (120.0));
         return noErr;
     }
 
     OSStatus getMusicalTimeLocation (UInt32* outDeltaSampleOffsetToNextBeat, Float32* outTimeSig_Numerator,
                                      UInt32* outTimeSig_Denominator, Float64* outCurrentMeasureDownBeat) const
     {
-        if (auto* ph = getPlayHead())
-        {
-            if (const auto pos = ph->getPosition())
-            {
-                const auto signature = pos->getTimeSignature().orFallback (AudioPlayHead::TimeSignature{});
-                setIfNotNull (outDeltaSampleOffsetToNextBeat, (UInt32) 0); //xxx
-                setIfNotNull (outTimeSig_Numerator,   (UInt32) signature.numerator);
-                setIfNotNull (outTimeSig_Denominator, (UInt32) signature.denominator);
-                setIfNotNull (outCurrentMeasureDownBeat, pos->getPpqPositionOfLastBarStart().orFallback (0.0)); //xxx wrong
-                return noErr;
-            }
-        }
+        setIfNotNull (outDeltaSampleOffsetToNextBeat, (UInt32) 0); //xxx
+        setIfNotNull (outCurrentMeasureDownBeat, getFromPlayHead (&AudioPlayHead::PositionInfo::getPpqPositionOfLastBarStart).orFallback (0.0));
 
-        setIfNotNull (outDeltaSampleOffsetToNextBeat, (UInt32) 0);
-        setIfNotNull (outTimeSig_Numerator, (UInt32) 4);
-        setIfNotNull (outTimeSig_Denominator, (UInt32) 4);
-        setIfNotNull (outCurrentMeasureDownBeat, 0);
+        const auto signature = getFromPlayHead (&AudioPlayHead::PositionInfo::getTimeSignature).orFallback (AudioPlayHead::TimeSignature{});
+        setIfNotNull (outTimeSig_Numerator,   (Float32) signature.numerator);
+        setIfNotNull (outTimeSig_Denominator, (UInt32)  signature.denominator);
+
         return noErr;
     }
 
@@ -2341,34 +2308,16 @@ private:
                                 Float64* outCurrentSampleInTimeLine, Boolean* outIsCycling,
                                 Float64* outCycleStartBeat, Float64* outCycleEndBeat)
     {
-        if (auto* ph = getPlayHead())
-        {
-            AudioPlayHead::CurrentPositionInfo result;
+        const auto nowPlaying = getFromPlayHead (&AudioPlayHead::PositionInfo::getIsPlaying);
+        setIfNotNull (outIsPlaying, nowPlaying);
+        setIfNotNull (outTransportStateChanged, std::exchange (wasPlaying, nowPlaying) != nowPlaying);
+        setIfNotNull (outCurrentSampleInTimeLine, (double) getFromPlayHead (&AudioPlayHead::PositionInfo::getTimeInSamples).orFallback (0));
+        setIfNotNull (outIsCycling, getFromPlayHead (&AudioPlayHead::PositionInfo::getIsLooping));
 
-            if (ph->getCurrentPosition (result))
-            {
-                setIfNotNull (outIsPlaying, result.isPlaying);
+        const auto loopPoints = getFromPlayHead (&AudioPlayHead::PositionInfo::getLoopPoints).orFallback (AudioPlayHead::LoopPoints{});
+        setIfNotNull (outCycleStartBeat, loopPoints.ppqStart);
+        setIfNotNull (outCycleEndBeat, loopPoints.ppqEnd);
 
-                if (outTransportStateChanged != nullptr)
-                {
-                    *outTransportStateChanged = result.isPlaying != wasPlaying;
-                    wasPlaying = result.isPlaying;
-                }
-
-                setIfNotNull (outCurrentSampleInTimeLine, result.timeInSamples);
-                setIfNotNull (outIsCycling, result.isLooping);
-                setIfNotNull (outCycleStartBeat, result.ppqLoopStart);
-                setIfNotNull (outCycleEndBeat, result.ppqLoopEnd);
-                return noErr;
-            }
-        }
-
-        setIfNotNull (outIsPlaying, false);
-        setIfNotNull (outTransportStateChanged, false);
-        setIfNotNull (outCurrentSampleInTimeLine, 0);
-        setIfNotNull (outIsCycling, false);
-        setIfNotNull (outCycleStartBeat, 0.0);
-        setIfNotNull (outCycleEndBeat, 0.0);
         return noErr;
     }
 
@@ -2549,14 +2498,14 @@ private:
             UInt32 propertySize = 0;
             Boolean writable;
 
-            if (AudioUnitGetPropertyInfo (audioUnit, kAudioUnitProperty_Supportednum_channels, kAudioUnitScope_Global, 0, &propertySize, &writable) == noErr
+            if (AudioUnitGetPropertyInfo (audioUnit, kAudioUnitProperty_SupportedNumChannels, kAudioUnitScope_Global, 0, &propertySize, &writable) == noErr
                 && propertySize > 0)
             {
                 numChannelInfos = propertySize / sizeof (AUChannelInfo);
                 channelInfos.malloc (static_cast<size_t> (numChannelInfos));
                 propertySize = static_cast<UInt32> (sizeof (AUChannelInfo) * static_cast<size_t> (numChannelInfos));
 
-                if (AudioUnitGetProperty (audioUnit, kAudioUnitProperty_Supportednum_channels, kAudioUnitScope_Global, 0, channelInfos.get(), &propertySize) != noErr)
+                if (AudioUnitGetProperty (audioUnit, kAudioUnitProperty_SupportedNumChannels, kAudioUnitScope_Global, 0, channelInfos.get(), &propertySize) != noErr)
                     numChannelInfos = 0;
             }
             else
@@ -2632,7 +2581,7 @@ private:
 };
 
 //==============================================================================
-class AudioUnitPluginWindowCocoa    : public AudioProcessorEditor
+class AudioUnitPluginWindowCocoa final : public AudioProcessorEditor
 {
 public:
     AudioUnitPluginWindowCocoa (AudioUnitPluginInstance& p, bool createGenericViewIfNeeded)
@@ -2640,9 +2589,6 @@ public:
           plugin (p)
     {
         addAndMakeVisible (wrapper);
-
-        viewControllerCallback =
-            CreateObjCBlock (this, &AudioUnitPluginWindowCocoa::requestViewControllerCallback);
 
         setOpaque (true);
         setVisible (true);
@@ -2662,13 +2608,12 @@ public:
         }
     }
 
-    void embedViewController (JUCE_IOS_MAC_VIEW* pluginView, const CGSize& size)
+    void embedViewController (JUCE_IOS_MAC_VIEW* pluginView, [[maybe_unused]] const CGSize& size)
     {
         wrapper.setView (pluginView);
         waitingForViewCallback = false;
 
       #if JUCE_MAC
-        ignoreUnused (size);
         if (pluginView != nil)
             wrapper.resizeToFitView();
       #else
@@ -2700,11 +2645,10 @@ private:
     AudioUnitFormatHelpers::AutoResizingNSViewComponent wrapper;
 
     typedef void (^ViewControllerCallbackBlock)(AUViewControllerBase *);
-    ObjCBlock<ViewControllerCallbackBlock> viewControllerCallback;
 
     bool waitingForViewCallback = false;
 
-    bool createView (bool createGenericViewIfNeeded)
+    bool createView ([[maybe_unused]] bool createGenericViewIfNeeded)
     {
         JUCE_IOS_MAC_VIEW* pluginView = nil;
         UInt32 dataSize = 0;
@@ -2754,12 +2698,9 @@ private:
                 && dataSize == sizeof (ViewControllerCallbackBlock))
         {
             waitingForViewCallback = true;
-            ViewControllerCallbackBlock callback;
-            callback = viewControllerCallback;
+            auto callback = ^(AUViewControllerBase* controller) { this->requestViewControllerCallback (controller); };
 
-            ViewControllerCallbackBlock* info = &callback;
-
-            if (noErr == AudioUnitSetProperty (plugin.audioUnit, kAudioUnitProperty_RequestViewController, kAudioUnitScope_Global, 0, info, dataSize))
+            if (noErr == AudioUnitSetProperty (plugin.audioUnit, kAudioUnitProperty_RequestViewController, kAudioUnitScope_Global, 0, &callback, dataSize))
                 return true;
 
             waitingForViewCallback = false;
@@ -2778,8 +2719,6 @@ private:
 
             pluginView = [[AUGenericView alloc] initWithAudioUnit: plugin.audioUnit];
         }
-       #else
-        ignoreUnused (createGenericViewIfNeeded);
        #endif
 
         wrapper.setView (pluginView);
@@ -2799,7 +2738,7 @@ private:
             if (@available (macOS 10.11, *))
                 size = [controller preferredContentSize];
 
-            if (size.width == 0 || size.height == 0)
+            if (approximatelyEqual (size.width, 0.0) || approximatelyEqual (size.height, 0.0))
                 size = controller.view.frame.size;
 
             return CGSizeMake (jmax ((CGFloat) 20.0f, size.width),
@@ -2808,7 +2747,7 @@ private:
 
         if (! MessageManager::getInstance()->isThisTheMessageThread())
         {
-            struct AsyncViewControllerCallback : public CallbackMessage
+            struct AsyncViewControllerCallback final : public CallbackMessage
             {
                 AudioUnitPluginWindowCocoa* owner;
                 JUCE_IOS_MAC_VIEW* controllerView;

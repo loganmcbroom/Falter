@@ -23,9 +23,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
-namespace dsp
+namespace juce::dsp
 {
 
 //==============================================================================
@@ -74,7 +72,7 @@ template <typename SampleType>
 void NoiseGate<SampleType>::prepare (const ProcessSpec& spec)
 {
     jassert (spec.sampleRate > 0);
-    jassert (spec.num_channels > 0);
+    jassert (spec.numChannels > 0);
 
     sampleRate = spec.sampleRate;
 
@@ -125,5 +123,4 @@ void NoiseGate<SampleType>::update()
 template class NoiseGate<float>;
 template class NoiseGate<double>;
 
-} // namespace dsp
-} // namespace juce
+} // namespace juce::dsp

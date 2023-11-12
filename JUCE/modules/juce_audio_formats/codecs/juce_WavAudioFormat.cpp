@@ -334,18 +334,18 @@ namespace WavFileHelpers
     } JUCE_PACKED;
 
     //==============================================================================
-    inline AudioChannelSet canonicalWavChannelSet (int num_channels)
+    inline AudioChannelSet canonicalWavChannelSet (int numChannels)
     {
-        if (num_channels == 1)  return AudioChannelSet::mono();
-        if (num_channels == 2)  return AudioChannelSet::stereo();
-        if (num_channels == 3)  return AudioChannelSet::createLCR();
-        if (num_channels == 4)  return AudioChannelSet::quadraphonic();
-        if (num_channels == 5)  return AudioChannelSet::create5point0();
-        if (num_channels == 6)  return AudioChannelSet::create5point1();
-        if (num_channels == 7)  return AudioChannelSet::create7point0SDDS();
-        if (num_channels == 8)  return AudioChannelSet::create7point1SDDS();
+        if (numChannels == 1)  return AudioChannelSet::mono();
+        if (numChannels == 2)  return AudioChannelSet::stereo();
+        if (numChannels == 3)  return AudioChannelSet::createLCR();
+        if (numChannels == 4)  return AudioChannelSet::quadraphonic();
+        if (numChannels == 5)  return AudioChannelSet::create5point0();
+        if (numChannels == 6)  return AudioChannelSet::create5point1();
+        if (numChannels == 7)  return AudioChannelSet::create7point0SDDS();
+        if (numChannels == 8)  return AudioChannelSet::create7point1SDDS();
 
-        return AudioChannelSet::discreteChannels (num_channels);
+        return AudioChannelSet::discreteChannels (numChannels);
     }
 
     //==============================================================================
@@ -948,7 +948,7 @@ namespace WavFileHelpers
         }
     };
 
-    //=============================================================================
+    //==============================================================================
     namespace IXMLChunk
     {
         static const std::unordered_set<String> aswgMetadataKeys
@@ -1204,7 +1204,7 @@ namespace WavFileHelpers
 }
 
 //==============================================================================
-class WavAudioFormatReader  : public AudioFormatReader
+class WavAudioFormatReader final : public AudioFormatReader
 {
 public:
     WavAudioFormatReader (InputStream* in)  : AudioFormatReader (in, wavFormatName)
@@ -1263,7 +1263,7 @@ public:
                 {
                     // read the format chunk
                     auto format = (unsigned short) input->readShort();
-                    num_channels = (unsigned int) input->readShort();
+                    numChannels = (unsigned int) input->readShort();
                     sampleRate = input->readInt();
                     auto bytesPerSec = input->readInt();
                     input->skipNextBytes (2);
@@ -1273,12 +1273,12 @@ public:
                     {
                         bytesPerFrame = bytesPerSec / (int) sampleRate;
 
-                        if (num_channels != 0)
-                            bitsPerSample = 8 * (unsigned int) bytesPerFrame / num_channels;
+                        if (numChannels != 0)
+                            bitsPerSample = 8 * (unsigned int) bytesPerFrame / numChannels;
                     }
                     else
                     {
-                        bytesPerFrame = (int) (num_channels * bitsPerSample / 8);
+                        bytesPerFrame = (int) (numChannels * bitsPerSample / 8);
                     }
 
                     if (format == 3)
@@ -1296,7 +1296,7 @@ public:
                             input->skipNextBytes (4); // skip over size and bitsPerSample
                             auto channelMask = input->readInt();
                             dict["ChannelMask"] = String (channelMask);
-                            channelLayout = getChannelLayoutFromMask (channelMask, num_channels);
+                            channelLayout = getChannelLayoutFromMask (channelMask, numChannels);
 
                             ExtensibleWavSubFormat subFormat;
                             subFormat.data1 = (uint32) input->readInt();
@@ -1476,7 +1476,7 @@ public:
     }
 
     //==============================================================================
-    bool readSamples (int** destSamples, int numDestChannels, int startOffsetInDestBuffer,
+    bool readSamples (int* const* destSamples, int numDestChannels, int startOffsetInDestBuffer,
                       int64 startSampleInFile, int numSamples) override
     {
         clearSamplesBeyondAvailableLength (destSamples, numDestChannels, startOffsetInDestBuffer,
@@ -1503,7 +1503,7 @@ public:
 
             copySampleData (bitsPerSample, usesFloatingPointData,
                             destSamples, startOffsetInDestBuffer, numDestChannels,
-                            tempBuffer, (int) num_channels, numThisTime);
+                            tempBuffer, (int) numChannels, numThisTime);
 
             startOffsetInDestBuffer += numThisTime;
             numSamples -= numThisTime;
@@ -1531,13 +1531,13 @@ public:
     //==============================================================================
     AudioChannelSet getChannelLayout() override
     {
-        if (channelLayout.size() == static_cast<int> (num_channels))
+        if (channelLayout.size() == static_cast<int> (numChannels))
             return channelLayout;
 
-        return WavFileHelpers::canonicalWavChannelSet (static_cast<int> (num_channels));
+        return WavFileHelpers::canonicalWavChannelSet (static_cast<int> (numChannels));
     }
 
-    static AudioChannelSet getChannelLayoutFromMask (int dwChannelMask, size_t totalnum_channels)
+    static AudioChannelSet getChannelLayoutFromMask (int dwChannelMask, size_t totalNumChannels)
     {
         AudioChannelSet wavFileChannelLayout;
 
@@ -1548,17 +1548,17 @@ public:
             wavFileChannelLayout.addChannel (static_cast<AudioChannelSet::ChannelType> (bit + 1));
 
         // channel layout and number of channels do not match
-        if (wavFileChannelLayout.size() != static_cast<int> (totalnum_channels))
+        if (wavFileChannelLayout.size() != static_cast<int> (totalNumChannels))
         {
             // for backward compatibility with old wav files, assume 1 or 2
             // channel wav files are mono/stereo respectively
-            if (totalnum_channels <= 2 && dwChannelMask == 0)
-                wavFileChannelLayout = AudioChannelSet::canonicalChannelSet (static_cast<int> (totalnum_channels));
+            if (totalNumChannels <= 2 && dwChannelMask == 0)
+                wavFileChannelLayout = AudioChannelSet::canonicalChannelSet (static_cast<int> (totalNumChannels));
             else
             {
                 auto discreteSpeaker = static_cast<int> (AudioChannelSet::discreteChannel0);
 
-                while (wavFileChannelLayout.size() < static_cast<int> (totalnum_channels))
+                while (wavFileChannelLayout.size() < static_cast<int> (totalNumChannels))
                     wavFileChannelLayout.addChannel (static_cast<AudioChannelSet::ChannelType> (discreteSpeaker++));
             }
         }
@@ -1579,7 +1579,7 @@ private:
 };
 
 //==============================================================================
-class WavAudioFormatWriter  : public AudioFormatWriter
+class WavAudioFormatWriter final : public AudioFormatWriter
 {
 public:
     WavAudioFormatWriter (OutputStream* const out, const double rate,
@@ -1628,15 +1628,15 @@ public:
         if (writeFailed)
             return false;
 
-        auto bytes = num_channels * (size_t) numSamples * bitsPerSample / 8;
+        auto bytes = numChannels * (size_t) numSamples * bitsPerSample / 8;
         tempBlock.ensureSize (bytes, false);
 
         switch (bitsPerSample)
         {
-            case 8:     WriteHelper<AudioData::UInt8, AudioData::Int32, AudioData::LittleEndian>::write (tempBlock.getData(), (int) num_channels, data, numSamples); break;
-            case 16:    WriteHelper<AudioData::Int16, AudioData::Int32, AudioData::LittleEndian>::write (tempBlock.getData(), (int) num_channels, data, numSamples); break;
-            case 24:    WriteHelper<AudioData::Int24, AudioData::Int32, AudioData::LittleEndian>::write (tempBlock.getData(), (int) num_channels, data, numSamples); break;
-            case 32:    WriteHelper<AudioData::Int32, AudioData::Int32, AudioData::LittleEndian>::write (tempBlock.getData(), (int) num_channels, data, numSamples); break;
+            case 8:     WriteHelper<AudioData::UInt8, AudioData::Int32, AudioData::LittleEndian>::write (tempBlock.getData(), (int) numChannels, data, numSamples); break;
+            case 16:    WriteHelper<AudioData::Int16, AudioData::Int32, AudioData::LittleEndian>::write (tempBlock.getData(), (int) numChannels, data, numSamples); break;
+            case 24:    WriteHelper<AudioData::Int24, AudioData::Int32, AudioData::LittleEndian>::write (tempBlock.getData(), (int) numChannels, data, numSamples); break;
+            case 32:    WriteHelper<AudioData::Int32, AudioData::Int32, AudioData::LittleEndian>::write (tempBlock.getData(), (int) numChannels, data, numSamples); break;
             default:    jassertfalse; break;
         }
 
@@ -1690,7 +1690,7 @@ private:
             return;
         }
 
-        const size_t bytesPerFrame = num_channels * bitsPerSample / 8;
+        const size_t bytesPerFrame = numChannels * bitsPerSample / 8;
         uint64 audioDataSize = bytesPerFrame * lengthInSamples;
         auto channelMask = getChannelMaskFromChannelLayout (channelLayout);
 
@@ -1762,7 +1762,7 @@ private:
                                                    : (short) 3 /*WAVE_FORMAT_IEEE_FLOAT*/);
         }
 
-        output->writeShort ((short) num_channels);
+        output->writeShort ((short) numChannels);
         output->writeInt ((int) sampleRate);
         output->writeInt ((int) ((double) bytesPerFrame * sampleRate)); // nAvgBytesPerSec
         output->writeShort ((short) bytesPerFrame); // nBlockAlign
@@ -1843,7 +1843,7 @@ private:
 };
 
 //==============================================================================
-class MemoryMappedWavReader   : public MemoryMappedAudioFormatReader
+class MemoryMappedWavReader final : public MemoryMappedAudioFormatReader
 {
 public:
     MemoryMappedWavReader (const File& wavFile, const WavAudioFormatReader& reader)
@@ -1852,7 +1852,7 @@ public:
     {
     }
 
-    bool readSamples (int** destSamples, int numDestChannels, int startOffsetInDestBuffer,
+    bool readSamples (int* const* destSamples, int numDestChannels, int startOffsetInDestBuffer,
                       int64 startSampleInFile, int numSamples) override
     {
         clearSamplesBeyondAvailableLength (destSamples, numDestChannels, startOffsetInDestBuffer,
@@ -1866,13 +1866,13 @@ public:
 
         WavAudioFormatReader::copySampleData (bitsPerSample, usesFloatingPointData,
                                               destSamples, startOffsetInDestBuffer, numDestChannels,
-                                              sampleToPointer (startSampleInFile), (int) num_channels, numSamples);
+                                              sampleToPointer (startSampleInFile), (int) numChannels, numSamples);
         return true;
     }
 
     void getSample (int64 sample, float* result) const noexcept override
     {
-        auto num = (int) num_channels;
+        auto num = (int) numChannels;
 
         if (map == nullptr || ! mappedSection.contains (sample))
         {
@@ -1897,7 +1897,7 @@ public:
         }
     }
 
-    void readMaxLevels (int64 startSampleInFile, int64 numSamples, Range<float>* results, int num_channelsToRead) override
+    void readMaxLevels (int64 startSampleInFile, int64 numSamples, Range<float>* results, int numChannelsToRead) override
     {
         numSamples = jmin (numSamples, lengthInSamples - startSampleInFile);
 
@@ -1905,7 +1905,7 @@ public:
         {
             jassert (numSamples <= 0); // you must make sure that the window contains all the samples you're going to attempt to read.
 
-            for (int i = 0; i < num_channelsToRead; ++i)
+            for (int i = 0; i < numChannelsToRead; ++i)
                 results[i] = {};
 
             return;
@@ -1913,11 +1913,11 @@ public:
 
         switch (bitsPerSample)
         {
-            case 8:     scanMinAndMax<AudioData::UInt8> (startSampleInFile, numSamples, results, num_channelsToRead); break;
-            case 16:    scanMinAndMax<AudioData::Int16> (startSampleInFile, numSamples, results, num_channelsToRead); break;
-            case 24:    scanMinAndMax<AudioData::Int24> (startSampleInFile, numSamples, results, num_channelsToRead); break;
-            case 32:    if (usesFloatingPointData) scanMinAndMax<AudioData::Float32> (startSampleInFile, numSamples, results, num_channelsToRead);
-                        else                       scanMinAndMax<AudioData::Int32>   (startSampleInFile, numSamples, results, num_channelsToRead);
+            case 8:     scanMinAndMax<AudioData::UInt8> (startSampleInFile, numSamples, results, numChannelsToRead); break;
+            case 16:    scanMinAndMax<AudioData::Int16> (startSampleInFile, numSamples, results, numChannelsToRead); break;
+            case 24:    scanMinAndMax<AudioData::Int24> (startSampleInFile, numSamples, results, numChannelsToRead); break;
+            case 32:    if (usesFloatingPointData) scanMinAndMax<AudioData::Float32> (startSampleInFile, numSamples, results, numChannelsToRead);
+                        else                       scanMinAndMax<AudioData::Int32>   (startSampleInFile, numSamples, results, numChannelsToRead);
                         break;
             default:    jassertfalse; break;
         }
@@ -1927,9 +1927,9 @@ public:
 
 private:
     template <typename SampleType>
-    void scanMinAndMax (int64 startSampleInFile, int64 numSamples, Range<float>* results, int num_channelsToRead) const noexcept
+    void scanMinAndMax (int64 startSampleInFile, int64 numSamples, Range<float>* results, int numChannelsToRead) const noexcept
     {
-        for (int i = 0; i < num_channelsToRead; ++i)
+        for (int i = 0; i < numChannelsToRead; ++i)
             results[i] = scanMinAndMaxInterleaved<SampleType, AudioData::LittleEndian> (i, startSampleInFile, numSamples);
     }
 
@@ -1982,7 +1982,7 @@ AudioFormatReader* WavAudioFormat::createReaderFor (InputStream* sourceStream, b
     }
    #endif
 
-    if (r->sampleRate > 0 && r->num_channels > 0 && r->bytesPerFrame > 0 && r->bitsPerSample <= 32)
+    if (r->sampleRate > 0 && r->numChannels > 0 && r->bytesPerFrame > 0 && r->bitsPerSample <= 32)
         return r.release();
 
     if (! deleteStreamIfOpeningFails)
@@ -2010,10 +2010,10 @@ MemoryMappedAudioFormatReader* WavAudioFormat::createMemoryMappedReader (FileInp
 }
 
 AudioFormatWriter* WavAudioFormat::createWriterFor (OutputStream* out, double sampleRate,
-                                                    unsigned int num_channels, int bitsPerSample,
+                                                    unsigned int numChannels, int bitsPerSample,
                                                     const StringPairArray& metadataValues, int qualityOptionIndex)
 {
-    return createWriterFor (out, sampleRate, WavFileHelpers::canonicalWavChannelSet (static_cast<int> (num_channels)),
+    return createWriterFor (out, sampleRate, WavFileHelpers::canonicalWavChannelSet (static_cast<int> (numChannels)),
                             bitsPerSample, metadataValues, qualityOptionIndex);
 }
 
@@ -2047,7 +2047,7 @@ namespace WavFileHelpers
             if (outStream != nullptr)
             {
                 std::unique_ptr<AudioFormatWriter> writer (wav.createWriterFor (outStream.get(), reader->sampleRate,
-                                                                                reader->num_channels, (int) reader->bitsPerSample,
+                                                                                reader->numChannels, (int) reader->bitsPerSample,
                                                                                 metadata, 0));
 
                 if (writer != nullptr)
@@ -2113,7 +2113,7 @@ bool WavAudioFormat::replaceMetadataInFile (const File& wavFile, const StringPai
 //==============================================================================
 #if JUCE_UNIT_TESTS
 
-struct WaveAudioFormatTests : public UnitTest
+struct WaveAudioFormatTests final : public UnitTest
 {
     WaveAudioFormatTests()
         : UnitTest ("Wave audio format tests", UnitTestCategories::audio)

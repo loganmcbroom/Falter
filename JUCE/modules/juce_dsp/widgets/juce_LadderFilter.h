@@ -23,9 +23,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
-namespace dsp
+namespace juce::dsp
 {
 
 enum class LadderFilterMode
@@ -93,11 +91,11 @@ public:
     {
         const auto& inputBlock = context.getInputBlock();
         auto& outputBlock      = context.getOutputBlock();
-        const auto NumChannels = outputBlock.getNumChannels();
+        const auto numChannels = outputBlock.getNumChannels();
         const auto numSamples  = outputBlock.getNumSamples();
 
         jassert (inputBlock.getNumChannels() <= getNumChannels());
-        jassert (inputBlock.getNumChannels() == NumChannels);
+        jassert (inputBlock.getNumChannels() == numChannels);
         jassert (inputBlock.getNumSamples()  == numSamples);
 
         if (! enabled || context.isBypassed)
@@ -110,7 +108,7 @@ public:
         {
             updateSmoothers();
 
-            for (size_t ch = 0; ch < NumChannels; ++ch)
+            for (size_t ch = 0; ch < numChannels; ++ch)
                 outputBlock.getChannelPointer (ch)[n] = processSample (inputBlock.getChannelPointer (ch)[n], ch);
         }
     }
@@ -149,5 +147,4 @@ private:
     bool enabled = true;
 };
 
-} // namespace dsp
-} // namespace juce
+} // namespace juce::dsp

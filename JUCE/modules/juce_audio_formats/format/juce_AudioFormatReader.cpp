@@ -36,11 +36,11 @@ AudioFormatReader::~AudioFormatReader()
     delete input;
 }
 
-static void convertFixedToFloat (int* const* channels, int num_channels, int numSamples)
+static void convertFixedToFloat (int* const* channels, int numChannels, int numSamples)
 {
     constexpr auto scaleFactor = 1.0f / static_cast<float> (0x7fffffff);
 
-    for (int i = 0; i < num_channels; ++i)
+    for (int i = 0; i < numChannels; ++i)
         if (auto d = channels[i])
             FloatVectorOperations::convertFixedToFloat (reinterpret_cast<float*> (d), d, scaleFactor, numSamples);
 }
@@ -86,18 +86,18 @@ bool AudioFormatReader::read (int* const* destChannels,
     if (numSamplesToRead <= 0)
         return true;
 
-    if (! readSamples (const_cast<int**> (destChannels),
-                       jmin ((int) num_channels, numDestChannels), startOffsetInDestBuffer,
+    if (! readSamples (destChannels,
+                       jmin ((int) numChannels, numDestChannels), startOffsetInDestBuffer,
                        startSampleInSource, numSamplesToRead))
         return false;
 
-    if (numDestChannels > (int) num_channels)
+    if (numDestChannels > (int) numChannels)
     {
         if (fillLeftoverChannelsWithCopies)
         {
             auto lastFullChannel = destChannels[0];
 
-            for (int i = (int) num_channels; --i > 0;)
+            for (int i = (int) numChannels; --i > 0;)
             {
                 if (destChannels[i] != nullptr)
                 {
@@ -107,13 +107,13 @@ bool AudioFormatReader::read (int* const* destChannels,
             }
 
             if (lastFullChannel != nullptr)
-                for (int i = (int) num_channels; i < numDestChannels; ++i)
+                for (int i = (int) numChannels; i < numDestChannels; ++i)
                     if (auto d = destChannels[i])
                         memcpy (d, lastFullChannel, sizeof (int) * originalNumSamplesToRead);
         }
         else
         {
-            for (int i = (int) num_channels; i < numDestChannels; ++i)
+            for (int i = (int) numChannels; i < numDestChannels; ++i)
                 if (auto d = destChannels[i])
                     zeromem (d, sizeof (int) * originalNumSamplesToRead);
         }
@@ -152,7 +152,7 @@ bool AudioFormatReader::read (AudioBuffer<float>* buffer,
     if (numSamples <= 0)
         return true;
 
-    auto numTargetChannels = buffer->get_num_channels();
+    auto numTargetChannels = buffer->getNumChannels();
 
     if (numTargetChannels <= 2)
     {
@@ -164,10 +164,10 @@ bool AudioFormatReader::read (AudioBuffer<float>* buffer,
         {
             chans[0] = dests[0];
 
-            if (num_channels > 1)
+            if (numChannels > 1)
                 chans[1] = dests[1];
         }
-        else if (useReaderLeftChan || (num_channels == 1))
+        else if (useReaderLeftChan || (numChannels == 1))
         {
             chans[0] = dests[0];
         }
@@ -209,7 +209,7 @@ bool AudioFormatReader::read (AudioBuffer<float>* buffer,
 void AudioFormatReader::readMaxLevels (int64 startSampleInFile, int64 numSamples,
                                        Range<float>* const results, const int channelsToRead)
 {
-    jassert (channelsToRead > 0 && channelsToRead <= (int) num_channels);
+    jassert (channelsToRead > 0 && channelsToRead <= (int) numChannels);
 
     if (numSamples <= 0)
     {
@@ -264,9 +264,9 @@ void AudioFormatReader::readMaxLevels (int64 startSampleInFile, int64 numSamples
 {
     Range<float> levels[2];
 
-    if (num_channels < 2)
+    if (numChannels < 2)
     {
-        readMaxLevels (startSampleInFile, numSamples, levels, (int) num_channels);
+        readMaxLevels (startSampleInFile, numSamples, levels, (int) numChannels);
         levels[1] = levels[0];
     }
     else
@@ -337,7 +337,7 @@ int64 AudioFormatReader::searchForLevel (int64 startSample,
                 {
                     matches = true;
                 }
-                else if (num_channels > 1)
+                else if (numChannels > 1)
                 {
                     const float sample2 = std::abs (((float*) tempBuffer[1]) [index]);
 
@@ -354,7 +354,7 @@ int64 AudioFormatReader::searchForLevel (int64 startSample,
                 {
                     matches = true;
                 }
-                else if (num_channels > 1)
+                else if (numChannels > 1)
                 {
                     const int sample2 = std::abs (tempBuffer[1][index]);
 
@@ -397,7 +397,7 @@ int64 AudioFormatReader::searchForLevel (int64 startSample,
 
 AudioChannelSet AudioFormatReader::getChannelLayout()
 {
-    return AudioChannelSet::canonicalChannelSet (static_cast<int> (num_channels));
+    return AudioChannelSet::canonicalChannelSet (static_cast<int> (numChannels));
 }
 
 //==============================================================================
@@ -409,7 +409,7 @@ MemoryMappedAudioFormatReader::MemoryMappedAudioFormatReader (const File& f, con
     sampleRate      = reader.sampleRate;
     bitsPerSample   = reader.bitsPerSample;
     lengthInSamples = reader.lengthInSamples;
-    num_channels     = reader.num_channels;
+    numChannels     = reader.numChannels;
     metadataValues  = reader.metadataValues;
     usesFloatingPointData = reader.usesFloatingPointData;
 }

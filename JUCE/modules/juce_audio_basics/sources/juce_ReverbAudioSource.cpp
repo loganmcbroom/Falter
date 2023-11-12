@@ -51,7 +51,7 @@ void ReverbAudioSource::getNextAudioBlock (const AudioSourceChannelInfo& bufferT
     {
         float* const firstChannel = bufferToFill.buffer->getWritePointer (0, bufferToFill.startSample);
 
-        if (bufferToFill.buffer->get_num_channels() > 1)
+        if (bufferToFill.buffer->getNumChannels() > 1)
         {
             reverb.processStereo (firstChannel,
                                   bufferToFill.buffer->getWritePointer (1, bufferToFill.startSample),

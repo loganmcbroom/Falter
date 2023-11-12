@@ -23,9 +23,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
-namespace dsp
+namespace juce::dsp
 {
 
 //==============================================================================
@@ -73,7 +71,7 @@ template <typename SampleType>
 void LadderFilter<SampleType>::prepare (const ProcessSpec& spec)
 {
     setSampleRate (SampleType (spec.sampleRate));
-    setnum_channels (spec.num_channels);
+    setNumChannels (spec.numChannels);
     reset();
 }
 
@@ -172,5 +170,4 @@ void LadderFilter<SampleType>::setSampleRate (SampleType newValue) noexcept
 template class LadderFilter<float>;
 template class LadderFilter<double>;
 
-} // namespace dsp
-} // namespace juce
+} // namespace juce::dsp

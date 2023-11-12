@@ -262,6 +262,9 @@ public:
     */
     void setCurrentAudioDeviceType (const String& type, bool treatAsChosenDevice);
 
+    /** Returns the current audio device workgroup, if supported. */
+    AudioWorkgroup getDeviceAudioWorkgroup() const;
+
     /** Closes the currently-open device.
         You can call restartLastAudioDevice() later to reopen it in the same state
         that it was just in.
@@ -431,7 +434,7 @@ public:
         friend class AudioDeviceManager;
 
         Atomic<float> level { 0 };
-        void updateLevel (const float* const*, int num_channels, int numSamples) noexcept;
+        void updateLevel (const float* const*, int numChannels, int numSamples) noexcept;
     };
 
     /** Returns a reference-counted object that can be used to get the current input level.
@@ -499,6 +502,10 @@ private:
     std::unique_ptr<XmlElement> lastExplicitSettings;
     mutable bool listNeedsScanning = true;
     AudioBuffer<float> tempBuffer;
+    MidiDeviceListConnection midiDeviceListConnection = MidiDeviceListConnection::make ([this]
+    {
+        midiDeviceListChanged();
+    });
 
     struct MidiCallbackInfo
     {
@@ -526,9 +533,9 @@ private:
     class CallbackHandler;
     std::unique_ptr<CallbackHandler> callbackHandler;
 
-    void audioDeviceIOCallbackInt (const float** inputChannelData,
+    void audioDeviceIOCallbackInt (const float* const* inputChannelData,
                                    int totalNumInputChannels,
-                                   float** outputChannelData,
+                                   float* const* outputChannelData,
                                    int totalNumOutputChannels,
                                    int numSamples,
                                    const AudioIODeviceCallbackContext& context);
@@ -537,6 +544,7 @@ private:
     void audioDeviceErrorInt (const String&);
     void handleIncomingMidiMessageInt (MidiInput*, const MidiMessage&);
     void audioDeviceListChanged();
+    void midiDeviceListChanged();
 
     String restartDevice (int blockSizeToUse, double sampleRateToUse,
                           const BigInteger& ins, const BigInteger& outs);
@@ -554,6 +562,7 @@ private:
     String initialiseDefault (const String& preferredDefaultDeviceName, const AudioDeviceSetup*);
     String initialiseFromXML (const XmlElement&, bool selectDefaultDeviceOnFailure,
                               const String& preferredDefaultDeviceName, const AudioDeviceSetup*);
+    void openLastRequestedMidiDevices (const Array<MidiDeviceInfo>&, const MidiDeviceInfo&);
 
     AudioIODeviceType* findType (const String& inputName, const String& outputName);
     AudioIODeviceType* findType (const String& typeName);

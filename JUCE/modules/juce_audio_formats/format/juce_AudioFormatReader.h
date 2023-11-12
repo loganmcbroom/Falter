@@ -161,14 +161,14 @@ public:
                             ok for this to be beyond the start or end of the stream.
         @param numSamples   how many samples to read
         @param results      this array will be filled with Range values for each channel.
-                            The array must contain num_channels elements.
-        @param num_channelsToRead  the number of channels of data to scan. This must be
+                            The array must contain numChannels elements.
+        @param numChannelsToRead  the number of channels of data to scan. This must be
                             more than zero, but not more than the total number of channels
                             that the reader contains
         @see read
     */
     virtual void readMaxLevels (int64 startSample, int64 numSamples,
-                                Range<float>* results, int num_channelsToRead);
+                                Range<float>* results, int numChannelsToRead);
 
     /** Finds the highest and lowest sample levels from a section of the audio stream.
 
@@ -231,7 +231,7 @@ public:
     int64 lengthInSamples = 0;
 
     /** The total number of channels in the audio stream. */
-    unsigned int num_channels = 0;
+    unsigned int numChannels = 0;
 
     /** Indicates whether the data is floating-point or fixed. */
     bool usesFloatingPointData = false;
@@ -267,7 +267,7 @@ public:
                                          to begin reading. This value is guaranteed to be >= 0.
         @param numSamples                the number of samples to read
     */
-    virtual bool readSamples (int** destChannels,
+    virtual bool readSamples (int* const* destChannels,
                               int numDestChannels,
                               int startOffsetInDestBuffer,
                               int64 startSampleInFile,
@@ -306,7 +306,7 @@ protected:
     /** Used by AudioFormatReader subclasses to clear any parts of the data blocks that lie
         beyond the end of their available length.
     */
-    static void clearSamplesBeyondAvailableLength (int** destChannels, int numDestChannels,
+    static void clearSamplesBeyondAvailableLength (int* const* destChannels, int numDestChannels,
                                                    int startOffsetInDestBuffer, int64 startSampleInFile,
                                                    int& numSamples, int64 fileLengthInSamples)
     {

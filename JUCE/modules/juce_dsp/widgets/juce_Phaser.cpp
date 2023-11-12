@@ -23,9 +23,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
-namespace dsp
+namespace juce::dsp
 {
 
 //==============================================================================
@@ -94,7 +92,7 @@ template <typename SampleType>
 void Phaser<SampleType>::prepare (const ProcessSpec& spec)
 {
     jassert (spec.sampleRate > 0);
-    jassert (spec.num_channels > 0);
+    jassert (spec.numChannels > 0);
 
     sampleRate = spec.sampleRate;
 
@@ -102,8 +100,8 @@ void Phaser<SampleType>::prepare (const ProcessSpec& spec)
         filters[n]->prepare (spec);
 
     dryWet.prepare (spec);
-    feedbackVolume.resize (spec.num_channels);
-    lastOutput.resize (spec.num_channels);
+    feedbackVolume.resize (spec.numChannels);
+    lastOutput.resize (spec.numChannels);
 
     auto specDown = spec;
     specDown.sampleRate /= (double) maxUpdateCounter;
@@ -150,5 +148,4 @@ void Phaser<SampleType>::update()
 template class Phaser<float>;
 template class Phaser<double>;
 
-} // namespace dsp
-} // namespace juce
+} // namespace juce::dsp

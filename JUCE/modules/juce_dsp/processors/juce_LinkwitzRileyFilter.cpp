@@ -23,9 +23,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
-namespace dsp
+namespace juce::dsp
 {
 
 //==============================================================================
@@ -56,15 +54,15 @@ template <typename SampleType>
 void LinkwitzRileyFilter<SampleType>::prepare (const ProcessSpec& spec)
 {
     jassert (spec.sampleRate > 0);
-    jassert (spec.num_channels > 0);
+    jassert (spec.numChannels > 0);
 
     sampleRate = spec.sampleRate;
     update();
 
-    s1.resize (spec.num_channels);
-    s2.resize (spec.num_channels);
-    s3.resize (spec.num_channels);
-    s4.resize (spec.num_channels);
+    s1.resize (spec.numChannels);
+    s2.resize (spec.numChannels);
+    s3.resize (spec.numChannels);
+    s4.resize (spec.numChannels);
 
     reset();
 }
@@ -145,5 +143,4 @@ void LinkwitzRileyFilter<SampleType>::update()
 template class LinkwitzRileyFilter<float>;
 template class LinkwitzRileyFilter<double>;
 
-} // namespace dsp
-} // namespace juce
+} // namespace juce::dsp

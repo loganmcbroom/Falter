@@ -23,9 +23,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
-namespace dsp
+namespace juce::dsp
 {
 
 /**
@@ -64,7 +62,7 @@ public:
     /** Sets the length of the ramp used for smoothing gain changes. */
     void setRampDurationSeconds (double newDurationSeconds) noexcept
     {
-        if (rampDurationSeconds != newDurationSeconds)
+        if (! approximatelyEqual (rampDurationSeconds, newDurationSeconds))
         {
             rampDurationSeconds = newDurationSeconds;
             updateRamp();
@@ -106,7 +104,7 @@ public:
         jassert (inBlock.getNumSamples()  == outBlock.getNumSamples());
 
         auto len         = inBlock.getNumSamples();
-        auto num_channels = inBlock.getNumChannels();
+        auto numChannels = inBlock.getNumChannels();
 
         if (context.isBypassed)
         {
@@ -118,7 +116,7 @@ public:
             return;
         }
 
-        if (num_channels == 1)
+        if (numChannels == 1)
         {
             auto* src = inBlock.getChannelPointer (0);
             auto* dst = outBlock.getChannelPointer (0);
@@ -134,7 +132,7 @@ public:
             for (size_t i = 0; i < len; ++i)
                 biases[i] = bias.getNextValue();
 
-            for (size_t chan = 0; chan < num_channels; ++chan)
+            for (size_t chan = 0; chan < numChannels; ++chan)
                 FloatVectorOperations::add (outBlock.getChannelPointer (chan),
                                             inBlock.getChannelPointer (chan),
                                             biases, static_cast<int> (len));
@@ -155,5 +153,4 @@ private:
     }
 };
 
-} // namespace dsp
-} // namespace juce
+} // namespace juce::dsp

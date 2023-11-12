@@ -23,9 +23,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
-namespace dsp
+namespace juce::dsp
 {
 
 /**
@@ -135,8 +133,8 @@ public:
         jassert (outBlock.getNumSamples() <= static_cast<size_t> (rampBuffer.size()));
 
         auto len           = outBlock.getNumSamples();
-        auto NumChannels   = outBlock.get_NumChannels();
-        auto inputChannels = inBlock.get_NumChannels();
+        auto numChannels   = outBlock.getNumChannels();
+        auto inputChannels = inBlock.getNumChannels();
         auto baseIncrement = MathConstants<NumericType>::twoPi / sampleRate;
 
         if (context.isBypassed)
@@ -156,7 +154,7 @@ public:
 
                 if (context.usesSeparateInputAndOutputBlocks())
                 {
-                    for (ch = 0; ch < jmin (NumChannels, inputChannels); ++ch)
+                    for (ch = 0; ch < jmin (numChannels, inputChannels); ++ch)
                     {
                         auto* dst = outBlock.getChannelPointer (ch);
                         auto* src = inBlock.getChannelPointer (ch);
@@ -167,7 +165,7 @@ public:
                 }
                 else
                 {
-                    for (ch = 0; ch < jmin (NumChannels, inputChannels); ++ch)
+                    for (ch = 0; ch < jmin (numChannels, inputChannels); ++ch)
                     {
                         auto* dst = outBlock.getChannelPointer (ch);
 
@@ -176,7 +174,7 @@ public:
                     }
                 }
 
-                for (; ch < NumChannels; ++ch)
+                for (; ch < numChannels; ++ch)
                 {
                     auto* dst = outBlock.getChannelPointer (ch);
 
@@ -201,7 +199,7 @@ public:
 
                 if (context.usesSeparateInputAndOutputBlocks())
                 {
-                    for (ch = 0; ch < jmin (NumChannels, inputChannels); ++ch)
+                    for (ch = 0; ch < jmin (numChannels, inputChannels); ++ch)
                     {
                         p = phase;
                         auto* dst = outBlock.getChannelPointer (ch);
@@ -213,7 +211,7 @@ public:
                 }
                 else
                 {
-                    for (ch = 0; ch < jmin (NumChannels, inputChannels); ++ch)
+                    for (ch = 0; ch < jmin (numChannels, inputChannels); ++ch)
                     {
                         p = phase;
                         auto* dst = outBlock.getChannelPointer (ch);
@@ -223,7 +221,7 @@ public:
                     }
                 }
 
-                for (; ch < NumChannels; ++ch)
+                for (; ch < numChannels; ++ch)
                 {
                     p = phase;
                     auto* dst = outBlock.getChannelPointer (ch);
@@ -247,5 +245,4 @@ private:
     Phase<NumericType> phase;
 };
 
-} // namespace dsp
-} // namespace juce
+} // namespace juce::dsp

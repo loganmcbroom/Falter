@@ -139,7 +139,7 @@ main(int argc, char** argv)
   if (from_file) {
     in_name = in_name ? in_name : input;
     if (!in_fd) {
-      if (!strncmp((const char*)input, "File:", 5)) {
+      if (!strncmp((const char*)input, "file:", 5)) {
         input_path = serd_file_uri_parse(input, NULL);
         input      = input_path;
       }

@@ -61,7 +61,7 @@ static std::unique_ptr<InputStream> createAssetInputStream (const char* resource
 #include "../../../../examples/Plugins/SurroundPluginDemo.h"
 
 //==============================================================================
-class InternalPlugin   : public AudioPluginInstance
+class InternalPlugin final : public AudioPluginInstance
 {
 public:
     explicit InternalPlugin (std::unique_ptr<AudioProcessor> innerIn)
@@ -105,7 +105,7 @@ public:
     void reset() override                                                         { inner->reset(); }
     void setNonRealtime (bool b) noexcept override                                { inner->setNonRealtime (b); }
     void refreshParameterList() override                                          { inner->refreshParameterList(); }
-    void num_channelsChanged() override                                            { inner->num_channelsChanged(); }
+    void numChannelsChanged() override                                            { inner->numChannelsChanged(); }
     void numBusesChanged() override                                               { inner->numBusesChanged(); }
     void processorLayoutsChanged() override                                       { inner->processorLayoutsChanged(); }
     void setPlayHead (AudioPlayHead* p) override                                  { inner->setPlayHead (p); }
@@ -167,7 +167,7 @@ private:
 };
 
 //==============================================================================
-class SineWaveSynth : public AudioProcessor
+class SineWaveSynth final : public AudioProcessor
 {
 public:
     SineWaveSynth()
@@ -224,7 +224,7 @@ public:
 
 private:
     //==============================================================================
-    struct SineWaveSound  : public SynthesiserSound
+    struct SineWaveSound final : public SynthesiserSound
     {
         SineWaveSound() = default;
 
@@ -232,7 +232,7 @@ private:
         bool appliesToChannel (int /*midiChannel*/) override    { return true; }
     };
 
-    struct SineWaveVoice  : public SynthesiserVoice
+    struct SineWaveVoice final : public SynthesiserVoice
     {
         SineWaveVoice() = default;
 
@@ -262,8 +262,8 @@ private:
                 // start a tail-off by setting this flag. The render callback will pick up on
                 // this and do a fade out, calling clearCurrentNote() when it's finished.
 
-                if (tailOff == 0.0) // we only need to begin a tail-off if it's not already doing so - the
-                    // stopNote method could be called more than once.
+                if (approximatelyEqual (tailOff, 0.0)) // we only need to begin a tail-off if it's not already doing so - the
+                                                       // stopNote method could be called more than once.
                     tailOff = 1.0;
             }
             else
@@ -287,7 +287,7 @@ private:
 
         void renderNextBlock (AudioBuffer<float>& outputBuffer, int startSample, int numSamples) override
         {
-            if (angleDelta != 0.0)
+            if (! approximatelyEqual (angleDelta, 0.0))
             {
                 if (tailOff > 0)
                 {
@@ -295,7 +295,7 @@ private:
                     {
                         const float currentSample = (float) (sin (currentAngle) * level * tailOff);
 
-                        for (int i = outputBuffer.get_num_channels(); --i >= 0;)
+                        for (int i = outputBuffer.getNumChannels(); --i >= 0;)
                             outputBuffer.addSample (i, startSample, currentSample);
 
                         currentAngle += angleDelta;
@@ -319,7 +319,7 @@ private:
                     {
                         const float currentSample = (float) (sin (currentAngle) * level);
 
-                        for (int i = outputBuffer.get_num_channels(); --i >= 0;)
+                        for (int i = outputBuffer.getNumChannels(); --i >= 0;)
                             outputBuffer.addSample (i, startSample, currentSample);
 
                         currentAngle += angleDelta;
@@ -343,7 +343,7 @@ private:
 };
 
 //==============================================================================
-class ReverbPlugin : public AudioProcessor
+class ReverbPlugin final : public AudioProcessor
 {
 public:
     ReverbPlugin()
@@ -370,16 +370,16 @@ public:
 
     void processBlock (AudioBuffer<float>& buffer, MidiBuffer&) override
     {
-        auto num_channels = buffer.get_num_channels();
+        auto numChannels = buffer.getNumChannels();
 
-        if (num_channels == 1)
+        if (numChannels == 1)
             reverb.processMono (buffer.getWritePointer (0), buffer.getNumSamples());
         else
             reverb.processStereo (buffer.getWritePointer (0),
                                   buffer.getWritePointer (1),
                                   buffer.getNumSamples());
 
-        for (int ch = 2; ch < num_channels; ++ch)
+        for (int ch = 2; ch < numChannels; ++ch)
             buffer.clear (ch, 0, buffer.getNumSamples());
     }
 

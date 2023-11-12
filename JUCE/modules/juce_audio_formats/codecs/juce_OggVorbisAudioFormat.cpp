@@ -37,20 +37,21 @@ namespace OggVorbisNamespace
 #if JUCE_INCLUDE_OGGVORBIS_CODE || ! defined (JUCE_INCLUDE_OGGVORBIS_CODE)
  JUCE_BEGIN_IGNORE_WARNINGS_MSVC (4267 4127 4244 4996 4100 4701 4702 4013 4133 4206 4305 4189 4706 4995 4365 4456 4457 4459 6297 6011 6001 6308 6255 6386 6385 6246 6387 6263 6262 28182)
 
- JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wconversion",
-                                      "-Wshadow",
-                                      "-Wfloat-conversion",
-                                      "-Wdeprecated-register",
+ JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wcast-align",
+                                      "-Wconversion",
                                       "-Wdeprecated-declarations",
-                                      "-Wswitch-enum",
-                                      "-Wzero-as-null-pointer-constant",
-                                      "-Wsign-conversion",
-                                      "-Wswitch-default",
-                                      "-Wredundant-decls",
+                                      "-Wdeprecated-register",
+                                      "-Wfloat-conversion",
+                                      "-Wfloat-equal",
+                                      "-Wmaybe-uninitialized",
                                       "-Wmisleading-indentation",
                                       "-Wmissing-prototypes",
-                                      "-Wcast-align",
-                                      "-Wmaybe-uninitialized")
+                                      "-Wredundant-decls",
+                                      "-Wshadow",
+                                      "-Wsign-conversion",
+                                      "-Wswitch-default",
+                                      "-Wswitch-enum",
+                                      "-Wzero-as-null-pointer-constant")
  JUCE_BEGIN_NO_SANITIZE ("undefined")
 
  #include "oggvorbis/vorbisenc.h"
@@ -108,7 +109,7 @@ const char* const OggVorbisAudioFormat::id3trackNumber = "id3trackNumber";
 
 
 //==============================================================================
-class OggReader : public AudioFormatReader
+class OggReader final : public AudioFormatReader
 {
 public:
     OggReader (InputStream* inp)  : AudioFormatReader (inp, oggFormatName)
@@ -138,11 +139,11 @@ public:
             addMetadataItem (comment, "TRACKNUMBER", OggVorbisAudioFormat::id3trackNumber);
 
             lengthInSamples = (uint32) ov_pcm_total (&ovFile, -1);
-            num_channels = (unsigned int) info->channels;
+            numChannels = (unsigned int) info->channels;
             bitsPerSample = 16;
             sampleRate = (double) info->rate;
 
-            reservoir.setSize ((int) num_channels, (int) jmin (lengthInSamples, (int64) 4096));
+            reservoir.setSize ((int) numChannels, (int) jmin (lengthInSamples, (int64) 4096));
         }
     }
 
@@ -158,7 +159,7 @@ public:
     }
 
     //==============================================================================
-    bool readSamples (int** destSamples, int numDestChannels, int startOffsetInDestBuffer,
+    bool readSamples (int* const* destSamples, int numDestChannels, int startOffsetInDestBuffer,
                       int64 startSampleInFile, int numSamples) override
     {
         const auto getBufferedRange = [this] { return bufferedRange; };
@@ -168,7 +169,7 @@ public:
             const auto bufferIndices = rangeToRead - bufferedRange.getStart();
             const auto writePos = (int64) startOffsetInDestBuffer + (rangeToRead.getStart() - startSampleInFile);
 
-            for (int i = jmin (numDestChannels, reservoir.get_num_channels()); --i >= 0;)
+            for (int i = jmin (numDestChannels, reservoir.getNumChannels()); --i >= 0;)
                 if (destSamples[i] != nullptr)
                     memcpy (destSamples[i] + writePos,
                             reservoir.getReadPointer (i) + bufferIndices.getStart(),
@@ -197,7 +198,7 @@ public:
 
                 jassert (samps <= numToRead);
 
-                for (int i = jmin ((int) num_channels, reservoir.get_num_channels()); --i >= 0;)
+                for (int i = jmin ((int) numChannels, reservoir.getNumChannels()); --i >= 0;)
                     memcpy (reservoir.getWritePointer (i, offset), dataIn[i], (size_t) samps * sizeof (float));
 
                 numToRead -= samps;
@@ -261,7 +262,7 @@ private:
 };
 
 //==============================================================================
-class OggWriter  : public AudioFormatWriter
+class OggWriter final : public AudioFormatWriter
 {
 public:
     OggWriter (OutputStream* out, double rate,
@@ -343,7 +344,7 @@ public:
                 const double gain = 1.0 / 0x80000000u;
                 float** const vorbisBuffer = vorbis_analysis_buffer (&vd, numSamples);
 
-                for (int i = (int) num_channels; --i >= 0;)
+                for (int i = (int) numChannels; --i >= 0;)
                 {
                     if (auto* dst = vorbisBuffer[i])
                     {
@@ -452,7 +453,7 @@ AudioFormatReader* OggVorbisAudioFormat::createReaderFor (InputStream* in, bool 
 
 AudioFormatWriter* OggVorbisAudioFormat::createWriterFor (OutputStream* out,
                                                           double sampleRate,
-                                                          unsigned int num_channels,
+                                                          unsigned int numChannels,
                                                           int bitsPerSample,
                                                           const StringPairArray& metadataValues,
                                                           int qualityOptionIndex)
@@ -460,7 +461,7 @@ AudioFormatWriter* OggVorbisAudioFormat::createWriterFor (OutputStream* out,
     if (out == nullptr)
         return nullptr;
 
-    std::unique_ptr<OggWriter> w (new OggWriter (out, sampleRate, num_channels,
+    std::unique_ptr<OggWriter> w (new OggWriter (out, sampleRate, numChannels,
                                                  (unsigned int) bitsPerSample,
                                                  qualityOptionIndex, metadataValues));
 

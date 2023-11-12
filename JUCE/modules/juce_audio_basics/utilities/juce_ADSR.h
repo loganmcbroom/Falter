@@ -232,13 +232,13 @@ public:
             return;
         }
 
-        auto num_channels = buffer.get_num_channels();
+        auto numChannels = buffer.getNumChannels();
 
         while (--numSamples >= 0)
         {
             auto env = getNextSample();
 
-            for (int i = 0; i < num_channels; ++i)
+            for (int i = 0; i < numChannels; ++i)
                 buffer.getWritePointer (i)[startSample] *= env;
 
             ++startSample;

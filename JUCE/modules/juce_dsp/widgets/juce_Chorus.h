@@ -23,9 +23,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
-namespace dsp
+namespace juce::dsp
 {
 
 /**
@@ -90,11 +88,11 @@ public:
     {
         const auto& inputBlock = context.getInputBlock();
         auto& outputBlock      = context.getOutputBlock();
-        const auto NumChannels = outputBlock.get_NumChannels();
+        const auto numChannels = outputBlock.getNumChannels();
         const auto numSamples  = outputBlock.getNumSamples();
 
-        jassert (inputBlock.get_NumChannels() == NumChannels);
-        jassert (inputBlock.get_NumChannels() == lastOutput.size());
+        jassert (inputBlock.getNumChannels() == numChannels);
+        jassert (inputBlock.getNumChannels() == lastOutput.size());
         jassert (inputBlock.getNumSamples()  == numSamples);
 
         if (context.isBypassed)
@@ -103,7 +101,7 @@ public:
             return;
         }
 
-        auto delayValuesBlock = AudioBlock<SampleType>(bufferDelayTimes).getSubBlock (0, numSamples);
+        auto delayValuesBlock = AudioBlock<SampleType> (bufferDelayTimes).getSubBlock (0, numSamples);
         auto contextDelay = ProcessContextReplacing<SampleType> (delayValuesBlock);
         delayValuesBlock.clear();
 
@@ -120,7 +118,7 @@ public:
 
         dryWet.pushDrySamples (inputBlock);
 
-        for (size_t channel = 0; channel < NumChannels; ++channel)
+        for (size_t channel = 0; channel < numChannels; ++channel)
         {
             auto* inputSamples  = inputBlock .getChannelPointer (channel);
             auto* outputSamples = outputBlock.getChannelPointer (channel);
@@ -165,5 +163,4 @@ private:
                                 maximumDelayModulation = 20.0;
 };
 
-} // namespace dsp
-} // namespace juce
+} // namespace juce::dsp

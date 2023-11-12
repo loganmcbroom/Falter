@@ -11,9 +11,9 @@
 %%araplaybackrenderer_headers%%
 
 //==============================================================================
-void %%araplaybackrenderer_class_name%%::prepareToPlay (double sampleRateIn, int maximumSamplesPerBlockIn, int num_channelsIn, juce::AudioProcessor::ProcessingPrecision, AlwaysNonRealtime alwaysNonRealtime)
+void %%araplaybackrenderer_class_name%%::prepareToPlay (double sampleRateIn, int maximumSamplesPerBlockIn, int numChannelsIn, juce::AudioProcessor::ProcessingPrecision, AlwaysNonRealtime alwaysNonRealtime)
 {
-    num_channels = num_channelsIn;
+    numChannels = numChannelsIn;
     sampleRate = sampleRateIn;
     maximumSamplesPerBlock = maximumSamplesPerBlockIn;
     useBufferedAudioSourceReader = alwaysNonRealtime == AlwaysNonRealtime::no;
@@ -30,7 +30,7 @@ bool %%araplaybackrenderer_class_name%%::processBlock (juce::AudioBuffer<float>&
 {
     const auto numSamples = buffer.getNumSamples();
     jassert (numSamples <= maximumSamplesPerBlock);
-    jassert (num_channels == buffer.get_num_channels());
+    jassert (numChannels == buffer.getNumChannels());
     jassert (realtime == juce::AudioProcessor::Realtime::no || useBufferedAudioSourceReader);
     const auto timeInSamples = positionInfo.getTimeInSamples().orFallback (0);
     const auto isPlaying = positionInfo.getIsPlaying();
@@ -74,7 +74,7 @@ bool %%araplaybackrenderer_class_name%%::processBlock (juce::AudioBuffer<float>&
             const int startInBuffer = (int) (renderRange.getStart() - blockRange.getStart());
             const auto startInSource = renderRange.getStart() + modificationSampleOffset;
 
-            for (int c = 0; c < num_channels; ++c)
+            for (int c = 0; c < numChannels; ++c)
             {
                 auto* channelData = buffer.getWritePointer (c);
 

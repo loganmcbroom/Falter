@@ -30,11 +30,11 @@ template <typename Value>
 struct ChannelInfo
 {
     ChannelInfo() = default;
-    ChannelInfo (Value** dataIn, int num_channelsIn)
-        : data (dataIn), num_channels (num_channelsIn)  {}
+    ChannelInfo (Value* const* dataIn, int numChannelsIn)
+        : data (dataIn), numChannels (numChannelsIn)  {}
 
-    Value** data = nullptr;
-    int num_channels = 0;
+    Value* const* data = nullptr;
+    int numChannels = 0;
 };
 
 /** Sets up `channels` so that it contains channel pointers suitable for passing to
@@ -75,10 +75,10 @@ static void initialiseIoBuffers (ChannelInfo<const float> ins,
 
     const auto prepareInputChannel = [&] (int index)
     {
-        if (ins.num_channels == 0)
+        if (ins.numChannels == 0)
             zeromem (channels[totalNumChans], numBytes);
         else
-            memcpy (channels[totalNumChans], ins.data[index % ins.num_channels], numBytes);
+            memcpy (channels[totalNumChans], ins.data[index % ins.numChannels], numBytes);
     };
 
     if (processorIns > processorOuts)
@@ -86,7 +86,7 @@ static void initialiseIoBuffers (ChannelInfo<const float> ins,
         // If there aren't enough output channels for the number of
         // inputs, we need to use some temporary extra ones (can't
         // use the input data in case it gets written to).
-        jassert (tempBuffer.get_num_channels() >= processorIns - processorOuts);
+        jassert (tempBuffer.getNumChannels() >= processorIns - processorOuts);
         jassert (tempBuffer.getNumSamples() >= numSamples);
 
         for (int i = 0; i < processorOuts; ++i)
@@ -98,7 +98,7 @@ static void initialiseIoBuffers (ChannelInfo<const float> ins,
 
         for (auto i = processorOuts; i < processorIns; ++i)
         {
-            channels[totalNumChans] = tempBuffer.getWritePointer (i - outs.num_channels);
+            channels[totalNumChans] = tempBuffer.getWritePointer (i - processorOuts);
             prepareInputChannel (i);
             ++totalNumChans;
         }
@@ -133,12 +133,12 @@ AudioProcessorPlayer::~AudioProcessorPlayer()
 }
 
 //==============================================================================
-AudioProcessorPlayer::num_channels AudioProcessorPlayer::findMostSuitableLayout (const AudioProcessor& proc) const
+AudioProcessorPlayer::NumChannels AudioProcessorPlayer::findMostSuitableLayout (const AudioProcessor& proc) const
 {
     if (proc.isMidiEffect())
         return {};
 
-    std::vector<num_channels> layouts { deviceChannels };
+    std::vector<NumChannels> layouts { deviceChannels };
 
     if (deviceChannels.ins == 0 || deviceChannels.ins == 1)
     {
@@ -146,7 +146,7 @@ AudioProcessorPlayer::num_channels AudioProcessorPlayer::findMostSuitableLayout 
         layouts.emplace_back (deviceChannels.outs, deviceChannels.outs);
     }
 
-    const auto it = std::find_if (layouts.begin(), layouts.end(), [&] (const num_channels& chans)
+    const auto it = std::find_if (layouts.begin(), layouts.end(), [&] (const NumChannels& chans)
     {
         return proc.checkBusesLayoutSupported (chans.toLayout());
     });
@@ -172,10 +172,11 @@ void AudioProcessorPlayer::setProcessor (AudioProcessor* const processorToPlay)
         return;
 
     sampleCount = 0;
+    currentWorkgroup.reset();
 
     if (processorToPlay != nullptr && sampleRate > 0 && blockSize > 0)
     {
-        defaultProcessorChannels = num_channels { processorToPlay->getBusesLayout() };
+        defaultProcessorChannels = NumChannels { processorToPlay->getBusesLayout() };
         actualProcessorChannels  = findMostSuitableLayout (*processorToPlay);
 
         if (processorToPlay->isMidiEffect())
@@ -190,6 +191,7 @@ void AudioProcessorPlayer::setProcessor (AudioProcessor* const processorToPlay)
 
         processorToPlay->setProcessingPrecision (supportsDouble ? AudioProcessor::doublePrecision
                                                                 : AudioProcessor::singlePrecision);
+
         processorToPlay->prepareToPlay (sampleRate, blockSize);
     }
 
@@ -210,6 +212,8 @@ void AudioProcessorPlayer::setDoublePrecisionProcessing (bool doublePrecision)
     {
         const ScopedLock sl (lock);
 
+        currentWorkgroup.reset();
+
         if (processor != nullptr)
         {
             processor->releaseResources();
@@ -218,6 +222,7 @@ void AudioProcessorPlayer::setDoublePrecisionProcessing (bool doublePrecision)
 
             processor->setProcessingPrecision (supportsDouble ? AudioProcessor::doublePrecision
                                                               : AudioProcessor::singlePrecision);
+
             processor->prepareToPlay (sampleRate, blockSize);
         }
 
@@ -235,14 +240,16 @@ void AudioProcessorPlayer::setMidiOutput (MidiOutput* midiOutputToUse)
 }
 
 //==============================================================================
-void AudioProcessorPlayer::audioDeviceIOCallbackWithContext (const float** const inputChannelData,
+void AudioProcessorPlayer::audioDeviceIOCallbackWithContext (const float* const* const inputChannelData,
                                                              const int numInputChannels,
-                                                             float** const outputChannelData,
+                                                             float* const* const outputChannelData,
                                                              const int numOutputChannels,
                                                              const int numSamples,
                                                              const AudioIODeviceCallbackContext& context)
 {
     const ScopedLock sl (lock);
+
+    jassert (currentDevice != nullptr);
 
     // These should have been prepared by audioDeviceAboutToStart()...
     jassert (sampleRate > 0 && blockSize > 0);
@@ -258,8 +265,8 @@ void AudioProcessorPlayer::audioDeviceIOCallbackWithContext (const float** const
                          tempBuffer,
                          channels);
 
-    const auto totalnum_channels = jmax (actualProcessorChannels.ins, actualProcessorChannels.outs);
-    AudioBuffer<float> buffer (channels.data(), (int) totalnum_channels, numSamples);
+    const auto totalNumChannels = jmax (actualProcessorChannels.ins, actualProcessorChannels.outs);
+    AudioBuffer<float> buffer (channels.data(), (int) totalNumChannels, numSamples);
 
     if (processor != nullptr)
     {
@@ -269,7 +276,10 @@ void AudioProcessorPlayer::audioDeviceIOCallbackWithContext (const float** const
 
         const ScopedLock sl2 (processor->getCallbackLock());
 
-        class PlayHead : private AudioPlayHead
+        if (std::exchange (currentWorkgroup, currentDevice->getWorkgroup()) != currentDevice->getWorkgroup())
+            processor->audioWorkgroupContextChanged (currentWorkgroup);
+
+        class PlayHead final : private AudioPlayHead
         {
         public:
             PlayHead (AudioProcessor& proc,
@@ -281,12 +291,14 @@ void AudioProcessorPlayer::audioDeviceIOCallbackWithContext (const float** const
                   sampleCount (sampleCountIn),
                   seconds ((double) sampleCountIn / sampleRateIn)
             {
-                processor.setPlayHead (this);
+                if (useThisPlayhead)
+                    processor.setPlayHead (this);
             }
 
             ~PlayHead() override
             {
-                processor.setPlayHead (nullptr);
+                if (useThisPlayhead)
+                    processor.setPlayHead (nullptr);
             }
 
         private:
@@ -303,6 +315,7 @@ void AudioProcessorPlayer::audioDeviceIOCallbackWithContext (const float** const
             Optional<uint64_t> hostTimeNs;
             uint64_t sampleCount;
             double seconds;
+            bool useThisPlayhead = processor.getPlayHead() == nullptr;
         };
 
         PlayHead playHead { *processor,
@@ -349,6 +362,7 @@ void AudioProcessorPlayer::audioDeviceIOCallbackWithContext (const float** const
 
 void AudioProcessorPlayer::audioDeviceAboutToStart (AudioIODevice* const device)
 {
+    currentDevice = device;
     auto newSampleRate = device->getCurrentSampleRate();
     auto newBlockSize  = device->getCurrentBufferSizeSamples();
     auto numChansIn    = device->getActiveInputChannels().countNumberOfSetBits();
@@ -363,6 +377,8 @@ void AudioProcessorPlayer::audioDeviceAboutToStart (AudioIODevice* const device)
     resizeChannels();
 
     messageCollector.reset (sampleRate);
+
+    currentWorkgroup.reset();
 
     if (processor != nullptr)
     {
@@ -386,6 +402,9 @@ void AudioProcessorPlayer::audioDeviceStopped()
     blockSize = 0;
     isPrepared = false;
     tempBuffer.setSize (1, 1);
+
+    currentDevice = nullptr;
+    currentWorkgroup.reset();
 }
 
 void AudioProcessorPlayer::handleIncomingMidiMessage (MidiInput*, const MidiMessage& message)
@@ -397,7 +416,7 @@ void AudioProcessorPlayer::handleIncomingMidiMessage (MidiInput*, const MidiMess
 //==============================================================================
 #if JUCE_UNIT_TESTS
 
-struct AudioProcessorPlayerTests  : public UnitTest
+struct AudioProcessorPlayerTests final : public UnitTest
 {
     AudioProcessorPlayerTests()
         : UnitTest ("AudioProcessorPlayer", UnitTestCategories::audio) {}
@@ -427,8 +446,8 @@ struct AudioProcessorPlayerTests  : public UnitTest
                     AudioBuffer<float> tempBuffer (jmax (layout.numIns, layout.numOuts), numSamples);
                     std::vector<float*> channels ((size_t) jmax (layout.numIns, layout.numOuts), nullptr);
 
-                    initialiseIoBuffers ({ systemIns.getArrayOfReadPointers(),   systemIns.get_num_channels() },
-                                         { systemOuts.getArrayOfWritePointers(), systemOuts.get_num_channels() },
+                    initialiseIoBuffers ({ systemIns.getArrayOfReadPointers(),   systemIns.getNumChannels() },
+                                         { systemOuts.getArrayOfWritePointers(), systemOuts.getNumChannels() },
                                          numSamples,
                                          layout.numIns,
                                          layout.numOuts,
@@ -464,11 +483,11 @@ struct AudioProcessorPlayerTests  : public UnitTest
         }
     }
 
-    static AudioBuffer<float> getTestBuffer (int num_channels, int numSamples)
+    static AudioBuffer<float> getTestBuffer (int numChannels, int numSamples)
     {
-        AudioBuffer<float> result (num_channels, numSamples);
+        AudioBuffer<float> result (numChannels, numSamples);
 
-        for (int i = 0; i < result.get_num_channels(); ++i)
+        for (int i = 0; i < result.getNumChannels(); ++i)
             FloatVectorOperations::fill (result.getWritePointer (i), (float) i + 1, result.getNumSamples());
 
         return result;

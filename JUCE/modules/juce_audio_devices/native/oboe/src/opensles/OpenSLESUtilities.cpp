@@ -67,7 +67,7 @@ SLAndroidDataFormat_PCM_EX OpenSLES_createExtendedFormat(
         SLDataFormat_PCM format, SLuint32 representation) {
     SLAndroidDataFormat_PCM_EX format_pcm_ex;
     format_pcm_ex.formatType = SL_ANDROID_DATAFORMAT_PCM_EX;
-    format_pcm_ex.num_channels = format.num_channels;
+    format_pcm_ex.numChannels = format.numChannels;
     format_pcm_ex.sampleRate = format.samplesPerSec;
     format_pcm_ex.bitsPerSample = format.bitsPerSample;
     format_pcm_ex.containerSize = format.containerSize;

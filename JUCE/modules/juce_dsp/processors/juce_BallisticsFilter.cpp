@@ -23,9 +23,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
-namespace dsp
+namespace juce::dsp
 {
 
 //==============================================================================
@@ -61,7 +59,7 @@ template <typename SampleType>
 void BallisticsFilter<SampleType>::prepare (const ProcessSpec& spec)
 {
     jassert (spec.sampleRate > 0);
-    jassert (spec.num_channels > 0);
+    jassert (spec.numChannels > 0);
 
     sampleRate = spec.sampleRate;
     expFactor  = -2.0 * MathConstants<double>::pi * 1000.0 / sampleRate;
@@ -69,7 +67,7 @@ void BallisticsFilter<SampleType>::prepare (const ProcessSpec& spec)
     setAttackTime  (attackTime);
     setReleaseTime (releaseTime);
 
-    yold.resize (spec.num_channels);
+    yold.resize (spec.numChannels);
 
     reset();
 }
@@ -126,5 +124,4 @@ SampleType BallisticsFilter<SampleType>::calculateLimitedCte (SampleType timeMs)
 template class BallisticsFilter<float>;
 template class BallisticsFilter<double>;
 
-} // namespace dsp
-} // namespace juce
+} // namespace juce::dsp

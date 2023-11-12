@@ -39,7 +39,7 @@ AudioSubsectionReader::AudioSubsectionReader (AudioFormatReader* sourceToUse,
     sampleRate = source->sampleRate;
     bitsPerSample = source->bitsPerSample;
     lengthInSamples = length;
-    num_channels = source->num_channels;
+    numChannels = source->numChannels;
     usesFloatingPointData = source->usesFloatingPointData;
 }
 
@@ -50,7 +50,7 @@ AudioSubsectionReader::~AudioSubsectionReader()
 }
 
 //==============================================================================
-bool AudioSubsectionReader::readSamples (int** destSamples, int numDestChannels, int startOffsetInDestBuffer,
+bool AudioSubsectionReader::readSamples (int* const* destSamples, int numDestChannels, int startOffsetInDestBuffer,
                                          int64 startSampleInFile, int numSamples)
 {
     clearSamplesBeyondAvailableLength (destSamples, numDestChannels, startOffsetInDestBuffer,
@@ -60,12 +60,12 @@ bool AudioSubsectionReader::readSamples (int** destSamples, int numDestChannels,
                                 startSampleInFile + startSample, numSamples);
 }
 
-void AudioSubsectionReader::readMaxLevels (int64 startSampleInFile, int64 numSamples, Range<float>* results, int num_channelsToRead)
+void AudioSubsectionReader::readMaxLevels (int64 startSampleInFile, int64 numSamples, Range<float>* results, int numChannelsToRead)
 {
     startSampleInFile = jmax ((int64) 0, startSampleInFile);
     numSamples = jmax ((int64) 0, jmin (numSamples, length - startSampleInFile));
 
-    source->readMaxLevels (startSampleInFile + startSample, numSamples, results, num_channelsToRead);
+    source->readMaxLevels (startSampleInFile + startSample, numSamples, results, numChannelsToRead);
 }
 
 } // namespace juce

@@ -23,9 +23,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
-namespace dsp
+namespace juce::dsp
 {
 
 /**
@@ -63,10 +61,10 @@ public:
     {
         const auto& inputBlock = context.getInputBlock();
         auto& outputBlock      = context.getOutputBlock();
-        const auto NumChannels = outputBlock.get_NumChannels();
+        const auto numChannels = outputBlock.getNumChannels();
         const auto numSamples  = outputBlock.getNumSamples();
 
-        jassert (inputBlock.get_NumChannels() == NumChannels);
+        jassert (inputBlock.getNumChannels() == numChannels);
         jassert (inputBlock.getNumSamples()  == numSamples);
 
         if (context.isBypassed)
@@ -82,7 +80,7 @@ public:
 
         outputBlock.multiplyBy (outputVolume);
 
-        for (size_t channel = 0; channel < NumChannels; ++channel)
+        for (size_t channel = 0; channel < numChannels; ++channel)
         {
             FloatVectorOperations::clip (outputBlock.getChannelPointer (channel), outputBlock.getChannelPointer (channel),
                                          (SampleType) -1.0, (SampleType) 1.0, (int) numSamples);
@@ -101,5 +99,4 @@ private:
     SampleType thresholddB = -10.0, releaseTime = 100.0;
 };
 
-} // namespace dsp
-} // namespace juce
+} // namespace juce::dsp

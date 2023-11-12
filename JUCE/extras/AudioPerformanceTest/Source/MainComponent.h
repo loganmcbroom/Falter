@@ -29,8 +29,8 @@
 #include <mutex>
 
 //==============================================================================
-class MainContentComponent   : public AudioAppComponent,
-                               private Timer
+class MainContentComponent final : public AudioAppComponent,
+                                   private Timer
 {
 public:
     //==============================================================================
@@ -74,7 +74,7 @@ public:
         std::size_t bufferSize = (std::size_t) outputAudio.getNumSamples();
         initialiseBuffers (bufferToFill, bufferSize);
 
-        for (int ch = 0; ch < outputAudio.get_num_channels(); ++ch)
+        for (int ch = 0; ch < outputAudio.getNumChannels(); ++ch)
             crunchSomeNumbers (outputAudio.getWritePointer (ch), bufferSize, numLoopIterationsPerCallback);
 
         std::lock_guard<std::mutex> lock (metricMutex);
@@ -271,7 +271,3 @@ private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainContentComponent)
 };
-
-
-// (This function is called by the app startup code to create our main component)
-Component* createMainContentComponent()     { return new MainContentComponent(); }

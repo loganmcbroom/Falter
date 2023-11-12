@@ -40,11 +40,11 @@ public:
         @param inputSource              the input source to read from
         @param deleteInputWhenDeleted   if true, the input source will be deleted when
                                         this object is deleted
-        @param num_channels              the number of channels to process
+        @param numChannels              the number of channels to process
     */
     ResamplingAudioSource (AudioSource* inputSource,
                            bool deleteInputWhenDeleted,
-                           int num_channels = 2);
+                           int numChannels = 2);
 
     /** Destructor. */
     ~ResamplingAudioSource() override;
@@ -83,7 +83,7 @@ private:
     double coefficients[6];
     SpinLock ratioLock;
     CriticalSection callbackLock;
-    const int num_channels;
+    const int numChannels;
     HeapBlock<float*> destBuffers;
     HeapBlock<const float*> srcBuffers;
 

@@ -83,7 +83,7 @@ public:
 
     ~ARAAudioSourceReader() override;
 
-    bool readSamples (int** destSamples,
+    bool readSamples (int* const* destSamples,
                       int numDestChannels,
                       int startOffsetInDestBuffer,
                       int64 startSampleInFile,
@@ -149,11 +149,11 @@ public:
     /** Create an ARAPlaybackRegionReader instance to read the given \p playbackRegions
 
         @param sampleRate      The sample rate that should be used for reading.
-        @param num_channels     The channel count that should be used for reading.
+        @param numChannels     The channel count that should be used for reading.
         @param playbackRegions The vector of playback regions that should be read - must not be empty!
                                All regions must be part of the same ARADocument.
     */
-    ARAPlaybackRegionReader (double sampleRate, int num_channels,
+    ARAPlaybackRegionReader (double sampleRate, int numChannels,
                              const std::vector<ARAPlaybackRegion*>& playbackRegions);
 
     ~ARAPlaybackRegionReader() override;
@@ -166,7 +166,7 @@ public:
     */
     void invalidate();
 
-    bool readSamples (int** destSamples,
+    bool readSamples (int* const* destSamples,
                       int numDestChannels,
                       int startOffsetInDestBuffer,
                       int64 startSampleInFile,

@@ -30,7 +30,7 @@ MemoryAudioSource::MemoryAudioSource (AudioBuffer<float>& bufferToUse, bool copy
         buffer.makeCopyOf (bufferToUse);
     else
         buffer.setDataToReferTo (bufferToUse.getArrayOfWritePointers(),
-                                 bufferToUse.get_num_channels(),
+                                 bufferToUse.getNumChannels(),
                                  bufferToUse.getNumSamples());
 }
 
@@ -51,7 +51,7 @@ void MemoryAudioSource::getNextAudioBlock (const AudioSourceChannelInfo& bufferT
     }
 
     auto& dst = *bufferToFill.buffer;
-    auto channels = jmin (dst.get_num_channels(), buffer.get_num_channels());
+    auto channels = jmin (dst.getNumChannels(), buffer.getNumChannels());
     int max = 0, pos = 0;
     auto n = buffer.getNumSamples();
     auto m = bufferToFill.numSamples;
@@ -65,7 +65,7 @@ void MemoryAudioSource::getNextAudioBlock (const AudioSourceChannelInfo& bufferT
         for (; ch < channels; ++ch)
             dst.copyFrom (ch, bufferToFill.startSample + pos, buffer, ch, i % n, max);
 
-        for (; ch < dst.get_num_channels(); ++ch)
+        for (; ch < dst.getNumChannels(); ++ch)
             dst.clear (ch, bufferToFill.startSample + pos, max);
 
         pos += max;
@@ -108,27 +108,7 @@ void MemoryAudioSource::setLooping (bool shouldLoop)
 //==============================================================================
 #if JUCE_UNIT_TESTS
 
-static bool operator== (const AudioBuffer<float>& a, const AudioBuffer<float>& b)
-{
-    if (a.get_num_channels() != b.get_num_channels())
-        return false;
-
-    for (int channel = 0; channel < a.get_num_channels(); ++channel)
-    {
-        auto* aPtr = a.getReadPointer (channel);
-        auto* bPtr = b.getReadPointer (channel);
-
-        if (std::vector<float> (aPtr, aPtr + a.getNumSamples())
-            != std::vector<float> (bPtr, bPtr + b.getNumSamples()))
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-struct MemoryAudioSourceTests  : public UnitTest
+struct MemoryAudioSourceTests final : public UnitTest
 {
     MemoryAudioSourceTests()  : UnitTest ("MemoryAudioSource", UnitTestCategories::audio)  {}
 
@@ -165,7 +145,7 @@ struct MemoryAudioSourceTests  : public UnitTest
             play (source, channelInfo);
 
             auto copy = buffer;
-            copy.setSize (buffer.get_num_channels(), blockSize, true, true, false);
+            copy.setSize (buffer.getNumChannels(), blockSize, true, true, false);
 
             expect (bufferToFill == copy);
 
@@ -184,7 +164,7 @@ struct MemoryAudioSourceTests  : public UnitTest
             play (source, channelInfo);
 
             for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
-                expect (bufferToFill.getSample (0, sample + buffer.getNumSamples()) == buffer.getSample (0, sample));
+                expectEquals (bufferToFill.getSample (0, sample + buffer.getNumSamples()), buffer.getSample (0, sample));
 
             expect (! isSilent (bufferToFill));
         }
@@ -199,7 +179,7 @@ struct MemoryAudioSourceTests  : public UnitTest
             play (source, channelInfo);
 
             auto copy = buffer;
-            copy.setSize (buffer.get_num_channels(), blockSize, true, true, false);
+            copy.setSize (buffer.getNumChannels(), blockSize, true, true, false);
 
             expect (bufferToFill == copy);
 
@@ -219,7 +199,7 @@ struct MemoryAudioSourceTests  : public UnitTest
             for (int i = 0; i < 100; ++i)
             {
                 play (source, channelInfo);
-                expect (bufferToFill.getSample (0, 0) == buffer.getSample (0, (i * blockSize) % buffer.getNumSamples()));
+                expectEquals (bufferToFill.getSample (0, 0), buffer.getSample (0, (i * blockSize) % buffer.getNumSamples()));
             }
         }
     }
@@ -228,7 +208,7 @@ struct MemoryAudioSourceTests  : public UnitTest
     {
         AudioBuffer<float> buffer { 2, length };
 
-        for (int channel = 0; channel < buffer.get_num_channels(); ++channel)
+        for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
             for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
                 buffer.setSample (channel, sample, jmap ((float) sample, 0.0f, (float) length, -1.0f, 1.0f));
 
@@ -246,7 +226,7 @@ struct MemoryAudioSourceTests  : public UnitTest
 
     static bool isSilent (const AudioBuffer<float>& b)
     {
-        for (int channel = 0; channel < b.get_num_channels(); ++channel)
+        for (int channel = 0; channel < b.getNumChannels(); ++channel)
             if (b.findMinMax (channel, 0, b.getNumSamples()) != Range<float>{})
                 return false;
 

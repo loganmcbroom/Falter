@@ -23,9 +23,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
-namespace dsp
+namespace juce::dsp
 {
 
 //==============================================================================
@@ -56,10 +54,10 @@ template <typename SampleType>
 void FirstOrderTPTFilter<SampleType>::prepare (const ProcessSpec& spec)
 {
     jassert (spec.sampleRate > 0);
-    jassert (spec.num_channels > 0);
+    jassert (spec.numChannels > 0);
 
     sampleRate = spec.sampleRate;
-    s1.resize (spec.num_channels);
+    s1.resize (spec.numChannels);
 
     update();
     reset();
@@ -118,5 +116,4 @@ void FirstOrderTPTFilter<SampleType>::update()
 template class FirstOrderTPTFilter<float>;
 template class FirstOrderTPTFilter<double>;
 
-} // namespace dsp
-} // namespace juce
+} // namespace juce::dsp

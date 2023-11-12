@@ -27,12 +27,12 @@ BufferingAudioSource::BufferingAudioSource (PositionableAudioSource* s,
                                             TimeSliceThread& thread,
                                             bool deleteSourceWhenDeleted,
                                             int bufferSizeSamples,
-                                            int num_channels,
+                                            int numChannels,
                                             bool prefillBufferOnPrepareToPlay)
     : source (s, deleteSourceWhenDeleted),
       backgroundThread (thread),
       numberOfSamplesToBuffer (jmax (1024, bufferSizeSamples)),
-      numberOfChannels (num_channels),
+      numberOfChannels (numChannels),
       prefillBuffer (prefillBufferOnPrepareToPlay)
 {
     jassert (source != nullptr);
@@ -51,7 +51,7 @@ void BufferingAudioSource::prepareToPlay (int samplesPerBlockExpected, double ne
 {
     auto bufferSizeNeeded = jmax (samplesPerBlockExpected * 2, numberOfSamplesToBuffer);
 
-    if (newSampleRate != sampleRate
+    if (! approximatelyEqual (newSampleRate, sampleRate)
          || bufferSizeNeeded != buffer.getNumSamples()
          || ! isPrepared)
     {
@@ -123,7 +123,7 @@ void BufferingAudioSource::getNextAudioBlock (const AudioSourceChannelInfo& info
 
     if (validStart < validEnd)
     {
-        for (int chan = jmin (numberOfChannels, info.buffer->get_num_channels()); --chan >= 0;)
+        for (int chan = jmin (numberOfChannels, info.buffer->getNumChannels()); --chan >= 0;)
         {
             jassert (buffer.getNumSamples() > 0);
 

@@ -29,7 +29,7 @@
 namespace juce
 {
 
-class VST3PluginFormatTests : public UnitTest
+class VST3PluginFormatTests final : public UnitTest
 {
 public:
     VST3PluginFormatTests()
@@ -130,10 +130,10 @@ public:
                     const ClientRemappedBuffer<float> scopedBuffer { remapper, &config.ins, &config.outs, data };
                     auto& remapped = scopedBuffer.buffer;
 
-                    expect (remapped.get_num_channels() == config.get_num_channels());
+                    expect (remapped.getNumChannels() == config.getNumChannels());
                     expect (remapped.getNumSamples() == blockSize);
 
-                    for (auto i = 0; i < remapped.get_num_channels(); ++i)
+                    for (auto i = 0; i < remapped.getNumChannels(); ++i)
                         expect (allMatch (remapped, i, 0.0f));
                 }
 
@@ -174,13 +174,13 @@ public:
                     const ClientRemappedBuffer<float> scopedBuffer { remapper, &config.ins, &config.outs, data };
                     auto& remapped = scopedBuffer.buffer;
 
-                    expect (remapped.get_num_channels() == config.get_num_channels());
+                    expect (remapped.getNumChannels() == config.getNumChannels());
                     expect (remapped.getNumSamples() == blockSize);
 
                     // The remapped buffer will only be cleared if the host's input layout does not
                     // match the client's input layout.
                     if (config.ins.size() != 1)
-                        for (auto i = 0; i < remapped.get_num_channels(); ++i)
+                        for (auto i = 0; i < remapped.getNumChannels(); ++i)
                             expect (allMatch (remapped, i, 0.0f));
                 }
 
@@ -213,13 +213,13 @@ public:
                     const ClientRemappedBuffer<float> scopedBuffer { remapper, &config.ins, &config.outs, data };
                     auto& remapped = scopedBuffer.buffer;
 
-                    expect (remapped.get_num_channels() == config.get_num_channels());
+                    expect (remapped.getNumChannels() == config.getNumChannels());
                     expect (remapped.getNumSamples() == blockSize);
 
                     // The remapped buffer will only be cleared if the host's input layout does not
                     // match the client's input layout.
                     if (config.ins.front().size() != 1)
-                        for (auto i = 0; i < remapped.get_num_channels(); ++i)
+                        for (auto i = 0; i < remapped.getNumChannels(); ++i)
                             expect (allMatch (remapped, i, 0.0f));
                 }
 
@@ -252,7 +252,7 @@ public:
                 ClientRemappedBuffer<float> scopedBuffer { remapper, &config.ins, &config.outs, data };
                 auto& remapped = scopedBuffer.buffer;
 
-                expect (remapped.get_num_channels() == 10);
+                expect (remapped.getNumChannels() == 10);
 
                 // Data from the input channels is copied to the correct channels of the remapped buffer
                 expect (allMatch (remapped, 0, 1.0f));
@@ -265,7 +265,7 @@ public:
                 // The remaining channels are output-only, so they may contain any data
 
                 // Write some data to the buffer in JUCE layout
-                for (auto i = 0; i < remapped.get_num_channels(); ++i)
+                for (auto i = 0; i < remapped.getNumChannels(); ++i)
                 {
                     auto* ptr = remapped.getWritePointer (i);
                     std::fill (ptr, ptr + remapped.getNumSamples(), (float) i);
@@ -309,7 +309,7 @@ public:
                 ClientRemappedBuffer<float> scopedBuffer { remapper, &config.ins, &config.outs, data };
                 auto& remapped = scopedBuffer.buffer;
 
-                expect (remapped.get_num_channels() == 15);
+                expect (remapped.getNumChannels() == 15);
 
                 // Data from the input channels is copied to the correct channels of the remapped buffer
                 expect (allMatch (remapped, 0,   1.0f));
@@ -329,7 +329,7 @@ public:
                 expect (allMatch (remapped, 14, 15.0f));
 
                 // Write some data to the buffer in JUCE layout
-                for (auto i = 0; i < remapped.get_num_channels(); ++i)
+                for (auto i = 0; i < remapped.getNumChannels(); ++i)
                 {
                     auto* ptr = remapped.getWritePointer (i);
                     std::fill (ptr, ptr + remapped.getNumSamples(), (float) i);
@@ -377,7 +377,7 @@ public:
                 ClientRemappedBuffer<float> scopedBuffer { remapper, &config.ins, &config.outs, data };
                 auto& remapped = scopedBuffer.buffer;
 
-                expect (remapped.get_num_channels() == 18);
+                expect (remapped.getNumChannels() == 18);
 
                 // Data from the input channels is copied to the correct channels of the remapped buffer
                 expect (allMatch (remapped, 0,   1.0f));
@@ -401,7 +401,7 @@ public:
                 expect (allMatch (remapped, 17, 19.0f));
 
                 // Write some data to the buffer in JUCE layout
-                for (auto i = 0; i < remapped.get_num_channels(); ++i)
+                for (auto i = 0; i < remapped.getNumChannels(); ++i)
                 {
                     auto* ptr = remapped.getWritePointer (i);
                     std::fill (ptr, ptr + remapped.getNumSamples(), (float) i);
@@ -463,7 +463,7 @@ public:
                 ClientRemappedBuffer<float> scopedBuffer { remapper, &config.ins, &config.outs, data };
                 auto& remapped = scopedBuffer.buffer;
 
-                expect (remapped.get_num_channels() == 8);
+                expect (remapped.getNumChannels() == 8);
 
                 expect (allMatch (remapped, 0,   1.0f));
                 expect (allMatch (remapped, 1,   2.0f));
@@ -472,7 +472,7 @@ public:
                 expect (allMatch (remapped, 3,   8.0f));
 
                 // Write some data to the buffer in JUCE layout
-                for (auto i = 0; i < remapped.get_num_channels(); ++i)
+                for (auto i = 0; i < remapped.getNumChannels(); ++i)
                 {
                     auto* ptr = remapped.getWritePointer (i);
                     std::fill (ptr, ptr + remapped.getNumSamples(), (float) i);
@@ -502,11 +502,11 @@ public:
                 AudioBuffer<float> hostBuffer (16, blockSize);
                 const auto* clientBuffers = mapper.getVst3LayoutForJuceBuffer (hostBuffer);
 
-                expect (clientBuffers[0].num_channels == 2);
-                expect (clientBuffers[1].num_channels == 10);
+                expect (clientBuffers[0].numChannels == 2);
+                expect (clientBuffers[1].numChannels == 10);
                 // Even though it's disabled, this bus should still have the correct channel count
-                expect (clientBuffers[2].num_channels == 16);
-                expect (clientBuffers[3].num_channels == 4);
+                expect (clientBuffers[2].numChannels == 16);
+                expect (clientBuffers[3].numChannels == 4);
 
                 expect (clientBuffers[0].channelBuffers32[0]  == hostBuffer.getReadPointer (0));
                 expect (clientBuffers[0].channelBuffers32[1]  == hostBuffer.getReadPointer (1));
@@ -522,7 +522,7 @@ public:
                 expect (clientBuffers[1].channelBuffers32[8]  == hostBuffer.getReadPointer (10));
                 expect (clientBuffers[1].channelBuffers32[9]  == hostBuffer.getReadPointer (11));
 
-                for (auto i = 0; i < clientBuffers[2].num_channels; ++i)
+                for (auto i = 0; i < clientBuffers[2].numChannels; ++i)
                     expect (clientBuffers[2].channelBuffers32[i] == nullptr);
 
                 expect (clientBuffers[3].channelBuffers32[0]  == hostBuffer.getReadPointer (12));
@@ -539,15 +539,32 @@ public:
                 AudioBuffer<double> hostBuffer (2, blockSize);
                 const auto* clientBuffers = mapper.getVst3LayoutForJuceBuffer (hostBuffer);
 
-                expect (clientBuffers[0].num_channels == 1);
-                expect (clientBuffers[1].num_channels == 1);
-                expect (clientBuffers[2].num_channels == 1);
-                expect (clientBuffers[3].num_channels == 1);
+                expect (clientBuffers[0].numChannels == 1);
+                expect (clientBuffers[1].numChannels == 1);
+                expect (clientBuffers[2].numChannels == 1);
+                expect (clientBuffers[3].numChannels == 1);
 
                 expect (clientBuffers[0].channelBuffers64[0] == hostBuffer.getReadPointer (0));
                 expect (clientBuffers[1].channelBuffers64[0] == nullptr);
                 expect (clientBuffers[2].channelBuffers64[0] == hostBuffer.getReadPointer (1));
                 expect (clientBuffers[3].channelBuffers64[0] == nullptr);
+            }
+        }
+
+        beginTest ("Speaker layout conversions");
+        {
+            using namespace Steinberg::Vst::SpeakerArr;
+
+            for (const auto& [channelSet, arr] : { std::tuple (AudioChannelSet::ambisonic (1), kAmbi1stOrderACN),
+                                                   std::tuple (AudioChannelSet::ambisonic (2), kAmbi2cdOrderACN),
+                                                   std::tuple (AudioChannelSet::ambisonic (3), kAmbi3rdOrderACN),
+                                                   std::tuple (AudioChannelSet::ambisonic (4), kAmbi4thOrderACN),
+                                                   std::tuple (AudioChannelSet::ambisonic (5), kAmbi5thOrderACN),
+                                                   std::tuple (AudioChannelSet::ambisonic (6), kAmbi6thOrderACN),
+                                                   std::tuple (AudioChannelSet::ambisonic (7), kAmbi7thOrderACN), })
+            {
+                expect (getVst3SpeakerArrangement (channelSet) == arr);
+                expect (channelSet == getChannelSetForSpeakerArrangement (arr));
             }
         }
     }
@@ -566,7 +583,7 @@ private:
 
         std::vector<DynamicChannelMapping> ins, outs;
 
-        int get_num_channels() const { return countUsedClientChannels (ins, outs); }
+        int getNumChannels() const { return countUsedClientChannels (ins, outs); }
     };
 
     struct TestBuffers
@@ -584,7 +601,7 @@ private:
         bool allMatch (int channel, float value) const
         {
             const auto& buf = buffers[(size_t) channel];
-            return std::all_of (buf.begin(), buf.end(), [&] (auto x) { return x == value; });
+            return std::all_of (buf.begin(), buf.end(), [&] (auto x) { return exactlyEqual (x, value); });
         }
 
         bool isClear (int channel) const
@@ -607,13 +624,13 @@ private:
 
     static bool channelStartsWithValue (Steinberg::Vst::AudioBusBuffers& bus, size_t index, float value)
     {
-        return bus.channelBuffers32[index][0] == value;
+        return exactlyEqual (bus.channelBuffers32[index][0], value);
     }
 
     static bool allMatch (const AudioBuffer<float>& buf, int index, float value)
     {
         const auto* ptr = buf.getReadPointer (index);
-        return std::all_of (ptr, ptr + buf.getNumSamples(), [&] (auto x) { return x == value; });
+        return std::all_of (ptr, ptr + buf.getNumSamples(), [&] (auto x) { return exactlyEqual (x, value); });
     }
 
     struct MultiBusBuffers
@@ -621,17 +638,17 @@ private:
         std::vector<Steinberg::Vst::AudioBusBuffers> buffers;
         std::vector<std::vector<float*>> pointerStorage;
 
-        MultiBusBuffers withBus (TestBuffers& storage, int num_channels) &&
+        MultiBusBuffers withBus (TestBuffers& storage, int numChannels) &&
         {
             MultiBusBuffers result { std::move (buffers), std::move (pointerStorage) };
 
             std::vector<float*> pointers;
 
-            for (auto i = 0; i < num_channels; ++i)
+            for (auto i = 0; i < numChannels; ++i)
                 pointers.push_back (storage.addChannel());
 
             Steinberg::Vst::AudioBusBuffers buffer;
-            buffer.num_channels = (Steinberg::int32) pointers.size();
+            buffer.numChannels = (Steinberg::int32) pointers.size();
             buffer.channelBuffers32 = pointers.data();
 
             result.buffers.push_back (buffer);

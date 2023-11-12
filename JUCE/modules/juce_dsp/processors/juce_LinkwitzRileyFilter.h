@@ -23,9 +23,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
-namespace dsp
+namespace juce::dsp
 {
 
 enum class LinkwitzRileyFilterType
@@ -85,11 +83,11 @@ public:
     {
         const auto& inputBlock = context.getInputBlock();
         auto& outputBlock      = context.getOutputBlock();
-        const auto num_channels = outputBlock.get_num_channels();
+        const auto numChannels = outputBlock.getNumChannels();
         const auto numSamples  = outputBlock.getNumSamples();
 
-        jassert (inputBlock.get_num_channels() <= s1.size());
-        jassert (inputBlock.get_num_channels() == num_channels);
+        jassert (inputBlock.getNumChannels() <= s1.size());
+        jassert (inputBlock.getNumChannels() == numChannels);
         jassert (inputBlock.getNumSamples()  == numSamples);
 
         if (context.isBypassed)
@@ -98,7 +96,7 @@ public:
             return;
         }
 
-        for (size_t channel = 0; channel < num_channels; ++channel)
+        for (size_t channel = 0; channel < numChannels; ++channel)
         {
             auto* inputSamples = inputBlock.getChannelPointer (channel);
             auto* outputSamples = outputBlock.getChannelPointer (channel);
@@ -139,5 +137,4 @@ private:
     Type filterType = Type::lowpass;
 };
 
-} // namespace dsp
-} // namespace juce
+} // namespace juce::dsp

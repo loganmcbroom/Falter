@@ -29,13 +29,13 @@ namespace juce
 AudioFormatWriter::AudioFormatWriter (OutputStream* const out,
                                       const String& formatName_,
                                       const double rate,
-                                      const unsigned int num_channels_,
+                                      const unsigned int numChannels_,
                                       const unsigned int bitsPerSample_)
   : sampleRate (rate),
-    num_channels (num_channels_),
+    numChannels (numChannels_),
     bitsPerSample (bitsPerSample_),
     usesFloatingPointData (false),
-    channelLayout (AudioChannelSet::canonicalChannelSet(static_cast<int> (num_channels_))),
+    channelLayout (AudioChannelSet::canonicalChannelSet (static_cast<int> (numChannels_))),
     output (out),
     formatName (formatName_)
 {
@@ -47,7 +47,7 @@ AudioFormatWriter::AudioFormatWriter (OutputStream* const out,
                                       const AudioChannelSet& channelLayout_,
                                       const unsigned int bitsPerSample_)
   : sampleRate (rate),
-    num_channels (static_cast<unsigned int> (channelLayout_.size())),
+    numChannels (static_cast<unsigned int> (channelLayout_.size())),
     bitsPerSample (bitsPerSample_),
     usesFloatingPointData (false),
     channelLayout (channelLayout_),
@@ -83,11 +83,11 @@ bool AudioFormatWriter::writeFromAudioReader (AudioFormatReader& reader,
                                               int64 numSamplesToRead)
 {
     const int bufferSize = 16384;
-    AudioBuffer<float> tempBuffer ((int) num_channels, bufferSize);
+    AudioBuffer<float> tempBuffer ((int) numChannels, bufferSize);
 
     int* buffers[128] = { nullptr };
 
-    for (int i = tempBuffer.get_num_channels(); --i >= 0;)
+    for (int i = tempBuffer.getNumChannels(); --i >= 0;)
         buffers[i] = reinterpret_cast<int*> (tempBuffer.getWritePointer (i, 0));
 
     if (numSamplesToRead < 0)
@@ -97,7 +97,7 @@ bool AudioFormatWriter::writeFromAudioReader (AudioFormatReader& reader,
     {
         const int numToDo = (int) jmin (numSamplesToRead, (int64) bufferSize);
 
-        if (! reader.read (buffers, (int) num_channels, startSample, numToDo, false))
+        if (! reader.read (buffers, (int) numChannels, startSample, numToDo, false))
             return false;
 
         if (reader.usesFloatingPointData != isFloatingPoint())
@@ -129,7 +129,7 @@ bool AudioFormatWriter::writeFromAudioReader (AudioFormatReader& reader,
 
 bool AudioFormatWriter::writeFromAudioSource (AudioSource& source, int numSamplesToRead, const int samplesPerBlock)
 {
-    AudioBuffer<float> tempBuffer (get_num_channels(), samplesPerBlock);
+    AudioBuffer<float> tempBuffer (getNumChannels(), samplesPerBlock);
 
     while (numSamplesToRead > 0)
     {
@@ -188,14 +188,14 @@ bool AudioFormatWriter::writeFromFloatArrays (const float* const* channels, int 
 
 bool AudioFormatWriter::writeFromAudioSampleBuffer (const AudioBuffer<float>& source, int startSample, int numSamples)
 {
-    auto numSourceChannels = source.get_num_channels();
+    auto numSourceChannels = source.getNumChannels();
     jassert (startSample >= 0 && startSample + numSamples <= source.getNumSamples() && numSourceChannels > 0);
 
     if (startSample == 0)
         return writeFromFloatArrays (source.getArrayOfReadPointers(), numSourceChannels, numSamples);
 
     const float* chans[256];
-    jassert ((int) num_channels < numElementsInArray (chans));
+    jassert ((int) numChannels < numElementsInArray (chans));
 
     for (int i = 0; i < numSourceChannels; ++i)
         chans[i] = source.getReadPointer (i, startSample);
@@ -211,7 +211,7 @@ bool AudioFormatWriter::flush()
 }
 
 //==============================================================================
-class AudioFormatWriter::ThreadedWriter::Buffer   : private TimeSliceClient
+class AudioFormatWriter::ThreadedWriter::Buffer final : private TimeSliceClient
 {
 public:
     Buffer (TimeSliceThread& tst, AudioFormatWriter* w, int channels, int numSamples)
@@ -245,7 +245,7 @@ public:
         if (size1 + size2 < numSamples)
             return false;
 
-        for (int i = buffer.get_num_channels(); --i >= 0;)
+        for (int i = buffer.getNumChannels(); --i >= 0;)
         {
             buffer.copyFrom (i, start1, data[i], size1);
             buffer.copyFrom (i, start2, data[i] + size1, size2);
@@ -309,7 +309,7 @@ public:
     void setDataReceiver (IncomingDataReceiver* newReceiver)
     {
         if (newReceiver != nullptr)
-            newReceiver->reset (buffer.get_num_channels(), writer->getSampleRate(), 0);
+            newReceiver->reset (buffer.getNumChannels(), writer->getSampleRate(), 0);
 
         const ScopedLock sl (thumbnailLock);
         receiver = newReceiver;
@@ -336,7 +336,7 @@ private:
 };
 
 AudioFormatWriter::ThreadedWriter::ThreadedWriter (AudioFormatWriter* writer, TimeSliceThread& backgroundThread, int numSamplesToBuffer)
-    : buffer (new AudioFormatWriter::ThreadedWriter::Buffer (backgroundThread, writer, (int) writer->num_channels, numSamplesToBuffer))
+    : buffer (new AudioFormatWriter::ThreadedWriter::Buffer (backgroundThread, writer, (int) writer->numChannels, numSamplesToBuffer))
 {
 }
 

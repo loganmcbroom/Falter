@@ -117,7 +117,7 @@ public:
     /** Clears the reverb's buffers. */
     void reset()
     {
-        for (int j = 0; j < num_channels; ++j)
+        for (int j = 0; j < numChannels; ++j)
         {
             for (int i = 0; i < numCombs; ++i)
                 comb[j][i].clear();
@@ -136,6 +136,7 @@ public:
 
         for (int i = 0; i < numSamples; ++i)
         {
+            // NOLINTNEXTLINE(clang-analyzer-core.NullDereference)
             const float input = (left[i] + right[i]) * gain;
             float outL = 0, outR = 0;
 
@@ -301,13 +302,13 @@ private:
     };
 
     //==============================================================================
-    enum { numCombs = 8, numAllPasses = 4, num_channels = 2 };
+    enum { numCombs = 8, numAllPasses = 4, numChannels = 2 };
 
     Parameters parameters;
     float gain;
 
-    CombFilter comb [num_channels][numCombs];
-    AllPassFilter allPass [num_channels][numAllPasses];
+    CombFilter comb [numChannels][numCombs];
+    AllPassFilter allPass [numChannels][numAllPasses];
 
     SmoothedValue<float> damping, feedback, dryGain, wetGain1, wetGain2;
 

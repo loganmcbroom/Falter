@@ -23,9 +23,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
-namespace dsp
+namespace juce::dsp
 {
 
 /**
@@ -49,13 +47,13 @@ struct ProcessorDuplicator
 
     void prepare (const ProcessSpec& spec)
     {
-        processors.removeRange ((int) spec.num_channels, processors.size());
+        processors.removeRange ((int) spec.numChannels, processors.size());
 
-        while (static_cast<size_t> (processors.size()) < spec.num_channels)
+        while (static_cast<size_t> (processors.size()) < spec.numChannels)
             processors.add (new MonoProcessorType (state));
 
         auto monoSpec = spec;
-        monoSpec.num_channels = 1;
+        monoSpec.numChannels = 1;
 
         for (auto* p : processors)
             p->prepare (monoSpec);
@@ -66,13 +64,13 @@ struct ProcessorDuplicator
     template <typename ProcessContext>
     void process (const ProcessContext& context) noexcept
     {
-        jassert ((int) context.getInputBlock().get_num_channels()  <= processors.size());
-        jassert ((int) context.getOutputBlock().get_num_channels() <= processors.size());
+        jassert ((int) context.getInputBlock().getNumChannels()  <= processors.size());
+        jassert ((int) context.getOutputBlock().getNumChannels() <= processors.size());
 
-        auto num_channels = static_cast<size_t> (jmin (context.getInputBlock().get_num_channels(),
-                                                      context.getOutputBlock().get_num_channels()));
+        auto numChannels = static_cast<size_t> (jmin (context.getInputBlock().getNumChannels(),
+                                                      context.getOutputBlock().getNumChannels()));
 
-        for (size_t chan = 0; chan < num_channels; ++chan)
+        for (size_t chan = 0; chan < numChannels; ++chan)
             processors[(int) chan]->process (MonoProcessContext<ProcessContext> (context, chan));
     }
 
@@ -95,5 +93,4 @@ private:
     juce::OwnedArray<MonoProcessorType> processors;
 };
 
-} // namespace dsp
-} // namespace juce
+} // namespace juce::dsp

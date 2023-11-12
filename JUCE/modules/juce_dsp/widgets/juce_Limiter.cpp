@@ -23,9 +23,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
-namespace dsp
+namespace juce::dsp
 {
 
 //==============================================================================
@@ -48,7 +46,7 @@ template <typename SampleType>
 void Limiter<SampleType>::prepare (const ProcessSpec& spec)
 {
     jassert (spec.sampleRate > 0);
-    jassert (spec.num_channels > 0);
+    jassert (spec.numChannels > 0);
 
     sampleRate = spec.sampleRate;
 
@@ -94,5 +92,4 @@ void Limiter<SampleType>::update()
 template class Limiter<float>;
 template class Limiter<double>;
 
-} // namespace dsp
-} // namespace juce
+} // namespace juce::dsp

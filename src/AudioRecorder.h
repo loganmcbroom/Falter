@@ -18,7 +18,7 @@ public:
 private:
 	void audioDeviceAboutToStart( AudioIODevice * device ) override;
 	void audioDeviceStopped() override;
-	void audioDeviceIOCallback( const float **, int, float **, int, int ) override;
+	void audioDeviceIOCallbackWithContext( const float *const *, int, float *const *, int, int, const AudioIODeviceCallbackContext & ) override;
 
 	int numRecords;
 	std::unique_ptr<std::vector<std::vector<float>>> outputBuffer;

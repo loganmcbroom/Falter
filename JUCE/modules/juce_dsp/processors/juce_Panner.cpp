@@ -23,9 +23,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
-namespace dsp
+namespace juce::dsp
 {
 
 //==============================================================================
@@ -58,7 +56,7 @@ template <typename SampleType>
 void Panner<SampleType>::prepare (const ProcessSpec& spec)
 {
     jassert (spec.sampleRate > 0);
-    jassert (spec.num_channels > 0);
+    jassert (spec.numChannels > 0);
 
     sampleRate = spec.sampleRate;
 
@@ -139,5 +137,4 @@ void Panner<SampleType>::update()
 template class Panner<float>;
 template class Panner<double>;
 
-} // namespace dsp
-} // namespace juce
+} // namespace juce::dsp

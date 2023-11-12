@@ -23,9 +23,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
-namespace dsp
+namespace juce::dsp
 {
 
 /**
@@ -43,14 +41,17 @@ struct ProcessSpec
     uint32 maximumBlockSize;
 
     /** The number of channels that the process() method will be expected to handle. */
-    uint32 num_channels;
+    uint32 numChannels;
 };
 
 constexpr bool operator== (const ProcessSpec& a, const ProcessSpec& b)
 {
-    return a.sampleRate         == b.sampleRate
-        && a.maximumBlockSize   == b.maximumBlockSize
-        && a.num_channels        == b.num_channels;
+    const auto tie = [] (const ProcessSpec& p)
+    {
+        return std::tie (p.sampleRate, p.maximumBlockSize, p.numChannels);
+    };
+
+    return tie (a) == tie (b);
 }
 
 constexpr bool operator!= (const ProcessSpec& a, const ProcessSpec& b) { return ! (a == b); }
@@ -182,5 +183,4 @@ private:
     AudioBlockType& outputBlock;
 };
 
-} // namespace dsp
-} // namespace juce
+} // namespace juce::dsp

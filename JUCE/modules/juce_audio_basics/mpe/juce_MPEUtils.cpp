@@ -26,19 +26,19 @@ namespace juce
 MPEChannelAssigner::MPEChannelAssigner (MPEZoneLayout::Zone zoneToUse)
     : zone                    (new MPEZoneLayout::Zone (zoneToUse)),
       channelIncrement        (zone->isLowerZone() ? 1 : -1),
-      num_channels             (zone->numMemberChannels),
+      numChannels             (zone->numMemberChannels),
       firstChannel            (zone->getFirstMemberChannel()),
       lastChannel             (zone->getLastMemberChannel()),
       midiChannelLastAssigned (firstChannel - channelIncrement)
 {
     // must be an active MPE zone!
-    jassert (num_channels > 0);
+    jassert (numChannels > 0);
 }
 
 MPEChannelAssigner::MPEChannelAssigner (Range<int> channelRange)
     : isLegacy                (true),
       channelIncrement        (1),
-      num_channels             (channelRange.getLength()),
+      numChannels             (channelRange.getLength()),
       firstChannel            (channelRange.getStart()),
       lastChannel             (channelRange.getEnd() - 1),
       midiChannelLastAssigned (firstChannel - channelIncrement)
@@ -49,7 +49,7 @@ MPEChannelAssigner::MPEChannelAssigner (Range<int> channelRange)
 
 int MPEChannelAssigner::findMidiChannelForNewNote (int noteNumber) noexcept
 {
-    if (num_channels <= 1)
+    if (numChannels <= 1)
         return firstChannel;
 
     for (int ch = firstChannel; (isLegacy || zone->isLowerZone() ? ch <= lastChannel : ch >= lastChannel); ch += channelIncrement)
@@ -284,7 +284,7 @@ void MPEChannelRemapper::zeroArrays()
 //==============================================================================
 #if JUCE_UNIT_TESTS
 
-struct MPEUtilsUnitTests  : public UnitTest
+struct MPEUtilsUnitTests final : public UnitTest
 {
     MPEUtilsUnitTests()
         : UnitTest ("MPE Utilities", UnitTestCategories::midi)

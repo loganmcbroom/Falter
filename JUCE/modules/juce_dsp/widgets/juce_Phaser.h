@@ -23,9 +23,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
-namespace dsp
+namespace juce::dsp
 {
 
 /**
@@ -85,11 +83,11 @@ public:
     {
         const auto& inputBlock = context.getInputBlock();
         auto& outputBlock      = context.getOutputBlock();
-        const auto NumChannels = outputBlock.get_NumChannels();
+        const auto numChannels = outputBlock.getNumChannels();
         const auto numSamples  = outputBlock.getNumSamples();
 
-        jassert (inputBlock.get_NumChannels() == NumChannels);
-        jassert (inputBlock.get_NumChannels() == lastOutput.size());
+        jassert (inputBlock.getNumChannels() == numChannels);
+        jassert (inputBlock.getNumChannels() == lastOutput.size());
         jassert (inputBlock.getNumSamples()  == numSamples);
 
         if (context.isBypassed)
@@ -114,7 +112,7 @@ public:
 
         if (numSamplesDown > 0)
         {
-            auto freqBlock = AudioBlock<SampleType>(bufferFrequency).getSubBlock (0, (size_t) numSamplesDown);
+            auto freqBlock = AudioBlock<SampleType> (bufferFrequency).getSubBlock (0, (size_t) numSamplesDown);
             auto contextFreq = ProcessContextReplacing<SampleType> (freqBlock);
             freqBlock.clear();
 
@@ -137,7 +135,7 @@ public:
         auto currentFrequency = filters[0]->getCutoffFrequency();
         dryWet.pushDrySamples (inputBlock);
 
-        for (size_t channel = 0; channel < NumChannels; ++channel)
+        for (size_t channel = 0; channel < numChannels; ++channel)
         {
             counter = updateCounter;
             int k = 0;
@@ -202,5 +200,4 @@ private:
     static constexpr int numStages = 6;
 };
 
-} // namespace dsp
-} // namespace juce
+} // namespace juce::dsp

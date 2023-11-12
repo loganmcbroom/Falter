@@ -382,7 +382,7 @@ namespace AiffFileHelpers
 }
 
 //==============================================================================
-class AiffAudioFormatReader  : public AudioFormatReader
+class AiffAudioFormatReader final : public AudioFormatReader
 {
 public:
     AiffAudioFormatReader (InputStream* in)
@@ -431,10 +431,10 @@ public:
                     {
                         hasGotType = true;
 
-                        num_channels = (unsigned int) input->readShortBigEndian();
+                        numChannels = (unsigned int) input->readShortBigEndian();
                         lengthInSamples = input->readIntBigEndian();
                         bitsPerSample = (unsigned int) input->readShortBigEndian();
-                        bytesPerFrame = (int) ((num_channels * bitsPerSample) >> 3);
+                        bytesPerFrame = (int) ((numChannels * bitsPerSample) >> 3);
 
                         unsigned char sampleRateBytes[10];
                         input->read (sampleRateBytes, 10);
@@ -573,7 +573,7 @@ public:
     }
 
     //==============================================================================
-    bool readSamples (int** destSamples, int numDestChannels, int startOffsetInDestBuffer,
+    bool readSamples (int* const* destSamples, int numDestChannels, int startOffsetInDestBuffer,
                       int64 startSampleInFile, int numSamples) override
     {
         clearSamplesBeyondAvailableLength (destSamples, numDestChannels, startOffsetInDestBuffer,
@@ -601,11 +601,11 @@ public:
             if (littleEndian)
                 copySampleData<AudioData::LittleEndian> (bitsPerSample, usesFloatingPointData,
                                                          destSamples, startOffsetInDestBuffer, numDestChannels,
-                                                         tempBuffer, (int) num_channels, numThisTime);
+                                                         tempBuffer, (int) numChannels, numThisTime);
             else
                 copySampleData<AudioData::BigEndian> (bitsPerSample, usesFloatingPointData,
                                                       destSamples, startOffsetInDestBuffer, numDestChannels,
-                                                      tempBuffer, (int) num_channels, numThisTime);
+                                                      tempBuffer, (int) numChannels, numThisTime);
 
             startOffsetInDestBuffer += numThisTime;
             numSamples -= numThisTime;
@@ -640,7 +640,7 @@ private:
 };
 
 //==============================================================================
-class AiffAudioFormatWriter  : public AudioFormatWriter
+class AiffAudioFormatWriter final : public AudioFormatWriter
 {
 public:
     AiffAudioFormatWriter (OutputStream* out, double rate,
@@ -683,15 +683,15 @@ public:
         if (writeFailed)
             return false;
 
-        auto bytes = num_channels * (size_t) numSamples * bitsPerSample / 8;
+        auto bytes = numChannels * (size_t) numSamples * bitsPerSample / 8;
         tempBlock.ensureSize (bytes, false);
 
         switch (bitsPerSample)
         {
-            case 8:     WriteHelper<AudioData::Int8,  AudioData::Int32, AudioData::BigEndian>::write (tempBlock.getData(), (int) num_channels, data, numSamples); break;
-            case 16:    WriteHelper<AudioData::Int16, AudioData::Int32, AudioData::BigEndian>::write (tempBlock.getData(), (int) num_channels, data, numSamples); break;
-            case 24:    WriteHelper<AudioData::Int24, AudioData::Int32, AudioData::BigEndian>::write (tempBlock.getData(), (int) num_channels, data, numSamples); break;
-            case 32:    WriteHelper<AudioData::Int32, AudioData::Int32, AudioData::BigEndian>::write (tempBlock.getData(), (int) num_channels, data, numSamples); break;
+            case 8:     WriteHelper<AudioData::Int8,  AudioData::Int32, AudioData::BigEndian>::write (tempBlock.getData(), (int) numChannels, data, numSamples); break;
+            case 16:    WriteHelper<AudioData::Int16, AudioData::Int32, AudioData::BigEndian>::write (tempBlock.getData(), (int) numChannels, data, numSamples); break;
+            case 24:    WriteHelper<AudioData::Int24, AudioData::Int32, AudioData::BigEndian>::write (tempBlock.getData(), (int) numChannels, data, numSamples); break;
+            case 32:    WriteHelper<AudioData::Int32, AudioData::Int32, AudioData::BigEndian>::write (tempBlock.getData(), (int) numChannels, data, numSamples); break;
             default:    jassertfalse; break;
         }
 
@@ -721,8 +721,7 @@ private:
     {
         using namespace AiffFileHelpers;
 
-        const bool couldSeekOk = output->setPosition (headerPosition);
-        ignoreUnused (couldSeekOk);
+        [[maybe_unused]] const bool couldSeekOk = output->setPosition (headerPosition);
 
         // if this fails, you've given it an output stream that can't seek! It needs
         // to be able to seek back to write the header
@@ -731,7 +730,7 @@ private:
         auto headerLen = (int) (54 + (markChunk.isEmpty() ? 0 : markChunk.getSize() + 8)
                                    + (comtChunk.isEmpty() ? 0 : comtChunk.getSize() + 8)
                                    + (instChunk.isEmpty() ? 0 : instChunk.getSize() + 8));
-        auto audioBytes = (int) (lengthInSamples * ((bitsPerSample * num_channels) / 8));
+        auto audioBytes = (int) (lengthInSamples * ((bitsPerSample * numChannels) / 8));
         audioBytes += (audioBytes & 1);
 
         output->writeInt (chunkName ("FORM"));
@@ -739,7 +738,7 @@ private:
         output->writeInt (chunkName ("AIFF"));
         output->writeInt (chunkName ("COMM"));
         output->writeIntBigEndian (18);
-        output->writeShortBigEndian ((short) num_channels);
+        output->writeShortBigEndian ((short) numChannels);
         output->writeIntBigEndian ((int) lengthInSamples);
         output->writeShortBigEndian ((short) bitsPerSample);
 
@@ -819,7 +818,7 @@ private:
 };
 
 //==============================================================================
-class MemoryMappedAiffReader   : public MemoryMappedAudioFormatReader
+class MemoryMappedAiffReader final : public MemoryMappedAudioFormatReader
 {
 public:
     MemoryMappedAiffReader (const File& f, const AiffAudioFormatReader& reader)
@@ -829,7 +828,7 @@ public:
     {
     }
 
-    bool readSamples (int** destSamples, int numDestChannels, int startOffsetInDestBuffer,
+    bool readSamples (int* const* destSamples, int numDestChannels, int startOffsetInDestBuffer,
                       int64 startSampleInFile, int numSamples) override
     {
         clearSamplesBeyondAvailableLength (destSamples, numDestChannels, startOffsetInDestBuffer,
@@ -844,18 +843,18 @@ public:
         if (littleEndian)
             AiffAudioFormatReader::copySampleData<AudioData::LittleEndian>
                     (bitsPerSample, usesFloatingPointData, destSamples, startOffsetInDestBuffer,
-                     numDestChannels, sampleToPointer (startSampleInFile), (int) num_channels, numSamples);
+                     numDestChannels, sampleToPointer (startSampleInFile), (int) numChannels, numSamples);
         else
             AiffAudioFormatReader::copySampleData<AudioData::BigEndian>
                     (bitsPerSample, usesFloatingPointData, destSamples, startOffsetInDestBuffer,
-                     numDestChannels, sampleToPointer (startSampleInFile), (int) num_channels, numSamples);
+                     numDestChannels, sampleToPointer (startSampleInFile), (int) numChannels, numSamples);
 
         return true;
     }
 
     void getSample (int64 sample, float* result) const noexcept override
     {
-        auto num = (int) num_channels;
+        auto num = (int) numChannels;
 
         if (map == nullptr || ! mappedSection.contains (sample))
         {
@@ -896,7 +895,7 @@ public:
         }
     }
 
-    void readMaxLevels (int64 startSampleInFile, int64 numSamples, Range<float>* results, int num_channelsToRead) override
+    void readMaxLevels (int64 startSampleInFile, int64 numSamples, Range<float>* results, int numChannelsToRead) override
     {
         numSamples = jmin (numSamples, lengthInSamples - startSampleInFile);
 
@@ -904,7 +903,7 @@ public:
         {
             jassert (numSamples <= 0); // you must make sure that the window contains all the samples you're going to attempt to read.
 
-            for (int i = 0; i < num_channelsToRead; ++i)
+            for (int i = 0; i < numChannelsToRead; ++i)
                 results[i] = Range<float>();
 
             return;
@@ -912,11 +911,11 @@ public:
 
         switch (bitsPerSample)
         {
-            case 8:     scanMinAndMax<AudioData::UInt8> (startSampleInFile, numSamples, results, num_channelsToRead); break;
-            case 16:    scanMinAndMax<AudioData::Int16> (startSampleInFile, numSamples, results, num_channelsToRead); break;
-            case 24:    scanMinAndMax<AudioData::Int24> (startSampleInFile, numSamples, results, num_channelsToRead); break;
-            case 32:    if (usesFloatingPointData) scanMinAndMax<AudioData::Float32> (startSampleInFile, numSamples, results, num_channelsToRead);
-                        else                       scanMinAndMax<AudioData::Int32>   (startSampleInFile, numSamples, results, num_channelsToRead);
+            case 8:     scanMinAndMax<AudioData::UInt8> (startSampleInFile, numSamples, results, numChannelsToRead); break;
+            case 16:    scanMinAndMax<AudioData::Int16> (startSampleInFile, numSamples, results, numChannelsToRead); break;
+            case 24:    scanMinAndMax<AudioData::Int24> (startSampleInFile, numSamples, results, numChannelsToRead); break;
+            case 32:    if (usesFloatingPointData) scanMinAndMax<AudioData::Float32> (startSampleInFile, numSamples, results, numChannelsToRead);
+                        else                       scanMinAndMax<AudioData::Int32>   (startSampleInFile, numSamples, results, numChannelsToRead);
                         break;
             default:    jassertfalse; break;
         }
@@ -928,9 +927,9 @@ private:
     const bool littleEndian;
 
     template <typename SampleType>
-    void scanMinAndMax (int64 startSampleInFile, int64 numSamples, Range<float>* results, int num_channelsToRead) const noexcept
+    void scanMinAndMax (int64 startSampleInFile, int64 numSamples, Range<float>* results, int numChannelsToRead) const noexcept
     {
-        for (int i = 0; i < num_channelsToRead; ++i)
+        for (int i = 0; i < numChannelsToRead; ++i)
             results[i] = scanMinAndMaxForChannel<SampleType> (i, startSampleInFile, numSamples);
     }
 
@@ -979,7 +978,7 @@ AudioFormatReader* AiffAudioFormat::createReaderFor (InputStream* sourceStream, 
 {
     std::unique_ptr<AiffAudioFormatReader> w (new AiffAudioFormatReader (sourceStream));
 
-    if (w->sampleRate > 0 && w->num_channels > 0)
+    if (w->sampleRate > 0 && w->numChannels > 0)
         return w.release();
 
     if (! deleteStreamIfOpeningFails)

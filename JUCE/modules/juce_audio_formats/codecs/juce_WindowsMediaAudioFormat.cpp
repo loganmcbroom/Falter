@@ -29,7 +29,7 @@ namespace juce
 namespace WindowsMediaCodec
 {
 
-class JuceIStream   : public ComBaseClassHelper<IStream>
+class JuceIStream final : public ComBaseClassHelper<IStream>
 {
 public:
     JuceIStream (InputStream& in) noexcept
@@ -127,7 +127,7 @@ static const char* wmFormatName = "Windows Media";
 static const char* const extensions[] = { ".mp3", ".wmv", ".asf", ".wm", ".wma", nullptr };
 
 //==============================================================================
-class WMAudioReader   : public AudioFormatReader
+class WMAudioReader final : public AudioFormatReader
 {
 public:
     WMAudioReader (InputStream* const input_)
@@ -163,7 +163,7 @@ public:
             wmSyncReader->Close();
     }
 
-    bool readSamples (int** destSamples, int numDestChannels, int startOffsetInDestBuffer,
+    bool readSamples (int* const* destSamples, int numDestChannels, int startOffsetInDestBuffer,
                       int64 startSampleInFile, int numSamples) override
     {
         if (sampleRate <= 0)
@@ -174,7 +174,7 @@ public:
         clearSamplesBeyondAvailableLength (destSamples, numDestChannels, startOffsetInDestBuffer,
                                            startSampleInFile, numSamples, lengthInSamples);
 
-        const auto stride = (int) (num_channels * sizeof (int16));
+        const auto stride = (int) (numChannels * sizeof (int16));
 
         while (numSamples > 0)
         {
@@ -234,14 +234,14 @@ public:
                 JUCE_BEGIN_IGNORE_WARNINGS_MSVC (28182)
                 jassert (destSamples[i] != nullptr);
 
-                auto srcChan = jmin (i, (int) num_channels - 1);
+                auto srcChan = jmin (i, (int) numChannels - 1);
                 const int16* src = rawData + srcChan;
                 int* const dst = destSamples[i] + startOffsetInDestBuffer;
 
                 for (int j = 0; j < numToDo; ++j)
                 {
                     dst[j] = (int) (((uint32) *src) << 16);
-                    src += num_channels;
+                    src += numChannels;
                 }
                 JUCE_END_IGNORE_WARNINGS_MSVC
             }
@@ -262,7 +262,7 @@ private:
 
     void checkCoInitialiseCalled()
     {
-        ignoreUnused (CoInitialize (nullptr));
+        [[maybe_unused]] const auto result = CoInitialize (nullptr);
     }
 
     void scanFileForDetails()
@@ -297,7 +297,7 @@ private:
                             auto* inputFormat = reinterpret_cast<WAVEFORMATEX*> (mediaType->pbFormat);
 
                             sampleRate = inputFormat->nSamplesPerSec;
-                            num_channels = inputFormat->nChannels;
+                            numChannels = inputFormat->nChannels;
                             bitsPerSample = inputFormat->wBitsPerSample != 0 ? inputFormat->wBitsPerSample : 16;
                             lengthInSamples = (lengthInNanoseconds * (QWORD) sampleRate) / 10000000;
                         }

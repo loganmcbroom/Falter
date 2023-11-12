@@ -30,6 +30,20 @@
  #define JUCE_STATE_DICTIONARY_KEY   "jucePluginState"
 #endif
 
+
+#if (JUCE_IOS && defined (__IPHONE_15_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_15_0) \
+   || (JUCE_MAC && defined (MAC_OS_VERSION_12_0) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_VERSION_12_0)
+ #define JUCE_APPLE_MIDI_EVENT_LIST_SUPPORTED 1
+#else
+ #define JUCE_APPLE_MIDI_EVENT_LIST_SUPPORTED 0
+#endif
+
+#include <juce_audio_basics/midi/juce_MidiDataConcatenator.h>
+
+#if JUCE_APPLE_MIDI_EVENT_LIST_SUPPORTED
+ #include <juce_audio_basics/midi/ump/juce_UMP.h>
+#endif
+
 namespace juce
 {
 
@@ -103,10 +117,10 @@ struct AudioUnitHelpers
             zerostruct (coreAudioLayout);
             coreAudioLayout.mChannelLayoutTag = CoreAudioLayouts::toCoreAudio (channelFormat);
 
-            const int num_channels = channelFormat.size();
+            const int numChannels = channelFormat.size();
             auto coreAudioChannels = CoreAudioLayouts::getCoreAudioLayoutChannels (coreAudioLayout);
 
-            for (int i = 0; i < num_channels; ++i)
+            for (int i = 0; i < numChannels; ++i)
                 layoutMap[i] = coreAudioChannels.indexOf (channelFormat.getTypeOfChannel (i));
         }
     };
@@ -130,9 +144,9 @@ struct AudioUnitHelpers
             inputBusOffsets  = getChannelOffsets (layout.inputBuses);
             outputBusOffsets = getChannelOffsets (layout.outputBuses);
 
-            const auto num_channels = jmax (inputBusOffsets.back(), outputBusOffsets.back());
-            scratch.setSize (num_channels, maxFrames);
-            channels.resize (static_cast<size_t> (num_channels), nullptr);
+            const auto numChannels = jmax (inputBusOffsets.back(), outputBusOffsets.back());
+            scratch.setSize (numChannels, maxFrames);
+            channels.resize (static_cast<size_t> (numChannels), nullptr);
 
             reset();
         }
@@ -151,7 +165,7 @@ struct AudioUnitHelpers
 
         float* setBuffer (const int idx, float* ptr = nullptr) noexcept
         {
-            jassert (idx < scratch.get_num_channels());
+            jassert (idx < scratch.getNumChannels());
             return channels[(size_t) idx] = uniqueBuffer (idx, ptr);
         }
 
@@ -172,10 +186,10 @@ struct AudioUnitHelpers
 
             const auto n = (UInt32) (bufferList.mBuffers[0].mDataByteSize / (bufferList.mBuffers[0].mNumberChannels * sizeof (float)));
             const auto isInterleaved = isAudioBufferInterleaved (bufferList);
-            const auto num_channels = (int) (isInterleaved ? bufferList.mBuffers[0].mNumberChannels
+            const auto numChannels = (int) (isInterleaved ? bufferList.mBuffers[0].mNumberChannels
                                                           : bufferList.mNumberBuffers);
 
-            for (int ch = 0; ch < num_channels; ++ch)
+            for (int ch = 0; ch < numChannels; ++ch)
             {
                 float* data = channels[(size_t) (inputBusOffsets[(size_t) bus] + ch)];
 
@@ -193,10 +207,10 @@ struct AudioUnitHelpers
 
             const auto n = (UInt32) (buffer.mBuffers[0].mDataByteSize / (buffer.mBuffers[0].mNumberChannels * sizeof (float)));
             const auto isInterleaved = isAudioBufferInterleaved (buffer);
-            const auto num_channels = (int) (isInterleaved ? buffer.mBuffers[0].mNumberChannels
+            const auto numChannels = (int) (isInterleaved ? buffer.mBuffers[0].mNumberChannels
                                                           : buffer.mNumberBuffers);
 
-            for (int ch = 0; ch < num_channels; ++ch)
+            for (int ch = 0; ch < numChannels; ++ch)
             {
                 float* data = channels[(size_t) (outputBusOffsets[(size_t) bus] + ch)];
 
@@ -279,14 +293,14 @@ struct AudioUnitHelpers
         }
         else
         {
-            const int num_channels = static_cast<int> (audioBuffer.mBuffers[0].mNumberChannels);
-            const UInt32 n = static_cast<UInt32> (num_channels) * size;
+            const int numChannels = static_cast<int> (audioBuffer.mBuffers[0].mNumberChannels);
+            const UInt32 n = static_cast<UInt32> (numChannels) * size;
             const float* src = static_cast<const float*> (audioBuffer.mBuffers[0].mData);
 
-            jassert (channel < num_channels);
+            jassert (channel < numChannels);
             jassert (audioBuffer.mBuffers[0].mDataByteSize == (n * sizeof (float)));
 
-            for (const float* inData = src; inData < (src + n); inData += num_channels)
+            for (const float* inData = src; inData < (src + n); inData += numChannels)
                 *dst++ = inData[channel];
         }
     }
@@ -302,14 +316,14 @@ struct AudioUnitHelpers
         }
         else
         {
-            const int num_channels = static_cast<int> (audioBuffer.mBuffers[0].mNumberChannels);
-            const UInt32 n = static_cast<UInt32> (num_channels) * size;
+            const int numChannels = static_cast<int> (audioBuffer.mBuffers[0].mNumberChannels);
+            const UInt32 n = static_cast<UInt32> (numChannels) * size;
             float* dst = static_cast<float*> (audioBuffer.mBuffers[0].mData);
 
-            jassert (channel < num_channels);
+            jassert (channel < numChannels);
             jassert (audioBuffer.mBuffers[0].mDataByteSize == (n * sizeof (float)));
 
-            for (float* outData = dst; outData < (dst + n); outData += num_channels)
+            for (float* outData = dst; outData < (dst + n); outData += numChannels)
                 outData[channel] = *src++;
         }
     }
@@ -317,13 +331,13 @@ struct AudioUnitHelpers
     template <size_t numLayouts>
     static bool isLayoutSupported (const AudioProcessor& processor,
                                    bool isInput, int busIdx,
-                                   int num_channels,
+                                   int numChannels,
                                    const short (&channelLayoutList)[numLayouts][2],
                                    bool hasLayoutMap = true)
     {
         if (const AudioProcessor::Bus* bus = processor.getBus (isInput, busIdx))
         {
-            if (! bus->isNumberOfChannelsSupported (num_channels))
+            if (! bus->isNumberOfChannelsSupported (numChannels))
                 return false;
 
             if (! hasLayoutMap)
@@ -333,7 +347,7 @@ struct AudioUnitHelpers
 
             for (int i = 0; i < numConfigs; ++i)
             {
-                if (channelLayoutList[i][isInput ? 0 : 1] == num_channels)
+                if (channelLayoutList[i][isInput ? 0 : 1] == numChannels)
                     return true;
             }
         }
@@ -359,7 +373,10 @@ struct AudioUnitHelpers
         }
 
         auto layout = processor.getBusesLayout();
-        auto maxNumChanToCheckFor = 9;
+
+        // The 'standard' layout with the most channels defined is AudioChannelSet::create9point1point6().
+        // This value should be updated if larger standard channel layouts are added in the future.
+        constexpr auto maxNumChanToCheckFor = 16;
 
         auto defaultInputs  = processor.getChannelCountOfBus (true,  0);
         auto defaultOutputs = processor.getChannelCountOfBus (false, 0);
@@ -463,9 +480,9 @@ struct AudioUnitHelpers
         return channelInfo;
     }
 
-    static bool isNumberOfChannelsSupported (const AudioProcessor::Bus* b, int num_channels, AudioProcessor::BusesLayout& inOutCurrentLayout)
+    static bool isNumberOfChannelsSupported (const AudioProcessor::Bus* b, int numChannels, AudioProcessor::BusesLayout& inOutCurrentLayout)
     {
-        auto potentialSets = AudioChannelSet::channelSetsWithNumberOfChannels (static_cast<int> (num_channels));
+        auto potentialSets = AudioChannelSet::channelSetsWithNumberOfChannels (static_cast<int> (numChannels));
 
         for (auto set : potentialSets)
         {

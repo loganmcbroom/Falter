@@ -92,7 +92,7 @@ public:
 
     //==============================================================================
     /** @internal */
-    void audioDeviceIOCallbackWithContext (const float**, int, float**, int, int, const AudioIODeviceCallbackContext&) override;
+    void audioDeviceIOCallbackWithContext (const float* const*, int, float* const*, int, int, const AudioIODeviceCallbackContext&) override;
     /** @internal */
     void audioDeviceAboutToStart (AudioIODevice*) override;
     /** @internal */
@@ -101,13 +101,13 @@ public:
     void handleIncomingMidiMessage (MidiInput*, const MidiMessage&) override;
 
 private:
-    struct num_channels
+    struct NumChannels
     {
-        num_channels() = default;
-        num_channels (int numIns, int numOuts) : ins (numIns), outs (numOuts) {}
+        NumChannels() = default;
+        NumChannels (int numIns, int numOuts) : ins (numIns), outs (numOuts) {}
 
-        explicit num_channels (const AudioProcessor::BusesLayout& layout)
-            : ins (layout.get_num_channels (true, 0)), outs (layout.get_num_channels (false, 0)) {}
+        explicit NumChannels (const AudioProcessor::BusesLayout& layout)
+            : ins (layout.getNumChannels (true, 0)), outs (layout.getNumChannels (false, 0)) {}
 
         AudioProcessor::BusesLayout toLayout() const
         {
@@ -119,7 +119,7 @@ private:
     };
 
     //==============================================================================
-    num_channels findMostSuitableLayout (const AudioProcessor&) const;
+    NumChannels findMostSuitableLayout (const AudioProcessor&) const;
     void resizeChannels();
 
     //==============================================================================
@@ -129,7 +129,7 @@ private:
     int blockSize = 0;
     bool isPrepared = false, isDoublePrecision = false;
 
-    num_channels deviceChannels, defaultProcessorChannels, actualProcessorChannels;
+    NumChannels deviceChannels, defaultProcessorChannels, actualProcessorChannels;
     std::vector<float*> channels;
     AudioBuffer<float> tempBuffer;
     AudioBuffer<double> conversionBuffer;
@@ -138,6 +138,9 @@ private:
     MidiMessageCollector messageCollector;
     MidiOutput* midiOutput = nullptr;
     uint64_t sampleCount = 0;
+
+    AudioIODevice* currentDevice = nullptr;
+    AudioWorkgroup currentWorkgroup;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioProcessorPlayer)
 };

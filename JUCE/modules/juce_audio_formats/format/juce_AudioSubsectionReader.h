@@ -66,11 +66,11 @@ public:
 
 
     //==============================================================================
-    bool readSamples (int** destSamples, int numDestChannels, int startOffsetInDestBuffer,
+    bool readSamples (int* const* destSamples, int numDestChannels, int startOffsetInDestBuffer,
                       int64 startSampleInFile, int numSamples) override;
 
     void readMaxLevels (int64 startSample, int64 numSamples,
-                        Range<float>* results, int num_channelsToRead) override;
+                        Range<float>* results, int numChannelsToRead) override;
 
     using AudioFormatReader::readMaxLevels;
 

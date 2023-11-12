@@ -83,8 +83,68 @@ private:
     int8 values[2];
 };
 
+
 //==============================================================================
-class AudioThumbnail::LevelDataSource   : public TimeSliceClient
+template <typename T>
+class AudioBufferReader final : public AudioFormatReader
+{
+public:
+    AudioBufferReader (const AudioBuffer<T>* bufferIn, double rate)
+        : AudioFormatReader (nullptr, "AudioBuffer"), buffer (bufferIn)
+    {
+        sampleRate = rate;
+        bitsPerSample = 32;
+        lengthInSamples = buffer->getNumSamples();
+        numChannels = (unsigned int) buffer->getNumChannels();
+        usesFloatingPointData = std::is_floating_point_v<T>;
+    }
+
+    bool readSamples (int* const* destChannels,
+                      int numDestChannels,
+                      int startOffsetInDestBuffer,
+                      int64 startSampleInFile,
+                      int numSamples) override
+    {
+        clearSamplesBeyondAvailableLength (destChannels, numDestChannels, startOffsetInDestBuffer,
+                                           startSampleInFile, numSamples, lengthInSamples);
+
+        const auto numAvailableSamples = (int) ((int64) buffer->getNumSamples() - startSampleInFile);
+        const auto numSamplesToCopy = std::clamp (numAvailableSamples, 0, numSamples);
+
+        if (numSamplesToCopy == 0)
+            return true;
+
+        for (int i = 0; i < numDestChannels; ++i)
+        {
+            if (void* targetChannel = destChannels[i])
+            {
+                const auto dest = DestType (targetChannel) + startOffsetInDestBuffer;
+
+                if (i < buffer->getNumChannels())
+                    dest.convertSamples (SourceType (buffer->getReadPointer (i) + startSampleInFile), numSamplesToCopy);
+                else
+                    dest.clearSamples (numSamples);
+            }
+        }
+
+        return true;
+    }
+
+private:
+    using SourceNumericalType =
+        std::conditional_t<std::is_same_v<T, int>, AudioData::Int32,
+                           std::conditional_t<std::is_same_v<T, float>, AudioData::Float32, void>>;
+
+    using DestinationNumericalType = std::conditional_t<std::is_floating_point_v<T>, AudioData::Float32, AudioData::Int32>;
+
+    using DestType   = AudioData::Pointer<DestinationNumericalType, AudioData::LittleEndian, AudioData::NonInterleaved, AudioData::NonConst>;
+    using SourceType = AudioData::Pointer<SourceNumericalType,      AudioData::LittleEndian, AudioData::NonInterleaved, AudioData::Const>;
+
+    const AudioBuffer<T>* buffer;
+};
+
+//==============================================================================
+class AudioThumbnail::LevelDataSource final : public TimeSliceClient
 {
 public:
     LevelDataSource (AudioThumbnail& thumb, AudioFormatReader* newReader, int64 hash)
@@ -115,7 +175,7 @@ public:
         if (reader != nullptr)
         {
             lengthInSamples = reader->lengthInSamples;
-            num_channels = reader->num_channels;
+            numChannels = reader->numChannels;
             sampleRate = reader->sampleRate;
 
             if (lengthInSamples <= 0 || isFullyLoaded())
@@ -142,10 +202,10 @@ public:
 
         if (reader != nullptr)
         {
-            if (levels.size() < (int) reader->num_channels)
-                levels.insertMultiple (0, {}, (int) reader->num_channels - levels.size());
+            if (levels.size() < (int) reader->numChannels)
+                levels.insertMultiple (0, {}, (int) reader->numChannels - levels.size());
 
-            reader->readMaxLevels (startSample, numSamples, levels.getRawDataPointer(), (int) reader->num_channels);
+            reader->readMaxLevels (startSample, numSamples, levels.getRawDataPointer(), (int) reader->numChannels);
 
             lastReaderUseTime = Time::getMillisecondCounter();
         }
@@ -205,7 +265,7 @@ public:
 
     int64 lengthInSamples = 0, numSamplesFinished = 0;
     double sampleRate = 0;
-    unsigned int num_channels = 0;
+    unsigned int numChannels = 0;
     int64 hashCode = 0;
 
 private:
@@ -238,26 +298,26 @@ private:
                 auto lastThumbIndex  = sampleToThumbSample (startSample + numToDo);
                 auto numThumbSamps = lastThumbIndex - firstThumbIndex;
 
-                HeapBlock<MinMaxValue> levelData ((unsigned int) numThumbSamps * num_channels);
-                HeapBlock<MinMaxValue*> levels (num_channels);
+                HeapBlock<MinMaxValue> levelData ((unsigned int) numThumbSamps * numChannels);
+                HeapBlock<MinMaxValue*> levels (numChannels);
 
-                for (int i = 0; i < (int) num_channels; ++i)
+                for (int i = 0; i < (int) numChannels; ++i)
                     levels[i] = levelData + i * numThumbSamps;
 
-                HeapBlock<Range<float>> levelsRead (num_channels);
+                HeapBlock<Range<float>> levelsRead (numChannels);
 
                 for (int i = 0; i < numThumbSamps; ++i)
                 {
                     reader->readMaxLevels ((firstThumbIndex + i) * owner.samplesPerThumbSample,
-                                           owner.samplesPerThumbSample, levelsRead, (int) num_channels);
+                                           owner.samplesPerThumbSample, levelsRead, (int) numChannels);
 
-                    for (int j = 0; j < (int) num_channels; ++j)
+                    for (int j = 0; j < (int) numChannels; ++j)
                         levels[j][i].setFloat (levelsRead[j]);
                 }
 
                 {
                     const ScopedUnlock su (readerLock);
-                    owner.setLevels (levels, firstThumbIndex, (int) num_channels, numThumbSamps);
+                    owner.setLevels (levels, firstThumbIndex, (int) numChannels, numThumbSamps);
                 }
 
                 numSamplesFinished += numToDo;
@@ -384,7 +444,7 @@ public:
     {
         if (refillCache (area.getWidth(), startTime, endTime, rate,
                          numChans, sampsPerThumbSample, levelData, chans)
-             && isPositiveAndBelow (channelNum, num_channelsCached))
+             && isPositiveAndBelow (channelNum, numChannelsCached))
         {
             auto clip = g.getClipBounds().getIntersection (area.withWidth (jmin (numSamplesCached, area.getWidth())));
 
@@ -424,7 +484,7 @@ public:
 private:
     Array<MinMaxValue> data;
     double cachedStart = 0, cachedTimePerPixel = 0;
-    int num_channelsCached = 0, numSamplesCached = 0;
+    int numChannelsCached = 0, numSamplesCached = 0;
     bool cacheNeedsRefilling = true;
 
     bool refillCache (int numSamples, double startTime, double endTime,
@@ -440,16 +500,16 @@ private:
         }
 
         if (numSamples == numSamplesCached
-             && num_channelsCached == numChans
-             && startTime == cachedStart
-             && timePerPixel == cachedTimePerPixel
+             && numChannelsCached == numChans
+             && approximatelyEqual (startTime, cachedStart)
+             && approximatelyEqual (timePerPixel, cachedTimePerPixel)
              && ! cacheNeedsRefilling)
         {
             return ! cacheNeedsRefilling;
         }
 
         numSamplesCached = numSamples;
-        num_channelsCached = numChans;
+        numChannelsCached = numChans;
         cachedStart = startTime;
         cachedTimePerPixel = timePerPixel;
         cacheNeedsRefilling = false;
@@ -470,14 +530,14 @@ private:
                 {
                     if (sample >= levelData->lengthInSamples)
                     {
-                        for (int chan = 0; chan < num_channelsCached; ++chan)
+                        for (int chan = 0; chan < numChannelsCached; ++chan)
                             *getData (chan, i) = MinMaxValue();
                     }
                     else
                     {
                         levelData->getLevels (sample, jmax (1, nextSample - sample), levels);
 
-                        auto totalChans = jmin (levels.size(), num_channelsCached);
+                        auto totalChans = jmin (levels.size(), numChannelsCached);
 
                         for (int chan = 0; chan < totalChans; ++chan)
                             getData (chan, i)->setFloat (levels.getReference (chan));
@@ -492,9 +552,9 @@ private:
         }
         else
         {
-            jassert (chans.size() == num_channelsCached);
+            jassert (chans.size() == numChannelsCached);
 
-            for (int channelNum = 0; channelNum < num_channelsCached; ++channelNum)
+            for (int channelNum = 0; channelNum < numChannelsCached; ++channelNum)
             {
                 ThumbData* channelData = chans.getUnchecked (channelNum);
                 MinMaxValue* cacheData = getData (channelNum, 0);
@@ -522,7 +582,7 @@ private:
 
     MinMaxValue* getData (const int channelNum, const int cacheIndex) noexcept
     {
-        jassert (isPositiveAndBelow (channelNum, num_channelsCached) && isPositiveAndBelow (cacheIndex, data.size()));
+        jassert (isPositiveAndBelow (channelNum, numChannelsCached) && isPositiveAndBelow (cacheIndex, data.size()));
 
         return data.getRawDataPointer() + channelNum * numSamplesCached
                                         + cacheIndex;
@@ -530,7 +590,7 @@ private:
 
     void ensureSize (const int numSamples)
     {
-        auto itemsRequired = numSamples * num_channelsCached;
+        auto itemsRequired = numSamples * numChannelsCached;
 
         if (data.size() < itemsRequired)
             data.insertMultiple (-1, MinMaxValue(), itemsRequired - data.size());
@@ -565,18 +625,18 @@ void AudioThumbnail::clearChannelData()
     window->invalidate();
     channels.clear();
     totalSamples = numSamplesFinished = 0;
-    num_channels = 0;
+    numChannels = 0;
     sampleRate = 0;
 
     sendChangeMessage();
 }
 
-void AudioThumbnail::reset (int newnum_channels, double newSampleRate, int64 totalSamplesInSource)
+void AudioThumbnail::reset (int newNumChannels, double newSampleRate, int64 totalSamplesInSource)
 {
     clear();
 
     const ScopedLock sl (lock);
-    num_channels = newnum_channels;
+    numChannels = newNumChannels;
     sampleRate = newSampleRate;
     totalSamples = totalSamplesInSource;
 
@@ -585,7 +645,7 @@ void AudioThumbnail::reset (int newnum_channels, double newSampleRate, int64 tot
 
 void AudioThumbnail::createChannels (const int length)
 {
-    while (channels.size() < num_channels)
+    while (channels.size() < numChannels)
         channels.add (new ThumbData (length));
 }
 
@@ -604,15 +664,15 @@ bool AudioThumbnail::loadFrom (InputStream& rawInput)
     totalSamples = input.readInt64();             // Total number of source samples.
     numSamplesFinished = input.readInt64();       // Number of valid source samples that have been read into the thumbnail.
     int32 numThumbnailSamples = input.readInt();  // Number of samples in the thumbnail data.
-    num_channels = input.readInt();                // Number of audio channels.
+    numChannels = input.readInt();                // Number of audio channels.
     sampleRate = input.readInt();                 // Source sample rate.
     input.skipNextBytes (16);                     // (reserved)
 
     createChannels (numThumbnailSamples);
 
     for (int i = 0; i < numThumbnailSamples; ++i)
-        for (int chan = 0; chan < num_channels; ++chan)
-            channels.getUnchecked(chan)->getData(i)->read (input);
+        for (int chan = 0; chan < numChannels; ++chan)
+            channels.getUnchecked (chan)->getData (i)->read (input);
 
     return true;
 }
@@ -621,21 +681,21 @@ void AudioThumbnail::saveTo (OutputStream& output) const
 {
     const ScopedLock sl (lock);
 
-    const int numThumbnailSamples = channels.size() == 0 ? 0 : channels.getUnchecked(0)->getSize();
+    const int numThumbnailSamples = channels.size() == 0 ? 0 : channels.getUnchecked (0)->getSize();
 
     output.write ("jatm", 4);
     output.writeInt (samplesPerThumbSample);
     output.writeInt64 (totalSamples);
     output.writeInt64 (numSamplesFinished);
     output.writeInt (numThumbnailSamples);
-    output.writeInt (num_channels);
+    output.writeInt (numChannels);
     output.writeInt ((int) sampleRate);
     output.writeInt64 (0);
     output.writeInt64 (0);
 
     for (int i = 0; i < numThumbnailSamples; ++i)
-        for (int chan = 0; chan < num_channels; ++chan)
-            channels.getUnchecked(chan)->getData(i)->write (output);
+        for (int chan = 0; chan < numChannels; ++chan)
+            channels.getUnchecked (chan)->getData (i)->write (output);
 }
 
 //==============================================================================
@@ -652,7 +712,7 @@ bool AudioThumbnail::setDataSource (LevelDataSource* newSource)
 
         source->lengthInSamples = totalSamples;
         source->sampleRate = sampleRate;
-        source->num_channels = (unsigned int) num_channels;
+        source->numChannels = (unsigned int) numChannels;
         source->numSamplesFinished = numSamplesFinished;
 
         return wasSuccessful();
@@ -665,7 +725,7 @@ bool AudioThumbnail::setDataSource (LevelDataSource* newSource)
 
     totalSamples = source->lengthInSamples;
     sampleRate = source->sampleRate;
-    num_channels = (int32) source->num_channels;
+    numChannels = (int32) source->numChannels;
 
     createChannels (1 + (int) (totalSamples / samplesPerThumbSample));
 
@@ -687,6 +747,16 @@ void AudioThumbnail::setReader (AudioFormatReader* newReader, int64 hash)
         setDataSource (new LevelDataSource (*this, newReader, hash));
 }
 
+void AudioThumbnail::setSource (const AudioBuffer<float>* newSource, double rate, int64 hash)
+{
+    setReader (new AudioBufferReader<float> (newSource, rate), hash);
+}
+
+void AudioThumbnail::setSource (const AudioBuffer<int>* newSource, double rate, int64 hash)
+{
+    setReader (new AudioBufferReader<int> (newSource, rate), hash);
+}
+
 int64 AudioThumbnail::getHashCode() const
 {
     return source == nullptr ? 0 : source->hashCode;
@@ -705,7 +775,7 @@ void AudioThumbnail::addBlock (int64 startSample, const AudioBuffer<float>& inco
 
     if (numToDo > 0)
     {
-        auto numChans = jmin (channels.size(), incoming.get_num_channels());
+        auto numChans = jmin (channels.size(), incoming.getNumChannels());
 
         const HeapBlock<MinMaxValue> thumbData (numToDo * numChans);
         const HeapBlock<MinMaxValue*> thumbChannels (numChans);
@@ -746,10 +816,10 @@ void AudioThumbnail::setLevels (const MinMaxValue* const* values, int thumbIndex
 }
 
 //==============================================================================
-int AudioThumbnail::get_num_channels() const noexcept
+int AudioThumbnail::getNumChannels() const noexcept
 {
     const ScopedLock sl (lock);
-    return num_channels;
+    return numChannels;
 }
 
 double AudioThumbnail::getTotalLength() const noexcept
@@ -812,16 +882,16 @@ void AudioThumbnail::drawChannel (Graphics& g, const Rectangle<int>& area, doubl
     const ScopedLock sl (lock);
 
     window->drawChannel (g, area, startTime, endTime, channelNum, verticalZoomFactor,
-                         sampleRate, num_channels, samplesPerThumbSample, source.get(), channels);
+                         sampleRate, numChannels, samplesPerThumbSample, source.get(), channels);
 }
 
 void AudioThumbnail::drawChannels (Graphics& g, const Rectangle<int>& area, double startTimeSeconds,
                                    double endTimeSeconds, float verticalZoomFactor)
 {
-    for (int i = 0; i < num_channels; ++i)
+    for (int i = 0; i < numChannels; ++i)
     {
-        auto y1 = roundToInt ((i * area.getHeight()) / num_channels);
-        auto y2 = roundToInt (((i + 1) * area.getHeight()) / num_channels);
+        auto y1 = roundToInt ((i * area.getHeight()) / numChannels);
+        auto y2 = roundToInt (((i + 1) * area.getHeight()) / numChannels);
 
         drawChannel (g, { area.getX(), area.getY() + y1, area.getWidth(), y2 - y1 },
                      startTimeSeconds, endTimeSeconds, i, verticalZoomFactor);

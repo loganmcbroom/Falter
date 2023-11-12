@@ -24,7 +24,7 @@ public:
     //==============================================================================
     void prepareToPlay (double sampleRate,
                         int maximumSamplesPerBlock,
-                        int num_channels,
+                        int numChannels,
                         juce::AudioProcessor::ProcessingPrecision,
                         AlwaysNonRealtime alwaysNonRealtime) override;
     void releaseResources() override;
@@ -38,7 +38,7 @@ private:
     //==============================================================================
     double sampleRate = 44100.0;
     int maximumSamplesPerBlock = 4096;
-    int num_channels = 1;
+    int numChannels = 1;
     bool useBufferedAudioSourceReader = true;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (%%araplaybackrenderer_class_name%%)

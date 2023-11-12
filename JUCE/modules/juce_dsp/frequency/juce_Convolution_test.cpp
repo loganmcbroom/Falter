@@ -29,14 +29,12 @@
 #define JUCE_FAIL_ON_ALLOCATION_IN_SCOPE
 #endif
 
-namespace juce
-{
-namespace dsp
+namespace juce::dsp
 {
 namespace
 {
 
-class ConvolutionTest  : public UnitTest
+class ConvolutionTest final : public UnitTest
 {
     template <typename Callback>
     static void nTimes (int n, Callback&& callback)
@@ -62,8 +60,8 @@ class ConvolutionTest  : public UnitTest
         AudioBuffer<float> result (2, length);
         result.clear();
 
-        auto** channels = result.getArrayOfWritePointers();
-        std::for_each (channels, channels + result.get_num_channels(), [length] (auto* channel)
+        auto* const* channels = result.getArrayOfWritePointers();
+        std::for_each (channels, channels + result.getNumChannels(), [length] (auto* channel)
         {
             std::fill (channel, channel + length, 1.0f);
         });
@@ -78,26 +76,26 @@ class ConvolutionTest  : public UnitTest
     {
         block.clear();
 
-        for (size_t channel = 0; channel != block.get_num_channels(); ++channel)
+        for (size_t channel = 0; channel != block.getNumChannels(); ++channel)
             block.setSample ((int) channel, 0, 1.0f);
     }
 
     void checkForNans (const AudioBlock<float>& block)
     {
-        for (size_t channel = 0; channel != block.get_num_channels(); ++channel)
+        for (size_t channel = 0; channel != block.getNumChannels(); ++channel)
             for (size_t sample = 0; sample != block.getNumSamples(); ++sample)
                 expect (! std::isnan (block.getSample ((int) channel, (int) sample)));
     }
 
     void checkAllChannelsNonZero (const AudioBlock<float>& block)
     {
-        for (size_t i = 0; i != block.get_num_channels(); ++i)
+        for (size_t i = 0; i != block.getNumChannels(); ++i)
         {
             const auto* channel = block.getChannelPointer (i);
 
             expect (std::any_of (channel, channel + block.getNumSamples(), [] (float sample)
             {
-                return sample != 0.0f;
+                return ! approximatelyEqual (sample, 0.0f);
             }));
         }
     }
@@ -133,7 +131,7 @@ class ConvolutionTest  : public UnitTest
                           const AudioBlock<const float>& expectedResult,
                           InitSequence initSequence)
     {
-        AudioBuffer<float> buffer (static_cast<int> (spec.num_channels),
+        AudioBuffer<float> buffer (static_cast<int> (spec.numChannels),
                                    static_cast<int> (spec.maximumBlockSize));
         AudioBlock<float> block { buffer };
         ProcessContextReplacing<float> context { block };
@@ -141,7 +139,7 @@ class ConvolutionTest  : public UnitTest
         const auto numBlocksPerSecond = (int) std::ceil (spec.sampleRate / spec.maximumBlockSize);
         const auto numBlocksForImpulse = (int) std::ceil ((double) expectedResult.getNumSamples() / spec.maximumBlockSize);
 
-        AudioBuffer<float> outBuffer (static_cast<int> (spec.num_channels),
+        AudioBuffer<float> outBuffer (static_cast<int> (spec.numChannels),
                                       numBlocksForImpulse * static_cast<int> (spec.maximumBlockSize));
 
         Convolution convolution (config);
@@ -171,7 +169,7 @@ class ConvolutionTest  : public UnitTest
 
                 convolution.process (context);
 
-                for (auto c = 0; c != static_cast<int> (spec.num_channels); ++c)
+                for (auto c = 0; c != static_cast<int> (spec.numChannels); ++c)
                 {
                     outBuffer.copyFrom (c,
                                         i * static_cast<int> (spec.maximumBlockSize),
@@ -193,7 +191,7 @@ class ConvolutionTest  : public UnitTest
                 processBlocksWithDiracImpulse();
 
                 // Check if the impulse response was loaded
-                if (block.getSample (0, 1) != 0.0f)
+                if (! approximatelyEqual (block.getSample (0, 1), 0.0f))
                     break;
             }
         }
@@ -212,7 +210,7 @@ class ConvolutionTest  : public UnitTest
             const auto actualLatency = static_cast<size_t> (convolution.getLatency());
 
             // The output should be the same as the IR
-            for (size_t c = 0; c != static_cast<size_t> (expectedResult.get_num_channels()); ++c)
+            for (size_t c = 0; c != static_cast<size_t> (expectedResult.getNumChannels()); ++c)
             {
                 for (size_t i = 0; i != static_cast<size_t> (expectedResult.getNumSamples()); ++i)
                 {
@@ -251,7 +249,7 @@ public:
     void runTest() override
     {
         const ProcessSpec spec { 44100.0, 512, 2 };
-        AudioBuffer<float> buffer (static_cast<int> (spec.num_channels),
+        AudioBuffer<float> buffer (static_cast<int> (spec.numChannels),
                                    static_cast<int> (spec.maximumBlockSize));
         AudioBlock<float> block { buffer };
         ProcessContextReplacing<float> context { block };
@@ -261,7 +259,7 @@ public:
             Random random;
             AudioBuffer<float> result (2, 1000);
 
-            for (auto channel = 0; channel != result.get_num_channels(); ++channel)
+            for (auto channel = 0; channel != result.getNumChannels(); ++channel)
                 for (auto sample = 0; sample != result.getNumSamples(); ++sample)
                     result.setSample (channel, sample, random.nextFloat());
 
@@ -367,7 +365,7 @@ public:
                                            thisSpec.sampleRate * 0.5,
                                            1.0);
 
-                juce::AudioBuffer<float> thisBuffer ((int) thisSpec.num_channels,
+                juce::AudioBuffer<float> thisBuffer ((int) thisSpec.numChannels,
                                                      (int) thisSpec.maximumBlockSize);
                 AudioBlock<float> thisBlock { thisBuffer };
                 ProcessContextReplacing<float> thisContext { thisBlock };
@@ -415,10 +413,10 @@ public:
 
             auto copy = ramp;
             const auto channels = copy.getArrayOfWritePointers();
-            const auto num_channels = copy.get_num_channels();
+            const auto numChannels = copy.getNumChannels();
             const auto numSamples = copy.getNumSamples();
 
-            const auto factor = 0.125f / std::sqrt (std::accumulate (channels, channels + num_channels, 0.0f,
+            const auto factor = 0.125f / std::sqrt (std::accumulate (channels, channels + numChannels, 0.0f,
                                                                      [numSamples] (auto max, auto* channel)
             {
                 return juce::jmax (max, std::accumulate (channel, channel + numSamples, 0.0f,
@@ -428,7 +426,7 @@ public:
                 }));
             }));
 
-            std::for_each (channels, channels + num_channels, [factor, numSamples] (auto* channel)
+            std::for_each (channels, channels + numChannels, [factor, numSamples] (auto* channel)
             {
                 FloatVectorOperations::multiply (channel, factor, numSamples);
             });
@@ -470,19 +468,19 @@ public:
                              Convolution::Stereo::no,
                              Convolution::Trim::yes,
                              Convolution::Normalise::no,
-                             AudioBlock<const float> (channels, numElementsInArray (channels), length));
+                             AudioBlock<const float> (channels, numElementsInArray (channels), (size_t) length));
         }
 
         beginTest ("IRs with extra silence are trimmed appropriately");
         {
             const auto length = static_cast<int> (spec.maximumBlockSize) * 3;
             const auto ramp = makeRamp (length);
-            AudioBuffer<float> paddedRamp (ramp.get_num_channels(), ramp.getNumSamples() * 2);
+            AudioBuffer<float> paddedRamp (ramp.getNumChannels(), ramp.getNumSamples() * 2);
             paddedRamp.clear();
 
             const auto offset = (paddedRamp.getNumSamples() - ramp.getNumSamples()) / 2;
 
-            for (auto channel = 0; channel != ramp.get_num_channels(); ++channel)
+            for (auto channel = 0; channel != ramp.getNumChannels(); ++channel)
                 paddedRamp.copyFrom (channel, offset, ramp.getReadPointer (channel), length);
 
             testConvolution (spec,
@@ -506,13 +504,13 @@ public:
                 {
                     AudioBuffer<float> original = ramp;
                     MemoryAudioSource memorySource (original, false);
-                    ResamplingAudioSource resamplingSource (&memorySource, false, original.get_num_channels());
+                    ResamplingAudioSource resamplingSource (&memorySource, false, original.getNumChannels());
 
                     const auto finalSize = roundToInt (original.getNumSamples() / resampleRatio);
                     resamplingSource.setResamplingRatio (resampleRatio);
                     resamplingSource.prepareToPlay (finalSize, spec.sampleRate * resampleRatio);
 
-                    AudioBuffer<float> result (original.get_num_channels(), finalSize);
+                    AudioBuffer<float> result (original.getNumChannels(), finalSize);
                     resamplingSource.getNextAudioBlock ({ &result, 0, result.getNumSamples() });
 
                     result.applyGain ((float) resampleRatio);
@@ -575,7 +573,6 @@ public:
 ConvolutionTest convolutionUnitTest;
 
 }
-}
-}
+} // namespace juce::dsp
 
 #undef JUCE_FAIL_ON_ALLOCATION_IN_SCOPE

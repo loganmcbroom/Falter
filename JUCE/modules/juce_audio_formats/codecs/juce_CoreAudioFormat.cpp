@@ -25,8 +25,8 @@
 
 #if JUCE_MAC || JUCE_IOS
 
-#include <juce_audio_basics/native/juce_mac_CoreAudioLayouts.h>
-#include <juce_core/native/juce_mac_CFHelpers.h>
+#include <juce_audio_basics/native/juce_CoreAudioLayouts_mac.h>
+#include <juce_core/native/juce_CFHelpers_mac.h>
 
 namespace juce
 {
@@ -267,7 +267,7 @@ struct CoreAudioFormatMetatdata
         for (int i = 0; i < numTimeSigEvents; ++i)
         {
             int numerator, denominator;
-            timeSigEvents.getEventPointer(i)->message.getTimeSignatureInfo (numerator, denominator);
+            timeSigEvents.getEventPointer (i)->message.getTimeSignatureInfo (numerator, denominator);
 
             String timeSigString;
             timeSigString << numerator << '/' << denominator;
@@ -384,7 +384,7 @@ struct CoreAudioFormatMetatdata
 };
 
 //==============================================================================
-class CoreAudioReader : public AudioFormatReader
+class CoreAudioReader final : public AudioFormatReader
 {
 public:
     using StreamKind = CoreAudioFormat::StreamKind;
@@ -418,7 +418,7 @@ public:
                                          &audioStreamBasicDescriptionSize,
                                          &sourceAudioFormat);
 
-                num_channels = sourceAudioFormat.mChannelsPerFrame;
+                numChannels = sourceAudioFormat.mChannelsPerFrame;
                 sampleRate  = sourceAudioFormat.mSampleRate;
 
                 UInt32 sizeOfLengthProperty = sizeof (int64);
@@ -444,7 +444,7 @@ public:
                     {
                         auto fileLayout = CoreAudioLayouts::fromCoreAudio (*caLayout.get());
 
-                        if (fileLayout.size() == static_cast<int> (num_channels))
+                        if (fileLayout.size() == static_cast<int> (numChannels))
                         {
                             hasLayout = true;
                             channelSet = fileLayout;
@@ -456,7 +456,7 @@ public:
                 destinationAudioFormat.mFormatID         = kAudioFormatLinearPCM;
                 destinationAudioFormat.mFormatFlags      = kLinearPCMFormatFlagIsFloat | kLinearPCMFormatFlagIsNonInterleaved | kAudioFormatFlagsNativeEndian;
                 destinationAudioFormat.mBitsPerChannel   = sizeof (float) * 8;
-                destinationAudioFormat.mChannelsPerFrame = num_channels;
+                destinationAudioFormat.mChannelsPerFrame = numChannels;
                 destinationAudioFormat.mBytesPerFrame    = sizeof (float);
                 destinationAudioFormat.mFramesPerPacket  = 1;
                 destinationAudioFormat.mBytesPerPacket   = destinationAudioFormat.mFramesPerPacket * destinationAudioFormat.mBytesPerFrame;
@@ -467,25 +467,25 @@ public:
                                                   &destinationAudioFormat);
                 if (status == noErr)
                 {
-                    bufferList.malloc (1, sizeof (AudioBufferList) + num_channels * sizeof (::AudioBuffer));
-                    bufferList->mNumberBuffers = num_channels;
-                    channelMap.malloc (num_channels);
+                    bufferList.malloc (1, sizeof (AudioBufferList) + numChannels * sizeof (::AudioBuffer));
+                    bufferList->mNumberBuffers = numChannels;
+                    channelMap.malloc (numChannels);
 
                     if (hasLayout && caLayout != nullptr)
                     {
                         auto caOrder = CoreAudioLayouts::getCoreAudioLayoutChannels (*caLayout);
 
-                        for (int i = 0; i < static_cast<int> (num_channels); ++i)
+                        for (int i = 0; i < static_cast<int> (numChannels); ++i)
                         {
                             auto idx = channelSet.getChannelIndexForType (caOrder.getReference (i));
-                            jassert (isPositiveAndBelow (idx, static_cast<int> (num_channels)));
+                            jassert (isPositiveAndBelow (idx, static_cast<int> (numChannels)));
 
                             channelMap[i] = idx;
                         }
                     }
                     else
                     {
-                        for (int i = 0; i < static_cast<int> (num_channels); ++i)
+                        for (int i = 0; i < static_cast<int> (numChannels); ++i)
                             channelMap[i] = i;
                     }
 
@@ -502,7 +502,7 @@ public:
     }
 
     //==============================================================================
-    bool readSamples (int** destSamples, int numDestChannels, int startOffsetInDestBuffer,
+    bool readSamples (int* const* destSamples, int numDestChannels, int startOffsetInDestBuffer,
                       int64 startSampleInFile, int numSamples) override
     {
         clearSamplesBeyondAvailableLength (destSamples, numDestChannels, startOffsetInDestBuffer,
@@ -525,10 +525,10 @@ public:
             auto numThisTime = jmin (8192, numSamples);
             auto numBytes = (size_t) numThisTime * sizeof (float);
 
-            audioDataBlock.ensureSize (numBytes * num_channels, false);
+            audioDataBlock.ensureSize (numBytes * numChannels, false);
             auto* data = static_cast<float*> (audioDataBlock.getData());
 
-            for (int j = (int) num_channels; --j >= 0;)
+            for (int j = (int) numChannels; --j >= 0;)
             {
                 bufferList->mBuffers[j].mNumberChannels = 1;
                 bufferList->mBuffers[j].mDataByteSize = (UInt32) numBytes;
@@ -553,11 +553,11 @@ public:
 
             for (int i = numDestChannels; --i >= 0;)
             {
-                auto* dest = destSamples[(i < (int) num_channels ? channelMap[i] : i)];
+                auto* dest = destSamples[(i < (int) numChannels ? channelMap[i] : i)];
 
                 if (dest != nullptr)
                 {
-                    if (i < (int) num_channels)
+                    if (i < (int) numChannels)
                         memcpy (dest + startOffsetInDestBuffer, bufferList->mBuffers[i].mData, numBytes);
                     else
                         zeromem (dest + startOffsetInDestBuffer, numBytes);
@@ -574,7 +574,7 @@ public:
 
     AudioChannelSet getChannelLayout() override
     {
-        if (channelSet.size() == static_cast<int> (num_channels))
+        if (channelSet.size() == static_cast<int> (numChannels))
             return channelSet;
 
         return AudioFormatReader::getChannelLayout();
@@ -664,7 +664,7 @@ AudioFormatWriter* CoreAudioFormat::createWriterFor (OutputStream*,
 #define DEFINE_CHANNEL_LAYOUT_DFL_ENTRY(x) CoreAudioChannelLayoutTag { x, #x, AudioChannelSet() }
 #define DEFINE_CHANNEL_LAYOUT_TAG_ENTRY(x, y) CoreAudioChannelLayoutTag { x, #x, y }
 
-class CoreAudioLayoutsUnitTest  : public UnitTest
+class CoreAudioLayoutsUnitTest final : public UnitTest
 {
 public:
     CoreAudioLayoutsUnitTest()

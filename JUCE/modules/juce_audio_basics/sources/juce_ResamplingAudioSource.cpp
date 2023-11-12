@@ -27,7 +27,7 @@ ResamplingAudioSource::ResamplingAudioSource (AudioSource* const inputSource,
                                               const bool deleteInputWhenDeleted,
                                               const int channels)
     : input (inputSource, deleteInputWhenDeleted),
-      num_channels (channels)
+      numChannels (channels)
 {
     jassert (input != nullptr);
     zeromem (coefficients, sizeof (coefficients));
@@ -50,11 +50,11 @@ void ResamplingAudioSource::prepareToPlay (int samplesPerBlockExpected, double s
     auto scaledBlockSize = roundToInt (samplesPerBlockExpected * ratio);
     input->prepareToPlay (scaledBlockSize, sampleRate * ratio);
 
-    buffer.setSize (num_channels, scaledBlockSize + 32);
+    buffer.setSize (numChannels, scaledBlockSize + 32);
 
-    filterStates.calloc (num_channels);
-    srcBuffers.calloc (num_channels);
-    destBuffers.calloc (num_channels);
+    filterStates.calloc (numChannels);
+    srcBuffers.calloc (numChannels);
+    destBuffers.calloc (numChannels);
     createLowPass (ratio);
 
     flushBuffers();
@@ -74,7 +74,7 @@ void ResamplingAudioSource::flushBuffers()
 void ResamplingAudioSource::releaseResources()
 {
     input->releaseResources();
-    buffer.setSize (num_channels, 0);
+    buffer.setSize (numChannels, 0);
 }
 
 void ResamplingAudioSource::getNextAudioBlock (const AudioSourceChannelInfo& info)
@@ -88,7 +88,7 @@ void ResamplingAudioSource::getNextAudioBlock (const AudioSourceChannelInfo& inf
         localRatio = ratio;
     }
 
-    if (lastRatio != localRatio)
+    if (! approximatelyEqual (lastRatio, localRatio))
     {
         createLowPass (localRatio);
         lastRatio = localRatio;
@@ -102,13 +102,13 @@ void ResamplingAudioSource::getNextAudioBlock (const AudioSourceChannelInfo& inf
     {
         bufferPos %= bufferSize;
         bufferSize = sampsNeeded + 32;
-        buffer.setSize (buffer.get_num_channels(), bufferSize, true, true);
+        buffer.setSize (buffer.getNumChannels(), bufferSize, true, true);
     }
 
     bufferPos %= bufferSize;
 
     int endOfBufferPos = bufferPos + sampsInBuffer;
-    const int channelsToProcess = jmin (num_channels, info.buffer->get_num_channels());
+    const int channelsToProcess = jmin (numChannels, info.buffer->getNumChannels());
 
     while (sampsNeeded > sampsInBuffer)
     {
@@ -233,7 +233,7 @@ void ResamplingAudioSource::setFilterCoefficients (double c1, double c2, double 
 void ResamplingAudioSource::resetFilters()
 {
     if (filterStates != nullptr)
-        filterStates.clear ((size_t) num_channels);
+        filterStates.clear ((size_t) numChannels);
 }
 
 void ResamplingAudioSource::applyFilter (float* samples, int num, FilterState& fs)

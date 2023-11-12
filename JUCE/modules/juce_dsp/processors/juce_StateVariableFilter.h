@@ -23,15 +23,10 @@
   ==============================================================================
 */
 
-namespace juce
-{
-namespace dsp
-{
-
 /**
     Classes for state variable filter processing.
 */
-namespace StateVariableFilter
+namespace juce::dsp::StateVariableFilter
 {
     template <typename NumericType>
     struct Parameters;
@@ -110,7 +105,7 @@ namespace StateVariableFilter
         template <typename ProcessContext>
         void process (const ProcessContext& context) noexcept
         {
-            static_assert (std::is_same<typename ProcessContext::SampleType, SampleType>::value,
+            static_assert (std::is_same_v<typename ProcessContext::SampleType, SampleType>,
                            "The sample-type of the filter must match the sample-type supplied to this process callback");
 
             if (context.isBypassed)
@@ -173,8 +168,8 @@ namespace StateVariableFilter
 
             // This class can only process mono signals. Use the ProcessorDuplicator class
             // to apply this filter on a multi-channel audio stream.
-            jassert (inputBlock.get_num_channels()  == 1);
-            jassert (outputBlock.get_num_channels() == 1);
+            jassert (inputBlock.getNumChannels()  == 1);
+            jassert (outputBlock.getNumChannels() == 1);
 
             auto n = inputBlock.getNumSamples();
             auto* src = inputBlock .getChannelPointer (0);
@@ -224,7 +219,7 @@ namespace StateVariableFilter
 
             Note: The bandwidth of the resonance increases with the value of the
             parameter. To have a standard 12 dB/octave filter, the value must be set
-            at 1 / sqrt(2).
+            at 1 / sqrt (2).
         */
         void setCutOffFrequency (double sampleRate, NumericType frequency,
                                  NumericType resonance = static_cast<NumericType> (1.0 / MathConstants<double>::sqrt2)) noexcept
@@ -254,7 +249,5 @@ namespace StateVariableFilter
         NumericType R2  = static_cast<NumericType> (MathConstants<double>::sqrt2);
         NumericType h   = static_cast<NumericType> (1.0 / (1.0 + R2 * g + g * g));
     };
-}
 
-} // namespace dsp
-} // namespace juce
+} // namespace juce::dsp::StateVariableFilter

@@ -82,14 +82,14 @@ struct AudioVisualiserComponent::ChannelInfo
 };
 
 //==============================================================================
-AudioVisualiserComponent::AudioVisualiserComponent (int initialnum_channels)
+AudioVisualiserComponent::AudioVisualiserComponent (int initialNumChannels)
   : numSamples (1024),
     inputSamplesPerBlock (256),
     backgroundColour (Colours::black),
     waveformColour (Colours::white)
 {
     setOpaque (true);
-    setnum_channels (initialnum_channels);
+    setNumChannels (initialNumChannels);
     setRepaintRate (60);
 }
 
@@ -97,11 +97,11 @@ AudioVisualiserComponent::~AudioVisualiserComponent()
 {
 }
 
-void AudioVisualiserComponent::setnum_channels (int num_channels)
+void AudioVisualiserComponent::setNumChannels (int numChannels)
 {
     channels.clear();
 
-    for (int i = 0; i < num_channels; ++i)
+    for (int i = 0; i < numChannels; ++i)
         channels.add (new ChannelInfo (*this, numSamples));
 }
 
@@ -119,36 +119,36 @@ void AudioVisualiserComponent::clear()
         c->clear();
 }
 
-void AudioVisualiserComponent::pushBuffer (const float** d, int num_channels, int num)
+void AudioVisualiserComponent::pushBuffer (const float* const* d, int numChannels, int num)
 {
-    num_channels = jmin (num_channels, channels.size());
+    numChannels = jmin (numChannels, channels.size());
 
-    for (int i = 0; i < num_channels; ++i)
-        channels.getUnchecked(i)->pushSamples (d[i], num);
+    for (int i = 0; i < numChannels; ++i)
+        channels.getUnchecked (i)->pushSamples (d[i], num);
 }
 
 void AudioVisualiserComponent::pushBuffer (const AudioBuffer<float>& buffer)
 {
     pushBuffer (buffer.getArrayOfReadPointers(),
-                buffer.get_num_channels(),
+                buffer.getNumChannels(),
                 buffer.getNumSamples());
 }
 
 void AudioVisualiserComponent::pushBuffer (const AudioSourceChannelInfo& buffer)
 {
-    auto num_channels = jmin (buffer.buffer->get_num_channels(), channels.size());
+    auto numChannels = jmin (buffer.buffer->getNumChannels(), channels.size());
 
-    for (int i = 0; i < num_channels; ++i)
-        channels.getUnchecked(i)->pushSamples (buffer.buffer->getReadPointer (i, buffer.startSample),
+    for (int i = 0; i < numChannels; ++i)
+        channels.getUnchecked (i)->pushSamples (buffer.buffer->getReadPointer (i, buffer.startSample),
                                                buffer.numSamples);
 }
 
-void AudioVisualiserComponent::pushSample (const float* d, int num_channels)
+void AudioVisualiserComponent::pushSample (const float* d, int numChannels)
 {
-    num_channels = jmin (num_channels, channels.size());
+    numChannels = jmin (numChannels, channels.size());
 
-    for (int i = 0; i < num_channels; ++i)
-        channels.getUnchecked(i)->pushSample (d[i]);
+    for (int i = 0; i < numChannels; ++i)
+        channels.getUnchecked (i)->pushSample (d[i]);
 }
 
 void AudioVisualiserComponent::setSamplesPerBlock (int newSamplesPerPixel) noexcept

@@ -84,6 +84,10 @@ private:
 
                 /** If you hit this, then you've leaked one or more objects of the type specified by
                     the 'OwnerClass' template parameter - the name should have been printed by the line above.
+
+                    If you're leaking, it's probably because you're using old-fashioned, non-RAII techniques for
+                    your object management. Tut, tut. Always, always use std::unique_ptrs, OwnedArrays,
+                    ReferenceCountedObjects, etc, and avoid the 'delete' operator at all costs!
                 */
                 jassertfalse;
             }
@@ -109,7 +113,7 @@ private:
  #if (DOXYGEN || JUCE_CHECK_MEMORY_LEAKS)
   /** This macro lets you embed a leak-detecting object inside a class.
 
-      To use it, simply declare a JUCE_LEAK_DETECTOR(YourClassName) inside a private section
+      To use it, simply declare a JUCE_LEAK_DETECTOR (YourClassName) inside a private section
       of the class declaration. E.g.
 
       @code

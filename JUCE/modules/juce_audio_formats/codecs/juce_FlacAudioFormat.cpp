@@ -92,8 +92,8 @@ namespace FlacNamespace
 {
 #if JUCE_INCLUDE_FLAC_CODE || ! defined (JUCE_INCLUDE_FLAC_CODE)
 
- #undef VERSION
- #define VERSION "1.3.1"
+ #undef PACKAGE_VERSION
+ #define PACKAGE_VERSION "1.3.4"
 
  #define FLAC__NO_DLL 1
 
@@ -111,15 +111,16 @@ namespace FlacNamespace
  #endif
 
  JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wconversion",
-                                      "-Wshadow",
                                       "-Wdeprecated-register",
-                                      "-Wswitch-enum",
-                                      "-Wswitch-default",
+                                      "-Wfloat-equal",
                                       "-Wimplicit-fallthrough",
-                                      "-Wzero-as-null-pointer-constant",
-                                      "-Wsign-conversion",
+                                      "-Wlanguage-extension-token",
                                       "-Wredundant-decls",
-                                      "-Wlanguage-extension-token")
+                                      "-Wshadow",
+                                      "-Wsign-conversion",
+                                      "-Wswitch-default",
+                                      "-Wswitch-enum",
+                                      "-Wzero-as-null-pointer-constant")
 
  #if JUCE_INTEL
   #if JUCE_32BIT
@@ -131,11 +132,17 @@ namespace FlacNamespace
   #define FLAC__HAS_X86INTRIN 1
  #endif
 
- #undef __STDC_LIMIT_MACROS
- #define __STDC_LIMIT_MACROS 1
  #define flac_max jmax
  #define flac_min jmin
- #undef DEBUG // (some flac code dumps debug trace if the app defines this macro)
+
+ #pragma push_macro ("DEBUG")
+ #pragma push_macro ("NDEBUG")
+ #undef  DEBUG  // (some flac code dumps debug trace if the app defines this macro)
+
+ #ifndef NDEBUG
+  #define NDEBUG // (some flac code prints cpu info if this isn't defined)
+ #endif
+
  #include "flac/all.h"
  #include "flac/libFLAC/bitmath.c"
  #include "flac/libFLAC/bitreader.c"
@@ -152,7 +159,11 @@ namespace FlacNamespace
  #include "flac/libFLAC/stream_encoder.c"
  #include "flac/libFLAC/stream_encoder_framing.c"
  #include "flac/libFLAC/window_flac.c"
- #undef VERSION
+
+ #pragma pop_macro ("DEBUG")
+ #pragma pop_macro ("NDEBUG")
+
+ #undef PACKAGE_VERSION
 
  JUCE_END_IGNORE_WARNINGS_GCC_LIKE
  JUCE_END_IGNORE_WARNINGS_MSVC
@@ -172,7 +183,7 @@ template <typename Item>
 auto emptyRange (Item item) { return Range<Item>::emptyRange (item); }
 
 //==============================================================================
-class FlacReader  : public AudioFormatReader
+class FlacReader final : public AudioFormatReader
 {
 public:
     FlacReader (InputStream* in)  : AudioFormatReader (in, flacFormatName)
@@ -215,12 +226,12 @@ public:
         sampleRate = info.sample_rate;
         bitsPerSample = info.bits_per_sample;
         lengthInSamples = (unsigned int) info.total_samples;
-        num_channels = info.channels;
+        numChannels = info.channels;
 
-        reservoir.setSize ((int) num_channels, 2 * (int) info.max_blocksize, false, false, true);
+        reservoir.setSize ((int) numChannels, 2 * (int) info.max_blocksize, false, false, true);
     }
 
-    bool readSamples (int** destSamples, int numDestChannels, int startOffsetInDestBuffer,
+    bool readSamples (int* const* destSamples, int numDestChannels, int startOffsetInDestBuffer,
                       int64 startSampleInFile, int numSamples) override
     {
         if (! ok)
@@ -233,7 +244,7 @@ public:
             const auto bufferIndices = rangeToRead - bufferedRange.getStart();
             const auto writePos = (int64) startOffsetInDestBuffer + (rangeToRead.getStart() - startSampleInFile);
 
-            for (int i = jmin (numDestChannels, reservoir.get_num_channels()); --i >= 0;)
+            for (int i = jmin (numDestChannels, reservoir.getNumChannels()); --i >= 0;)
             {
                 if (destSamples[i] != nullptr)
                 {
@@ -289,11 +300,11 @@ public:
         else
         {
             if (numSamples > reservoir.getNumSamples())
-                reservoir.setSize ((int) num_channels, numSamples, false, false, true);
+                reservoir.setSize ((int) numChannels, numSamples, false, false, true);
 
             auto bitsToShift = 32 - bitsPerSample;
 
-            for (int i = 0; i < (int) num_channels; ++i)
+            for (int i = 0; i < (int) numChannels; ++i)
             {
                 auto* src = buffer[i];
                 int n = i;
@@ -375,7 +386,7 @@ private:
 
 
 //==============================================================================
-class FlacWriter  : public AudioFormatWriter
+class FlacWriter final : public AudioFormatWriter
 {
 public:
     FlacWriter (OutputStream* out, double rate, uint32 numChans, uint32 bits, int qualityOptionIndex)
@@ -387,9 +398,9 @@ public:
         if (qualityOptionIndex > 0)
             FLAC__stream_encoder_set_compression_level (encoder, (uint32) jmin (8, qualityOptionIndex));
 
-        FLAC__stream_encoder_set_do_mid_side_stereo (encoder, num_channels == 2);
-        FLAC__stream_encoder_set_loose_mid_side_stereo (encoder, num_channels == 2);
-        FLAC__stream_encoder_set_channels (encoder, num_channels);
+        FLAC__stream_encoder_set_do_mid_side_stereo (encoder, numChannels == 2);
+        FLAC__stream_encoder_set_loose_mid_side_stereo (encoder, numChannels == 2);
+        FLAC__stream_encoder_set_channels (encoder, numChannels);
         FLAC__stream_encoder_set_bits_per_sample (encoder, jmin ((unsigned int) 24, bitsPerSample));
         FLAC__stream_encoder_set_sample_rate (encoder, (unsigned int) sampleRate);
         FLAC__stream_encoder_set_blocksize (encoder, 0);
@@ -429,10 +440,10 @@ public:
 
         if (bitsToShift > 0)
         {
-            temp.malloc (num_channels * (size_t) numSamples);
-            channels.calloc (num_channels + 1);
+            temp.malloc (numChannels * (size_t) numSamples);
+            channels.calloc (numChannels + 1);
 
-            for (unsigned int i = 0; i < num_channels; ++i)
+            for (unsigned int i = 0; i < numChannels; ++i)
             {
                 if (samplesToWrite[i] == nullptr)
                     break;
@@ -486,8 +497,7 @@ public:
         packUint32 ((FLAC__uint32) info.total_samples, buffer + 14, 4);
         memcpy (buffer + 18, info.md5sum, 16);
 
-        const bool seekOk = output->setPosition (streamStartPos + 4);
-        ignoreUnused (seekOk);
+        [[maybe_unused]] const bool seekOk = output->setPosition (streamStartPos + 4);
 
         // if this fails, you've given it an output stream that can't seek! It needs
         // to be able to seek back to write the header
