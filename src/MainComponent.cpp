@@ -33,7 +33,7 @@ MainComponent::MainComponent()
 	, mainContainer()
 	, procButton( "N", 			&FalterLookAndFeel::getLNF().fontWingdings 	)
 	, recordButton( "l", 		&FalterLookAndFeel::getLNF().fontWingdings  )
-	, settingsButton( "M", 		&FalterLookAndFeel::getLNF().fontWingdings  )
+	, settingsButton( "$", 		&FalterLookAndFeel::getLNF().fontWingdings  )
 	, scriptSelectButton( "0", 	&FalterLookAndFeel::getLNF().fontWingdings 	)
 	, autoProcessButton( "R", 	&FalterLookAndFeel::getLNF().fontWingdings  )
 	, scriptLabel( "" )
@@ -230,9 +230,9 @@ void MainComponent::settingsButtonClicked()
 	settingsMode = !settingsMode;
 
 	if( settingsMode )
-		settingsButton.setButtonText( "$" );
-	else
 		settingsButton.setButtonText( "M" );
+	else
+		settingsButton.setButtonText( "$" );
 
 	mainContainer.setVisible( ! settingsMode );
 	settingsContainer.setVisible( settingsMode );
