@@ -16,3 +16,5 @@ Task:
     publish lls addon
         wait a bit for new framework developments
 
+    old juce copy had modifications to fix audio settings component
+
