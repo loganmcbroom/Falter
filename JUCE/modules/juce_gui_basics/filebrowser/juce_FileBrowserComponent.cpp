@@ -35,7 +35,7 @@ FileBrowserComponent::FileBrowserComponent (int flags_,
      flags (flags_),
      previewComp (previewComp_),
      currentPathBox ("path"),
-     fileLabel ("f", TRANS ("file:")),
+     fileLabel ("f", ""),
      thread ("JUCE FileBrowser"),
      wasProcessActive (true)
 {
