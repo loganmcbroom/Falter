@@ -137,7 +137,7 @@ struct F_Audio_convert_to_PV_selector { pPV operator()( pAudio a,
         return F_Audio_convert_to_PV()( a, window_size, hop, dft_size );
     } };
 
-struct F_Audio_convertToMidSide { pAudio operator()( pAudio a )
+struct F_Audio_convert_to_mid_side { pAudio operator()( pAudio a )
     { std::cout << "flan::Audio::convert_to_mid_side";
     return std::make_shared<flan::Audio>( a->convert_to_mid_side() ); } };
 
@@ -473,11 +473,11 @@ struct F_Audio_filter_1pole_highshelf { pAudio operator()( pAudio a,
     { std::cout << "flan::Audio::filter_1pole_highshelf";
     return std::make_shared<flan::Audio>( a->filter_1pole_highshelf( *cutoff, *gain, order ) ); } };
 
-struct F_Audio_filter_1pole_repeat { pAudio operator()( pAudio a,
-    pFunc1x1 cutoff,
-    const uint16_t repeats )
-    { std::cout << "flan::Audio::filter_1pole_repeat";
-    return std::make_shared<flan::Audio>( a->filter_1pole_repeat( *cutoff, repeats ) ); } };
+// struct F_Audio_filter_1pole_repeat { pAudio operator()( pAudio a,
+//     pFunc1x1 cutoff,
+//     const uint16_t repeats )
+//     { std::cout << "flan::Audio::filter_1pole_repeat";
+//     return std::make_shared<flan::Audio>( a->filter_1pole_repeat( *cutoff, repeats ) ); } };
 
 /* 2 Pole ============================ */
 
@@ -554,7 +554,7 @@ struct F_Audio_filter_2pole_multinotch { pAudio operator()( pAudio a,
 
 struct F_Audio_filter_comb { pAudio operator()( pAudio a,
     pFunc1x1 cutoff,
-    pFunc1x1 feedback,
+    pFunc1x1 feedback = std::make_shared<Func1x1>( 0 ),
     pFunc1x1 wet_dry = std::make_shared<Func1x1>( .5 ),
     bool invert = false )
     { std::cout << "flan::Audio::filter_comb";
@@ -689,6 +689,72 @@ struct F_Audio_synthesize_psola { pAudio operator()( pAudio a,
 
 
 //============================================================================================================================================================
+// Helpers - These are not part of flan, they are helpers for ltmp processing
+//============================================================================================================================================================
+
+static std::vector<std::vector<const Audio *>> groupify( const AudioVec & a, int group_size )
+    {
+    const auto pvec = sharedPvecToPvec( a );
+
+    const int num_groups = std::ceil( float( a.size() ) / group_size );
+    std::vector<std::vector<const Audio *>> pvec_split( num_groups );
+    for( int i = 0; i < a.size(); ++i )
+        {
+        const int group = std::floor( float( i ) / group_size );
+        pvec_split[group].push_back( pvec[i] );
+        }
+    return pvec_split;
+    }
+
+struct F_Audio_mix_groups { AudioVec operator()( AudioVec a,
+    int group_size )
+    { 
+    std::cout << "falter::Audio::mix_groups";
+
+    auto pvec_split = groupify( a, group_size );
+    AudioVec out;
+    std::transform( pvec_split.begin(), pvec_split.end(), std::back_inserter( out ), []( const std::vector<const Audio *> & v )
+        {
+        return std::make_shared<flan::Audio>( flan::Audio::mix( v ) );
+        } );
+
+    return out;
+    } };
+
+struct F_Audio_combine_channel_groups { AudioVec operator()( AudioVec a,
+    int group_size )
+    { 
+    std::cout << "falter::Audio::combine_channel_groups";
+
+    auto pvec_split = groupify( a, group_size );
+    AudioVec out;
+    std::transform( pvec_split.begin(), pvec_split.end(), std::back_inserter( out ), []( const std::vector<const Audio *> & v )
+        {
+        return std::make_shared<flan::Audio>( flan::Audio::combine_channels( v ) );
+        } );
+
+    return out;
+    } };
+
+
+struct F_Audio_join_groups { AudioVec operator()( AudioVec a,
+    int group_size )
+    { 
+    std::cout << "falter::Audio::join_groups";
+
+    auto pvec_split = groupify( a, group_size );
+    AudioVec out;
+    std::transform( pvec_split.begin(), pvec_split.end(), std::back_inserter( out ), []( const std::vector<const Audio *> & v )
+        {
+        return std::make_shared<flan::Audio>( flan::Audio::join( v ) );
+        } );
+
+    return out;
+    } };
+
+
+
+//============================================================================================================================================================
 // Registration
 //============================================================================================================================================================
 
@@ -707,6 +773,9 @@ void luaF_register_Audio( lua_State * L )
         lua_pushcclosure( L, luaF_LTMP<F_Audio_combine_channels,         1>, 0 ); lua_setfield( L, -2, "combine_channels"           );  
         lua_pushcclosure( L, luaF_LTMP<F_Audio_mix,                      1>, 0 ); lua_setfield( L, -2, "mix"                        ); 
         lua_pushcclosure( L, luaF_LTMP<F_Audio_mix_variable_gain,        3>, 0 ); lua_setfield( L, -2, "mix_variable_gain"          ); 
+        lua_pushcclosure( L, luaF_LTMP<F_Audio_mix_groups,               2>, 0 ); lua_setfield( L, -2, "mix_groups"                 ); 
+        lua_pushcclosure( L, luaF_LTMP<F_Audio_combine_channel_groups,   2>, 0 ); lua_setfield( L, -2, "combine_channel_groups"     ); 
+        lua_pushcclosure( L, luaF_LTMP<F_Audio_join_groups,              2>, 0 ); lua_setfield( L, -2, "join_groups"                ); 
         lua_pushcclosure( L, luaF_LTMP<F_Audio_join,                     1>, 0 ); lua_setfield( L, -2, "join"                       ); 
         lua_pushcclosure( L, luaF_LTMP<F_Audio_select,                   2>, 0 ); lua_setfield( L, -2, "select"                     ); 
         lua_pushcclosure( L, luaF_LTMP<F_Audio_synthesize_waveform,      3>, 0 ); lua_setfield( L, -2, "synthesize_waveform"        ); 
@@ -732,7 +801,7 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_convert_to_PV,                         1>( L, "convert_to_PV"                          );
             luaF_register_helper<F_Audio_convert_to_ms_PV,                      1>( L, "convert_to_ms_PV"                       );          
             //luaF_register_helper<F_Audio_convert_to_PV_selector,                1>( L, "__call"                                 );
-            luaF_register_helper<F_Audio_convertToMidSide,                      1>( L, "convertToMidSide"                       );
+            luaF_register_helper<F_Audio_convert_to_mid_side,                   1>( L, "convert_to_mid_side"                       );
             luaF_register_helper<F_Audio_convert_to_left_right,                 1>( L, "convert_to_left_right"                  );
             luaF_register_helper<F_Audio_convert_to_stereo,                     1>( L, "convert_to_stereo"                      );
             luaF_register_helper<F_Audio_convert_to_mono,                       1>( L, "convert_to_mono"                        );
@@ -792,8 +861,7 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_filter_1pole_highpass,                 2>( L, "filter_1pole_highpass"                  );                        
             luaF_register_helper<F_Audio_filter_1pole_split,                    2>( L, "filter_1pole_split"                     );                     
             luaF_register_helper<F_Audio_filter_1pole_lowshelf,                 3>( L, "filter_1pole_lowshelf"                  );                        
-            luaF_register_helper<F_Audio_filter_1pole_highshelf,                3>( L, "filter_1pole_highshelf"                 );                             
-            //luaF_register_helper<F_Audio_filter_1pole_repeat,                   3>( L, "filter_1pole_repeat"                    );                      
+            luaF_register_helper<F_Audio_filter_1pole_highshelf,                3>( L, "filter_1pole_highshelf"                 );                        
             luaF_register_helper<F_Audio_filter_2pole_lowpass,                  3>( L, "filter_2pole_lowpass"                   );                       
             luaF_register_helper<F_Audio_filter_2pole_bandpass,                 3>( L, "filter_2pole_bandpass"                  );                        
             luaF_register_helper<F_Audio_filter_2pole_highpass,                 3>( L, "filter_2pole_highpass"                  );                        
@@ -803,7 +871,7 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_filter_2pole_highshelf,                4>( L, "filter_2pole_highshelf"                 );                             
             luaF_register_helper<F_Audio_filter_1pole_multinotch,               2>( L, "filter_1pole_multinotch"                );                              
             luaF_register_helper<F_Audio_filter_2pole_multinotch,               3>( L, "filter_2pole_multinotch"                );                              
-            luaF_register_helper<F_Audio_filter_comb,                           3>( L, "filter_comb"                            );      
+            luaF_register_helper<F_Audio_filter_comb,                           2>( L, "filter_comb"                            );      
 
             // Combination
             // luaF_register_helper<F_Audio_mix_in_place,                          2>( L, "mix_in_place"                           );  
@@ -819,6 +887,9 @@ void luaF_register_Audio( lua_State * L )
             lua_pushcclosure( L, luaF_LTMP<F_Audio_combine_channels,         1>, 0 ); lua_setfield( L, -2, "combine_channels"       );  
             lua_pushcclosure( L, luaF_LTMP<F_Audio_mix,                      1>, 0 ); lua_setfield( L, -2, "mix"                    ); 
             lua_pushcclosure( L, luaF_LTMP<F_Audio_mix_variable_gain,        3>, 0 ); lua_setfield( L, -2, "mix_variable_gain"      ); 
+            lua_pushcclosure( L, luaF_LTMP<F_Audio_mix_groups,               2>, 0 ); lua_setfield( L, -2, "mix_groups"             ); 
+            lua_pushcclosure( L, luaF_LTMP<F_Audio_combine_channel_groups,   2>, 0 ); lua_setfield( L, -2, "combine_channel_groups" ); 
+            lua_pushcclosure( L, luaF_LTMP<F_Audio_join_groups,              2>, 0 ); lua_setfield( L, -2, "join_groups"            ); 
             lua_pushcclosure( L, luaF_LTMP<F_Audio_join,                     1>, 0 ); lua_setfield( L, -2, "join"                   ); 
             lua_pushcclosure( L, luaF_LTMP<F_Audio_select,                   2>, 0 ); lua_setfield( L, -2, "select"                 );  
 

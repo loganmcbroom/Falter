@@ -59,12 +59,10 @@ template<typename T> T luaF_checkUsertype( lua_State * L, int i )
     }
 
 // Test if a type is shared_ptr
-//template<typename T> concept is_resetable = requires(T a) { a.reset(); };
 template<typename T> struct is_shared_ptr : std::false_type {};
 template<typename T> struct is_shared_ptr<std::shared_ptr<T>> : std::true_type {};
 
 // Same but for vectors
-//template<typename T> concept is_clearable = requires(T a) { a.clear(); };
 template<typename T> struct is_vector : std::false_type {};
 template<typename T> struct is_vector<std::vector<T>> : std::true_type {};
 
