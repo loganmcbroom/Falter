@@ -22,6 +22,7 @@ public:
 	void playAudio( FalterClip * clip );
 	void stop();
 
+	bool isActiveClip( const FalterClip * );
 	void deactivateClip( const FalterClip * );
 
 private:

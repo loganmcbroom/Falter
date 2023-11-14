@@ -64,6 +64,11 @@ void FalterPlayer::stop()
 	activeClip = nullptr;
 	}
 
+bool FalterPlayer::isActiveClip( const FalterClip * clip )
+	{
+	return activeClip == clip;
+	}
+
 void FalterPlayer::deactivateClip( const FalterClip * clip )
 	{
 	if( clip == activeClip )

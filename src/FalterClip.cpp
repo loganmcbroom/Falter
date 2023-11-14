@@ -187,4 +187,10 @@ void FalterClip::timerCallback()
 		0.0f, 
 		getToggleState() ? 2.0f : 0.0f, 
 		float( getHeight() ) ) );
+
+	// This should be checking source.hasStreamFinished, but that method seems to have broken on the JUCE side?
+	// I mean this shouldn't be checked at all, but the listener callback for transport source ending seems to not work anymore.
+	// It seems like the source doesn't realize it's run out of input.
+	if( audio->get_length() - source.getCurrentPosition() < 0.001f ) 
+		stopPressed();
 	} 
