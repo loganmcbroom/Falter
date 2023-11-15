@@ -99,11 +99,11 @@ template<> pFunc2x2 luaF_checkFunc( lua_State * L, int i ) { return luaF_checkFu
 // Static functions ================================================================================================================
 
 struct F_Func1x1_ADSR { pFunc1x1 operator()( 
-    float a = 0, 
-    float d = 1, 
-    float s = 0, 
-    float r = 1, 
-    float sLvl = 0, 
+    float a, 
+    float d, 
+    float s, 
+    float r, 
+    float sLvl, 
     float aExp = 1, 
     float dExp = 1, 
     float rExp = 1 ) 
@@ -226,6 +226,8 @@ struct F_Func1x1_save_to_bmp { void operator()( pFunc1x1 a,
 
 void luaF_register_function_types( lua_State* L )
     {
+    lua_pushcclosure( L, luaF_LTMP<F_Func1x1_ADSR, 5>, 0 ); lua_setglobal( L, "ADSR" );
+
     // ====================================================================================================================================================
     // Func1x1 
     // ====================================================================================================================================================
@@ -234,7 +236,6 @@ void luaF_register_function_types( lua_State* L )
         lua_newtable( L );
             lua_pushcfunction( L, luaF_Func_ctor_selector<pFunc1x1> ); lua_setfield( L, -2, "__call" );
         lua_setmetatable( L, -2 );
-        lua_pushcclosure( L, luaF_LTMP<F_Func1x1_ADSR, 5>, 0 ); lua_setfield( L, -2, "ADSR" );
     lua_setglobal( L, luaF_getUsertypeName<pFunc1x1>().c_str() );
     
     // Register the Func1x1 type which is constructer 

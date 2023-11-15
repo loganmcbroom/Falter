@@ -42,10 +42,19 @@ void luaF_LTMP_push( lua_State* L, const std::vector<T> & os )
     {
     if( os.size() == 0 ) 
         throw std::runtime_error( "luaF_LTMP_push was called with an empty output vector" );
-    if( os.size() == 1 ) 
-        luaF_push( L, os[0] );
-    else
-        luaF_pushArrayOfType( L, os );
+
+    luaF_pushArrayOfType( L, os ); 
+
+    // if constexpr ( std::same_as<T, pAudio> || std::same_as<T, pPV> )
+    //     {
+    //     luaF_pushArrayOfType( L, os ); 
+    //     }
+    // else
+    //     {
+    //     if( os.size() == 1 ) luaF_push( L, os[0] );
+    //     else l
+    //     }
+       
     }
 
 // This recursively gets all the arguments needed for a flan function call from the Lua stack as a tuple.
@@ -110,6 +119,21 @@ auto luaF_LTMP_getCurrentTuple( Tup t, int i )
         }
     }
 
+template <typename T>
+static std::vector<T> flatten( const std::vector<std::vector<T>> & v ) 
+    {
+    std::size_t total_size = 0;
+    for( const auto & sub : v ) total_size += sub.size();
+
+    std::vector<T> result;
+    result.reserve( total_size );
+
+    for( const auto & sub : v )
+        result.insert( result.end(), sub.begin(), sub.end() );
+
+    return result;
+    }
+
 // When a flan algorithm is called, you may optionally pass a Lua array where a single argument would normally be.
 // The algorithm will then be run for each one of those array elements.
 // This function does the heavy lifting for the LTMP system, going through the arguments on the Lua stack, getting the current
@@ -150,7 +174,14 @@ static int luaF_LTMP_dispatched( lua_State* L )
             if( canceller ) 
                 throw std::runtime_error( "Couldn't complete script, thread was cancelled" );
             }
-        luaF_LTMP_push( L, outputs );
+        if constexpr( is_vector<R> )
+            {
+            luaF_LTMP_push( L, flatten( outputs ) );
+            }
+        else
+            {
+            luaF_LTMP_push( L, outputs );
+            }
         return 1;
         }
     }

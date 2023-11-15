@@ -32,6 +32,7 @@ using pWavetable    = std::shared_ptr<flan::Wavetable>;
 using pGraph        = std::shared_ptr<flan::Graph>;
 using pAudioMod     = std::shared_ptr<flan::AudioMod>;
 using pPrismFunc    = std::shared_ptr<flan::PrismFunc>;
+using pGrainSource  = std::shared_ptr<flan::Function<flan::Second, flan::Audio>>;
 
 using AudioVec      = std::vector<pAudio>;
 using PVVec         = std::vector<pPV>;

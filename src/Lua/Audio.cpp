@@ -625,32 +625,30 @@ struct F_Audio_synthesize_impulse { pAudio operator()(
     
 // Grain Controllers ===================================================================================================================
 
-// struct F_Audio_synthesize_grains { pAudio operator()(
-//     Second length,
-//     pFunc1x1 grains_per_second,
-//     pFunc1x1 time_scatter,
-//     const Function<Second, Audio> & grain_source, fix
-//     FrameRate sample_rate = 48000 )
-//     { std::cout << "flan::Audio::";
-//    return std::make_shared<flan::Audio>( Audio::synthesize_grains( length, *grains_per_second, *time_scatter, grain_source, sample_rate ) ); } };
+struct F_Audio_synthesize_grains { pAudio operator()(
+    Second length,
+    pFunc1x1 grains_per_second,
+    pFunc1x1 time_scatter,
+    pGrainSource grain_source,
+    FrameRate sample_rate = 48000 )
+    { std::cout << "flan::Audio::synthesize_grains";
+    return std::make_shared<flan::Audio>( Audio::synthesize_grains( length, *grains_per_second, *time_scatter, *grain_source, sample_rate ) ); } };
 
 struct F_Audio_synthesize_grains_repeat { pAudio operator()( pAudio a,
     Second length,
     pFunc1x1 grains_per_second,
     pFunc1x1 time_scatter,
-    pFunc1x1 gain,
-    FrameRate sample_rate = 48000 )
+    pFunc1x1 gain )
     { std::cout << "flan::Audio::synthesize_grains_repeat";
-    return std::make_shared<flan::Audio>( a->synthesize_grains_repeat( length, *grains_per_second, *time_scatter, *gain, sample_rate ) ); } };
+    return std::make_shared<flan::Audio>( a->synthesize_grains_repeat( length, *grains_per_second, *time_scatter, *gain ) ); } };
 
 struct F_Audio_synthesize_grains_with_feedback_mod { pAudio operator()( pAudio a,
     Second length, 
     pFunc1x1 grains_per_second, 
     pFunc1x1 time_scatter, 
-    pAudioMod mod,
-    FrameRate sample_rate = 48000 )
+    pAudioMod mod )
     { std::cout << "flan::Audio::synthesize_grains_with_feedback_mod";
-    return std::make_shared<flan::Audio>( a->synthesize_grains_with_feedback_mod( length, *grains_per_second, *time_scatter, *mod, true, sample_rate ) ); } };
+    return std::make_shared<flan::Audio>( a->synthesize_grains_with_feedback_mod( length, *grains_per_second, *time_scatter, *mod, true ) ); } };
 
 // Grain Compositions ===================================================================================================================
 
@@ -675,9 +673,10 @@ struct F_Audio_synthesize_granulation { pAudio operator()( pAudio a,
     pFunc1x1 time_scatter, 
     pFunc1x1 time_selection, 
     pFunc1x1 grain_length,
+    Second fade = 0,
     pAudioMod mod = std::make_shared<flan::AudioMod>() )
     { std::cout << "flan::Audio::synthesize_granulation";
-    return std::make_shared<flan::Audio>( a->synthesize_granulation( length, *grains_per_second, *time_scatter, *time_selection, *grain_length, *mod ) ); } };
+    return std::make_shared<flan::Audio>( a->synthesize_granulation( length, *grains_per_second, *time_scatter, *time_selection, *grain_length, fade, *mod ) ); } };
 
 struct F_Audio_synthesize_psola { pAudio operator()( pAudio a,
     Second length, 
@@ -780,7 +779,7 @@ void luaF_register_Audio( lua_State * L )
         lua_pushcclosure( L, luaF_LTMP<F_Audio_select,                   2>, 0 ); lua_setfield( L, -2, "select"                     ); 
         lua_pushcclosure( L, luaF_LTMP<F_Audio_synthesize_waveform,      3>, 0 ); lua_setfield( L, -2, "synthesize_waveform"        ); 
         lua_pushcclosure( L, luaF_LTMP<F_Audio_synthesize_impulse,       1>, 0 ); lua_setfield( L, -2, "synthesize_impulse"         ); 
-        // lua_pushcclosure( L, luaF_LTMP<F_Audio_synthesize_grains,        n>, 0 ); lua_setfield( L, -2, "synthesize_grains"    ); 
+        lua_pushcclosure( L, luaF_LTMP<F_Audio_synthesize_grains,        4>, 0 ); lua_setfield( L, -2, "synthesize_grains"          ); 
         lua_pushcclosure( L, luaF_LTMP<F_Audio_synthesize_trainlets,     7>, 0 ); lua_setfield( L, -2, "synthesize_trainlets"       ); 
 
     lua_setglobal( L, luaF_getUsertypeName<pAudio>().c_str() );

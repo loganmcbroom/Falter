@@ -34,7 +34,7 @@ pAudioMod luaF_checkAudioMod( lua_State * L, int i )
             lua_pop( L, 1 );
             }, flan::ExecutionPolicy::Linear_Sequenced );
         }
-    else throw std::runtime_error( "Non-function used in place of AudioMod" );
+    else throw std::runtime_error( "Non-function used in place of AudioMod." );
     return std::make_shared<flan::AudioMod>();
     }
 
@@ -64,8 +64,32 @@ pPrismFunc luaF_checkPrismFunc( lua_State * L, int i )
             return out;
             }, flan::ExecutionPolicy::Linear_Sequenced );
         }
-    else throw std::runtime_error( "Non-function used in place of Prismfunc" );
+    else throw std::runtime_error( "Non-function used in place of prism function." );
     return std::make_shared<flan::PrismFunc>();
+    }
+
+pGrainSource luaF_checkGrainSource( lua_State * L, int i )
+    {
+     if( lua_isfunction( L, i ) )
+        {
+        lua_pushvalue( L, i ); // Copy the function, ref will pop it
+        const int ref = luaL_ref( L, LUA_REGISTRYINDEX );
+        return std::make_shared<flan::Function<flan::Second, flan::Audio>>( [L, ref]( flan::Second t ) -> flan::Audio
+            {
+            lua_rawgeti( L, LUA_REGISTRYINDEX, ref );
+            luaF_push( L, t );
+            lua_call( L, 1, 1 );
+            auto out_ps = luaF_check<AudioVec>( L, -1 ); 
+            lua_pop( L, 1 );
+
+            // It would be much more effecient to not copy here, however, we can't guarantee the grain source is returning 
+            // a freshly generated Audio. It may be returning an Audio still being used in other parts of the script, or it may
+            // simply return the same Audio every time if the user doesn't realize synth_grains_repeat is for that case.
+            // As such, a copy must be created.
+            return out_ps[0]->copy();
+            }, flan::ExecutionPolicy::Linear_Sequenced );
+        }
+    else throw std::runtime_error( "Non-function used in place of grain source." );
     }
 
 // static int luaF_AudioMod_call( lua_State * L )

@@ -9,6 +9,7 @@ extern "C"
 
 #include "Audio.h"
 #include "PV.h"
+#include "Wavetable.h"
 #include "Function.h"
 #include "Interpolators.h"
 
@@ -31,6 +32,7 @@ template<> std::string luaF_getUsertypeName<WavetableVec>()         { return "Wa
 
 template<> std::string luaF_getUsertypeName<pAudioMod>()            { return "AudioMod";         }
 template<> std::string luaF_getUsertypeName<pPrismFunc>()           { return "PrismFunc";        }
+template<> std::string luaF_getUsertypeName<pGrainSource>()         { return "GrainSource";      }
 
 
 // Register =======================================================================================================================
@@ -39,7 +41,8 @@ void luaF_register_Usertypes( lua_State * L )
     {
     luaF_register_Audio( L ); // Register Audio class into the Lua context
 	luaF_register_PV( L ); // Register PV class into the Lua context
-	luaF_register_function_types( L ); // Register all function types into the Lua context
+	luaF_register_Wavetable( L );
+    luaF_register_function_types( L ); // Register all function types into the Lua context
     luaF_register_Interpolators( L );
     }
 

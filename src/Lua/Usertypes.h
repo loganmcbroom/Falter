@@ -24,6 +24,7 @@ template<> constexpr bool luaF_isUsertype<pWavetable>()         { return true; }
 template<> constexpr bool luaF_isUsertype<InterpolatorIndex>()  { return true; };
 template<> constexpr bool luaF_isUsertype<pAudioMod>()          { return true; };
 template<> constexpr bool luaF_isUsertype<pPrismFunc>()         { return true; };
+template<> constexpr bool luaF_isUsertype<pGrainSource>()       { return true; };
 
 template<> constexpr bool luaF_isUsertype<AudioVec>()           { return true; };
 template<> constexpr bool luaF_isUsertype<PVVec>()              { return true; };
