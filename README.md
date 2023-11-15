@@ -68,7 +68,6 @@ free to reach out to me so I can update the addon.
 
 
 ### Scripting
-
 Writing about how to click a gui is easy, telling someone how to program not so much. Maybe I should first tell you, I'm not going to teach you
 how to program in Lua here. It's expected that you either know a bit about coding, or are willing to google stuff while you work. The sky
 is the limit on what you can do, but here are the basic things you'll need to know. The first is that whatever inputs you passed into the script 
@@ -76,7 +75,12 @@ are stored in an array called "inputs". The second is that Lua is one-indexed, s
 just a plain array of Audios by the way, it is an "AudioVec" type object, which I will explain in a minute. You can apply algorithms to the inputs
 however you see fit, or you can pass in no inputs and generate your sounds entirely within the script using Audio.synthesize or PV.synthesize.
 When you are done processing, return any number of Audio objects from the script, and they will appear in the output clip list. If anything goes
-wrong in the script, an error will be dumped to the logger, and the thread will turn red.
+wrong in the script, an error will be dumped to the logger, and the thread will turn red. 
+
+An oddity you might run into at some point is that even non-LTMP (see below) method calls always return array types. This isn't all that 
+noticable most of the time, but if you call something like Audio:get_amplitude_envelope, be aware that you will get out an array of functions,
+even if that array only has a single function in it. The alternatives are mainaining a list of what types return array types, or returning both 
+array and non-array types based on the context. Both of these cause other strange issues, so I went with always returning arrays.
 
 #### Types
 * Audio, it is audio. You can do all the normal stuff you'd expect with it, and that is that.
