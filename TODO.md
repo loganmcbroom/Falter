@@ -14,6 +14,10 @@ Task:
     publish lls addon
         wait a bit for new framework developments
 
-    seems like a common task I need is dry/wet mixing, what utils can be given for that?
+    drag and drop clips onto desktop/discord
+     
+    remove in_place methods from Audio
 
-    mention in readme that all methods return vector types
+    update wavetable
+        cpp
+        lls
