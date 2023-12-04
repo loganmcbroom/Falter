@@ -45,6 +45,10 @@ private:
 	bool isInterestedInFileDrag( const StringArray & ) override;
 	void fileDragEnter( const StringArray &, int, int ) override;
 	void fileDragExit( const StringArray & ) override;
+	bool shouldDropFilesWhenDraggedExternally( 
+		const DragAndDropTarget::SourceDetails & sourceDetails, 
+		StringArray & files, 
+		bool & canMoveFiles ) override;	
 
 	// FileBrowserListener interface
 	void selectionChanged() override;

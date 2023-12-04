@@ -11,6 +11,7 @@
 #include "Settings.h"
 #include "AudioLoadThread.h"
 #include "AudioRecorder.h"
+#include "DragAndDropTypes.h"
 
 static std::unique_ptr<FalterLogger> loggerFactory()
 	{
@@ -95,6 +96,8 @@ MainComponent::MainComponent()
 
 	startTimer( 100 );
 
+	File::getCurrentWorkingDirectory().getChildFile( "workspace" ).createDirectory();
+
 	Logger::writeToLog( "Falter Initialized\n" );
 	}
 
@@ -105,6 +108,9 @@ MainComponent::~MainComponent()
 	audioDeviceManager->removeAudioCallback( recorder.get() );
 	Logger::setCurrentLogger( nullptr );
 	setLookAndFeel( nullptr );
+	const File f = File::getCurrentWorkingDirectory().getChildFile( "workspace" );
+	if( f.exists() && f.isDirectory() )
+		f.deleteRecursively();
 	}
 
 void MainComponent::paint( Graphics& g )
@@ -195,9 +201,20 @@ void MainComponent::procButtonClicked()
 
 	auto retrieveFiles = [&]( AudioVec & as, const String & threadName )
 		{
-		for( int i = 0; i < as.size(); ++i )
+		for( int i = as.size()-1; i >= 0; --i )
+			{
 			if( ! as[i]->is_null() )
-				outClips.insertClipFromAudio( as[i], -1, String( "Output " ) + String( i + 1 ) + String( " of: " ) + threadName );
+				outClips.insertClipFromAudio( as[i], 0, String( "Output " ) + String( i + 1 ) + String( " of: " ) + threadName );
+			else
+				Logger::writeToLog( "Null output recieved, this is usually caused by an invalid method input" );
+			}
+		// If we are in hot mode and got outputs, play the first of them
+		if( !as.empty() && autoProcess )
+			{
+			auto child = outClips.getItem( 0 );
+			if( auto clip = std::dynamic_pointer_cast<FalterClip>( child ) )
+				clip->playPressed();
+			}
 		};
 
 	AudioVec inAudio;
@@ -270,7 +287,10 @@ void MainComponent::filesDropped( const StringArray & files, int, int )
 	fileDragExit( files );
 	}
 
-bool MainComponent::isInterestedInFileDrag( const StringArray & ) { return true; }
+bool MainComponent::isInterestedInFileDrag( const StringArray & ) 
+	{ 
+	return true; 
+	}
 
 void MainComponent::fileDragEnter( const StringArray & s, int, int ) 
 	{ 
@@ -284,6 +304,26 @@ void MainComponent::fileDragExit( const StringArray & )
 	inClips.setClearButtonText( "r" ); 
 	inClips.setName( "Inputs" );
 	inClips.repaint();
+	}
+
+bool MainComponent::shouldDropFilesWhenDraggedExternally( 
+	const DragAndDropTarget::SourceDetails & sourceDetails, 
+	StringArray & files, 
+	bool & canMoveFiles ) 
+	{
+	if( sourceDetails.description == DragAndDropTypes::AudioClip )
+		{
+		auto * clip = dynamic_cast<FalterClip *>( sourceDetails.sourceComponent.get() );
+		if( !clip ) return false;
+		File f = clip->getWorkspaceFile();
+		if( f.existsAsFile() )
+			{
+			files.add( f.getFullPathName() );
+			canMoveFiles = true;
+			return true;
+			}		
+		}
+	return false;
 	}
 
 void MainComponent::selectionChanged()

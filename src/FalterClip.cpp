@@ -19,10 +19,10 @@ static std::vector<const float *> getFlanChanPointers( std::shared_ptr<flan::Aud
 	}
 
 FalterClip::FalterClip( std::shared_ptr<flan::Audio> _audio
-			, FalterPlayer & _player
-			, AudioThumbnailCache &_thumbnailCache
-			, const String & name
-			) 
+	, FalterPlayer & _player
+	, AudioThumbnailCache &_thumbnailCache
+	, const String & name
+	) 
 	: Button( name )
 	, player( _player )
 	, audio( _audio )
@@ -32,6 +32,7 @@ FalterClip::FalterClip( std::shared_ptr<flan::Audio> _audio
 	, thumbnail( 512, player.getFormatManager(), _thumbnailCache )
 	, busButton  ( "4", &FalterLookAndFeel::getLNF().fontWebdings, 18 ) 
 	, saveButton ( "<", &FalterLookAndFeel::getLNF().fontWingdings, 18 )
+	, id()
 	{
 	auto & lnf = FalterLookAndFeel::getLNF();
 
@@ -51,12 +52,22 @@ FalterClip::FalterClip( std::shared_ptr<flan::Audio> _audio
 
 	currentPosition.setFill( lnf.light.withAlpha( 0.85f ) );
     addAndMakeVisible( currentPosition );
+
+	Thread::launch( [a = audio, id = id]()
+		{ 
+		a->save( "workspace/" + id.toDashedString().toStdString() + ".wav" ); 
+		} );
 	}
 
 FalterClip::~FalterClip()
 	{
 	thumbnail.setSource( nullptr );
 	player.deactivateClip( this );
+
+	// Delete file
+	File f = getWorkspaceFile();
+	if( f.existsAsFile() )
+		f.deleteFile();
 	}
 
 void FalterClip::resized()
@@ -69,9 +80,9 @@ void FalterClip::resized()
 void FalterClip::mouseDrag( const MouseEvent & )
 	{
 	DragAndDropContainer * dragC = DragAndDropContainer::findParentDragContainerFor( this );
-	if (! dragC->isDragAndDropActive() ) 
+	if ( !dragC->isDragAndDropActive() ) 
 		{
-		dragC->startDragging( (String) DragAndDropTypes::AudioClip , this );
+		dragC->startDragging( (String) DragAndDropTypes::AudioClip, this );
 		}
 	}
 
@@ -147,6 +158,13 @@ void FalterClip::setToggle( bool playMode )
 		busButton.font = &FalterLookAndFeel::getLNF().fontWebdings;
 		currentPosition.setRectangle( juce::Rectangle< float >(0,0,0,0) );
 		}
+	}
+
+File FalterClip::getWorkspaceFile() const
+	{
+	return File::getCurrentWorkingDirectory()
+		.getChildFile( "workspace" )
+		.getChildFile( id.toDashedString() + ".wav" );
 	}
 
 void FalterClip::buttonClicked( Button * button )

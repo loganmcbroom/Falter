@@ -35,6 +35,8 @@ public:
 	void stopPressed();
 	void setToggle( bool );
 
+	File getWorkspaceFile() const;
+
 private:  
 	void timerCallback() override;
 	void changeListenerCallback( ChangeBroadcaster * source ) override;
@@ -53,4 +55,6 @@ private:
 	AudioThumbnail thumbnail;
 	FalterButton busButton, saveButton;
 	DrawableRectangle currentPosition;
+
+	juce::Uuid id;
 }; 
