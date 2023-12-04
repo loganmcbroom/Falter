@@ -3,8 +3,8 @@
 #include "FalterButton.h"
 #include "FalterLookAndFeel.h"
 
-#define CLEAR_HEIGHT 25
-#define ERASE_WIDTH 25
+static const int CLEAR_HEIGHT = 25;
+static const int ERASE_WIDTH = 25;
 
 FalterList::FalterList()
 	: Component()
