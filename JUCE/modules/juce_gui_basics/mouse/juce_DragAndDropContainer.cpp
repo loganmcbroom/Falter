@@ -161,7 +161,7 @@ public:
 
             if (getCurrentlyOver() != nullptr)
                 lastTimeOverTarget = now;
-            else if (now > lastTimeOverTarget + RelativeTime::milliseconds (700))
+            else if (now > lastTimeOverTarget + RelativeTime::milliseconds (70))
                 checkForExternalDrag (details, screenPos);
         }
 
