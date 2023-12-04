@@ -21,19 +21,10 @@ static constexpr typename std::underlying_type<E>::type to_underlying( E e )
     return static_cast<typename std::underlying_type<E>::type>( e );
     }
 
-struct F_Wavetable_Audio_Ctor { pWavetable operator()( pAudio a, 
-    std::underlying_type_t<Wavetable::SnapMode> b = to_underlying( Wavetable::SnapMode::Zero ), 
-    std::underlying_type_t<Wavetable::PitchMode> c = to_underlying( Wavetable::PitchMode::Local ) )
+struct F_Wavetable_Audio_Ctor { pWavetable operator()( pAudio a )
     { 
     std::cout << "flan::Wavetable::create_from_audio";
-    auto wt = std::make_shared<Wavetable>( *a, 
-        static_cast<Wavetable::SnapMode>( b ), 
-        static_cast<Wavetable::PitchMode>( c ),
-        .3,
-        256 ); 
-    wt->remove_dc_in_place();
-    wt->remove_jumps_in_place();
-    return wt;
+    return std::make_shared<Wavetable>( *a );
     } };
 
 struct F_Wavetable_Function_Ctor { pWavetable operator()(

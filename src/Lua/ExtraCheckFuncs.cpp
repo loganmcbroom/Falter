@@ -21,17 +21,35 @@ pAudioMod luaF_checkAudioMod( lua_State * L, int i )
         return std::make_shared<flan::AudioMod>( [L, ref]( flan::Audio & audio, flan::Second t )
             {
             lua_rawgeti( L, LUA_REGISTRYINDEX, ref );
+
             // We have to take a mutable Audio & to match the AudioMod signature, and we have to pass that Audio to Lua inside a shared_ptr.
             // We can't actually give that shared_ptr ownership though, as the Audio belongs to the algorithm calling the mod.
             // Thus, we need a shared_ptr with a no-op deleter. You could crash a thread by trying to store the Audio passed into
             // the mod in a global on the Lua side, but I see no alternative.
+
+            // There is also a question here of "Can we safely move the output of the Lua function, or do we have to copy?".
+            // We will make the assumption that an AudioMod user will not store the Audio it returns in a global somewhere and try to use it 
+            // later, that is, we assume the return is a temporary. 
+
+            // Both these assumptions carry mild risk, but I'm not going to slow down the program so other people can't break it with bad code.
+
             pAudio fake_shared_ptr = std::shared_ptr<flan::Audio>( &audio, []( flan::Audio * ){} ); 
             luaF_push<pAudio>( L, fake_shared_ptr );
             lua_pushnumber( L, t );
             lua_call( L, 2, 1 );
-            pAudio lua_output = luaF_check<pAudio>( L, -1 );
-            audio = std::move( *lua_output );
+            if( luaF_is<AudioVec>( L, -1 ) )
+                {
+                auto out_ps = luaF_check<AudioVec>( L, -1 ); 
+                if( out_ps.empty() ) return;
+                audio = std::move( *out_ps[0] );
+                }
+            else if( luaF_is<pAudio>( L, -1 ) )
+                {
+                auto out_p = luaF_check<pAudio>( L, -1 ); 
+                audio = std::move( *out_p );
+                }
             lua_pop( L, 1 );
+
             }, flan::ExecutionPolicy::Linear_Sequenced );
         }
     else throw std::runtime_error( "Non-function used in place of AudioMod." );
@@ -70,7 +88,7 @@ pPrismFunc luaF_checkPrismFunc( lua_State * L, int i )
 
 pGrainSource luaF_checkGrainSource( lua_State * L, int i )
     {
-     if( lua_isfunction( L, i ) )
+    if( lua_isfunction( L, i ) )
         {
         lua_pushvalue( L, i ); // Copy the function, ref will pop it
         const int ref = luaL_ref( L, LUA_REGISTRYINDEX );
@@ -79,14 +97,25 @@ pGrainSource luaF_checkGrainSource( lua_State * L, int i )
             lua_rawgeti( L, LUA_REGISTRYINDEX, ref );
             luaF_push( L, t );
             lua_call( L, 1, 1 );
-            auto out_ps = luaF_check<AudioVec>( L, -1 ); 
-            lua_pop( L, 1 );
-
-            // It would be much more effecient to not copy here, however, we can't guarantee the grain source is returning 
+            if( luaF_is<AudioVec>( L, -1 ) )
+                {
+                auto out_ps = luaF_check<AudioVec>( L, -1 ); 
+                lua_pop( L, 1 );
+                if( out_ps.empty() ) return flan::Audio::create_null();
+                return out_ps[0]->copy();
+                }
+            else if( luaF_is<pAudio>( L, -1 ) )
+                {
+                auto out_p = luaF_check<pAudio>( L, -1 ); 
+                lua_pop( L, 1 );
+                return out_p->copy();
+                }
+            
+            // It would be much more effecient to not copy in this func, however, we can't guarantee the grain source is returning 
             // a freshly generated Audio. It may be returning an Audio still being used in other parts of the script, or it may
             // simply return the same Audio every time if the user doesn't realize synth_grains_repeat is for that case.
             // As such, a copy must be created.
-            return out_ps[0]->copy();
+            
             }, flan::ExecutionPolicy::Linear_Sequenced );
         }
     else throw std::runtime_error( "Non-function used in place of grain source." );

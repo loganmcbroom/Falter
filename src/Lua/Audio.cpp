@@ -9,6 +9,7 @@ extern "C"
 
 #include <flan/Audio/Audio.h>
 #include <flan/PV/PV.h>
+#include <flan/Wavetable.h>
 #include <flan/Graph.h>
 
 #include "LTMP.h"
@@ -157,6 +158,12 @@ struct F_Audio_convert_to_function { pFunc1x1 operator()( pAudio a )
     { std::cout << "flan::Audio::convert_to_function";
     return std::make_shared<Func1x1>( a->convert_to_function() ); } };
 
+struct F_Audio_convert_to_wavetable { pWavetable operator()( pAudio a )
+    { 
+    std::cout << "flan::Audio::convert_to_wavetable";
+    return std::make_shared<Wavetable>( *a ); 
+    } };
+
 
 
 //============================================================================================================================================================
@@ -289,9 +296,9 @@ struct F_Audio_repitch { pAudio operator()( pAudio a,
 struct F_Audio_iterate { pAudio operator()( pAudio a, 
     uint32_t b = 1, 
     pAudioMod c = std::make_shared<flan::AudioMod>(), 
-    bool d = false )
+    Fool d = false )
     { std::cout << "flan::Audio::iterate";
-    return std::make_shared<flan::Audio>( a->iterate( b, *c, d ) ); } };
+    return std::make_shared<flan::Audio>( a->iterate( b, *c, d.b ) ); } };
 
 struct F_Audio_delay { pAudio operator()( pAudio a, 
     flan::Second b = 10, 
@@ -353,6 +360,34 @@ struct F_Audio_fade { pAudio operator()( pAudio a,
     { std::cout << "flan::Audio::fade";
     return std::make_shared<flan::Audio>( a->fade( b, c, index2interpolator( d ) ) ); } };
 
+struct F_Audio_apply_adsr { pAudio operator()( pAudio a, 
+    Second b,
+    Second c,
+    Second d = 0,
+    Second e = 0,
+    Amplitude f = 0,
+    float g = 1,
+    float h = 1,
+    float i = 1 )
+    { 
+    // This isn't a real flan function but nobody needs to know that.
+    std::cout << "flan::Audio::apply_adsr";
+    auto envelope = flan::ADSR( b, c, d, e, f, g, h, i );
+    return std::make_shared<flan::Audio>( a->modify_volume( envelope ) ); 
+    } };
+
+struct F_Audio_apply_ar { pAudio operator()( pAudio a, 
+    Second b,
+    Second e,
+    float h = 1,
+    float i = 1 )
+    { 
+    // This isn't a real flan function but nobody needs to know that.
+    std::cout << "flan::Audio::apply_ad";
+    auto envelope = flan::ADSR( b, 0, 0, e, 1, 1, h, i );
+    return std::make_shared<flan::Audio>( a->modify_volume( envelope ) ); 
+    } };
+
 struct F_Audio_fade_in_place { void operator()( pAudio a, 
     flan::Second b = 16.0f/48000.0f, 
     flan::Second c = 16.0f/48000.0f, 
@@ -408,15 +443,10 @@ struct F_Audio_compress { pAudio operator()( pAudio a,
 // Spatial
 //============================================================================================================================================================
 
-struct F_Audio_stereo_spatialize_variable { pAudio operator()( pAudio a,
-    pFunc1x2 position )
-    { std::cout << "flan::Audio::stereo_spatialize_variable";
-    return std::make_shared<flan::Audio>( a->stereo_spatialize_variable( *position ) ); } };
-
 struct F_Audio_stereo_spatialize { pAudio operator()( pAudio a,
-    vec2 position )
+    pFunc1x2 position )
     { std::cout << "flan::Audio::stereo_spatialize";
-    return std::make_shared<flan::Audio>( a->stereo_spatialize( position ) ); } };
+    return std::make_shared<flan::Audio>( a->stereo_spatialize( *position ) ); } };
 
 struct F_Audio_pan { pAudio operator()( pAudio a, 
     pFunc1x1 b = std::make_shared<Func1x1>( 0 ) )
@@ -539,26 +569,26 @@ struct F_Audio_filter_1pole_multinotch { pAudio operator()( pAudio a,
     pFunc1x1 cutoff,
     pFunc1x1 wet_dry = std::make_shared<Func1x1>( .5 ),
     uint16_t order = 1,
-    bool invert = false )
+    Fool invert = false )
     { std::cout << "flan::Audio::filter_1pole_multinotch";
-    return std::make_shared<flan::Audio>( a->filter_1pole_multinotch( *cutoff, *wet_dry, order, invert ) ); } };
+    return std::make_shared<flan::Audio>( a->filter_1pole_multinotch( *cutoff, *wet_dry, order, invert.b ) ); } };
 
 struct F_Audio_filter_2pole_multinotch { pAudio operator()( pAudio a,
     pFunc1x1 cutoff,
     pFunc1x1 damping,
     pFunc1x1 wet_dry = std::make_shared<Func1x1>( .5 ),
     uint16_t order = 1,
-    bool invert = false )
+    Fool invert = false )
     { std::cout << "flan::Audio::filter_2pole_multinotch";
-    return std::make_shared<flan::Audio>( a->filter_2pole_multinotch( *cutoff, *damping, *wet_dry, order, invert ) ); } };
+    return std::make_shared<flan::Audio>( a->filter_2pole_multinotch( *cutoff, *damping, *wet_dry, order, invert.b ) ); } };
 
 struct F_Audio_filter_comb { pAudio operator()( pAudio a,
     pFunc1x1 cutoff,
     pFunc1x1 feedback = std::make_shared<Func1x1>( 0 ),
     pFunc1x1 wet_dry = std::make_shared<Func1x1>( .5 ),
-    bool invert = false )
+    Fool invert = false )
     { std::cout << "flan::Audio::filter_comb";
-    return std::make_shared<flan::Audio>( a->filter_comb( *cutoff, *feedback, *wet_dry, invert ) ); } };
+    return std::make_shared<flan::Audio>( a->filter_comb( *cutoff, *feedback, *wet_dry, invert.b ) ); } };
 
 
 
@@ -805,6 +835,7 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_convert_to_stereo,                     1>( L, "convert_to_stereo"                      );
             luaF_register_helper<F_Audio_convert_to_mono,                       1>( L, "convert_to_mono"                        );
             luaF_register_helper<F_Audio_convert_to_function,                   1>( L, "convert_to_function"                    );
+            luaF_register_helper<F_Audio_convert_to_wavetable,                  1>( L, "convert_to_wavetable"                   );
 
             // Channels
             luaF_register_helper<F_Audio_split_channels,                        1>( L, "split_channels"                         );        
@@ -837,22 +868,23 @@ void luaF_register_Audio( lua_State * L )
 
             // Volume
             luaF_register_helper<F_Audio_modify_volume,                         2>( L, "modify_volume"                          );
-            luaF_register_helper<F_Audio_modify_volume_in_place,                2>( L, "modify_volume_in_place"                 );                                        
+            // luaF_register_helper<F_Audio_modify_volume_in_place,                2>( L, "modify_volume_in_place"                 );                                        
             luaF_register_helper<F_Audio_set_volume,                            2>( L, "set_volume"                             );
+            luaF_register_helper<F_Audio_apply_adsr,                            3>( L, "apply_adsr"                             );
+            luaF_register_helper<F_Audio_apply_ar,                              3>( L, "apply_ar"                               );
             luaF_register_helper<F_Audio_fade,                                  1>( L, "fade"                                   );
-            luaF_register_helper<F_Audio_fade_in_place,                         1>( L, "fade_in_place"                          );   
+            // luaF_register_helper<F_Audio_fade_in_place,                         1>( L, "fade_in_place"                          );   
             luaF_register_helper<F_Audio_fade_frames,                           1>( L, "fade_frames"                            );
-            luaF_register_helper<F_Audio_fade_frames_in_place,                  1>( L, "fade_frames_in_place"                   );                                      
+            // luaF_register_helper<F_Audio_fade_frames_in_place,                  1>( L, "fade_frames_in_place"                   );                                      
             luaF_register_helper<F_Audio_invert_phase,                          1>( L, "invert_phase"                           );
             luaF_register_helper<F_Audio_waveshape,                             2>( L, "waveshape"                              );
             luaF_register_helper<F_Audio_add_moisture,                          1>( L, "add_moisture"                           );  
             luaF_register_helper<F_Audio_compress,                              2>( L, "compress"                               );
 
             // Spatial
-            luaF_register_helper<F_Audio_stereo_spatialize_variable,            2>( L, "stereo_spatialize_variable"             );                               
             luaF_register_helper<F_Audio_stereo_spatialize,                     2>( L, "stereo_spatialize"                      );                               
             luaF_register_helper<F_Audio_pan,                                   2>( L, "pan"                                    );
-            luaF_register_helper<F_Audio_pan_in_place,                          2>( L, "pan_in_place"                           );  
+            // luaF_register_helper<F_Audio_pan_in_place,                          2>( L, "pan_in_place"                           );  
             luaF_register_helper<F_Audio_widen,                                 2>( L, "widen"                                  );
 
             // Filters

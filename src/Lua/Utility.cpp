@@ -19,7 +19,7 @@ template<> bool luaF_is<uint32_t>( lua_State * L, int i ) { return lua_isnumber(
 template<> bool luaF_is<uint64_t>( lua_State * L, int i ) { return lua_isnumber( L, i ); }
 template<> bool luaF_is<unsigned long>( lua_State * L, int i ) { return lua_isnumber( L, i ); }
 template<> bool luaF_is<float>( lua_State * L, int i ) { return lua_isnumber( L, i ); }
-template<> bool luaF_is<bool>( lua_State * L, int i ) { return lua_isboolean( L, i ); }
+template<> bool luaF_is<Fool>( lua_State * L, int i ) { return lua_isboolean( L, i ); }
 template<> bool luaF_is<flan::Interval>( lua_State * L, int i ) 
     { 
     if( i < 0 ) i = lua_gettop( L ) + 1 + i;
@@ -70,7 +70,7 @@ template<> uint32_t luaF_check( lua_State * L, int i ) { return static_cast<uint
 template<> uint64_t luaF_check( lua_State * L, int i ) { return static_cast<uint64_t>(  luaL_checkinteger( L, i ) ); }
 template<> unsigned long luaF_check( lua_State * L, int i ) { return static_cast<unsigned long>(  luaL_checkinteger( L, i ) ); }
 template<> float luaF_check( lua_State * L, int i ) { return static_cast<float>(  luaL_checknumber( L, i ) ); }
-template<> bool luaF_check( lua_State * L, int i ) { return static_cast<bool>(  lua_toboolean( L, i ) ); }
+template<> Fool luaF_check( lua_State * L, int i ) { return static_cast<bool>(  lua_toboolean( L, i ) ); }
 
 template<> flan::Interval luaF_check( lua_State * L, int i ) 
     {  
@@ -137,7 +137,7 @@ template<> std::string luaF_check( lua_State * L, int i ) { return std::string( 
 template<> void luaF_push( lua_State * L, int i ) { lua_pushinteger( L, i ); }
 template<> void luaF_push( lua_State * L, uint32_t i ) { lua_pushinteger( L, i ); }
 template<> void luaF_push( lua_State * L, float i ) { lua_pushnumber( L, i ); }
-template<> void luaF_push( lua_State * L, bool i ) { lua_pushboolean( L, i ); }
+template<> void luaF_push( lua_State * L, Fool i ) { lua_pushboolean( L, i.b ); }
 template<> void luaF_push( lua_State * L, flan::Interval i ) 
     { 
     lua_newtable( L );

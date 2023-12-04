@@ -50,3 +50,9 @@ using Func1x1Vec = std::vector<pFunc1x1>;
 using Func2x1Vec = std::vector<pFunc2x1>;
 using Func1x2Vec = std::vector<pFunc1x2>;
 using Func2x2Vec = std::vector<pFunc2x2>;
+
+// Dummy type for fixing the dummy mistake c++ made making vector of bool not work correctly
+struct Fool { 
+    Fool( bool b_ ) : b( b_ ) {}
+    bool b; 
+};
