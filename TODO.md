@@ -13,11 +13,5 @@ Maybe todo:
 Task:
     publish lls addon
         wait a bit for new framework developments
-
-    drag and drop clips onto desktop/discord
-     
-    remove in_place methods from Audio
-
-    update wavetable
-        cpp
-        lls
+        
+    
