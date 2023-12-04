@@ -21,7 +21,7 @@ FalterThread & FalterThreadList::addThread( const String & script, const FalterT
 	++n;
 	Time t = Time::getCurrentTime();
 	auto newThread = std::make_shared<FalterThread>( n, script, callback, files );
-	addItem( newThread );
+	insertItem( newThread, 0 );
 	return *newThread;
 	}
 
