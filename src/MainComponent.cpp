@@ -209,7 +209,7 @@ void MainComponent::procButtonClicked()
 				Logger::writeToLog( "Null output recieved, this is usually caused by an invalid method input" );
 			}
 		// If we are in hot mode and got outputs, play the first of them
-		if( !as.empty() && autoProcess )
+		if( !std::all_of( as.begin(), as.end(), []( std::shared_ptr<flan::Audio> a ){ return a->is_null(); } ) && autoProcess )
 			{
 			auto child = outClips.getItem( 0 );
 			if( auto clip = std::dynamic_pointer_cast<FalterClip>( child ) )
@@ -282,8 +282,12 @@ void MainComponent::autoProcessButtonClicked()
 
 void MainComponent::filesDropped( const StringArray & files, int, int )
 	{
-	for( const auto & file : files )
-		importFile( File( file ) );
+	for( const auto & file_string : files )
+		{
+		File file( file_string );
+		if( file.exists() && !file.isDirectory() )
+			importFile( file );
+		}
 	fileDragExit( files );
 	}
 
