@@ -13,6 +13,14 @@
 #include "AudioRecorder.h"
 #include "DragAndDropTypes.h"
 
+MainComponent * MainComponent::instance = nullptr;
+
+MainComponent * MainComponent::getInstance()
+	{
+	jassert( instance );
+	return instance;
+	}
+
 static std::unique_ptr<FalterLogger> loggerFactory()
 	{
 	auto log = std::make_unique<FalterLogger>();
@@ -45,7 +53,10 @@ MainComponent::MainComponent()
 	, settingsContainer()
 	, deviceSelector( *audioDeviceManager )
 	, logHeight( FalterLookAndFeel::getLNF().unit * 5 + FalterLookAndFeel::getLNF().margin * 4 )
+	, workingDirectory()
 	{
+	instance = this;
+
 	setLookAndFeel( &FalterLookAndFeel::getLNF() );
 
 	audioDeviceManager->initialise( 2, 2, nullptr, true );
@@ -96,7 +107,15 @@ MainComponent::MainComponent()
 
 	startTimer( 100 );
 
-	File::getCurrentWorkingDirectory().getChildFile( "workspace" ).createDirectory();
+	// Set up the working directory
+	workingDirectory = File::getCurrentWorkingDirectory().getChildFile( "workspace" );
+	if( !workingDirectory.exists() ) 
+		workingDirectory.createDirectory();
+	String timeString = Time::getCurrentTime().toString( true, true );
+	timeString = timeString.replaceCharacter( ':', '-' );
+	timeString = timeString.replaceCharacter( ' ', '_' );
+	workingDirectory = workingDirectory.getChildFile( timeString );
+	workingDirectory.createDirectory();
 
 	Logger::writeToLog( "Falter Initialized\n" );
 	}
@@ -108,9 +127,10 @@ MainComponent::~MainComponent()
 	audioDeviceManager->removeAudioCallback( recorder.get() );
 	Logger::setCurrentLogger( nullptr );
 	setLookAndFeel( nullptr );
-	const File f = File::getCurrentWorkingDirectory().getChildFile( "workspace" );
-	if( f.exists() && f.isDirectory() )
-		f.deleteRecursively();
+	// const File f = File::getCurrentWorkingDirectory().getChildFile( "workspace" );
+	// if( f.exists() && f.isDirectory() )
+	// 	f.deleteRecursively();
+	instance = nullptr;
 	}
 
 void MainComponent::paint( Graphics& g )
@@ -319,7 +339,7 @@ bool MainComponent::shouldDropFilesWhenDraggedExternally(
 		{
 		auto * clip = dynamic_cast<FalterClip *>( sourceDetails.sourceComponent.get() );
 		if( !clip ) return false;
-		File f = clip->getWorkspaceFile();
+		File f = clip->getFile();
 		if( f.existsAsFile() )
 			{
 			files.add( f.getFullPathName() );

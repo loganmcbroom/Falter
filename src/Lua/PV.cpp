@@ -21,6 +21,48 @@ extern "C"
 using namespace flan;
 
 //============================================================================================================================================================
+// Buffer Methods
+//============================================================================================================================================================
+
+struct F_PV_get_num_channels { int operator()( pPV a )
+    { std::cout << "flan::PV::get_num_channels";
+    return a->get_num_channels(); } };
+
+struct F_PV_get_num_frames { int operator()( pPV a )
+    { std::cout << "flan::PV::get_num_frames";
+    return a->get_num_frames(); } };
+
+struct F_PV_get_num_bins { int operator()( pPV a )
+    { std::cout << "flan::PV::get_num_bins";
+    return a->get_num_bins(); } };
+
+struct F_PV_get_sample_rate { float operator()( pPV a )
+    { std::cout << "flan::PV::get_sample_rate";
+    return a->get_sample_rate(); } };
+
+struct F_PV_get_hop_size { int operator()( pPV a )
+    { std::cout << "flan::PV::get_hop_size";
+    return a->get_hop_size(); } }; 
+
+struct F_PV_get_dft_size { int operator()( pPV a )
+    { std::cout << "flan::PV::get_dft_size";
+    return a->get_dft_size(); } }; 
+
+struct F_PV_get_window_size { int operator()( pPV a )
+    { std::cout << "flan::PV::get_window_size";
+    return a->get_window_size(); } }; 
+
+struct F_PV_get_length { float operator()( pPV a )
+    { std::cout << "flan::PV::get_length";
+    return a->get_length(); } }; 
+
+struct F_PV_get_height { float operator()( pPV a )
+    { std::cout << "flan::PV::get_height";
+    return a->get_height(); } }; 
+
+
+
+//============================================================================================================================================================
 // Constructors
 //============================================================================================================================================================
 
@@ -258,6 +300,17 @@ void luaF_register_PV( lua_State * L )
     lua_pushvalue( L, -1 ); lua_setfield( L, -2, "__index" );
 
     // | PV Metatable | PVVec Metatable
+
+    // Buffer Methods 
+    luaF_register_helper<F_PV_get_num_channels,             1>( L, "get_num_channels" );                    
+    luaF_register_helper<F_PV_get_num_frames,               1>( L, "get_num_frames"   );                    
+    luaF_register_helper<F_PV_get_num_bins,                 1>( L, "get_num_bins"     );            
+    luaF_register_helper<F_PV_get_sample_rate,              1>( L, "get_sample_rate"  );                    
+    luaF_register_helper<F_PV_get_hop_size,                 1>( L, "get_hop_size"     );            
+    luaF_register_helper<F_PV_get_dft_size,                 1>( L, "get_dft_size"     );            
+    luaF_register_helper<F_PV_get_window_size,              1>( L, "get_window_size"  );                    
+    luaF_register_helper<F_PV_get_length,                   1>( L, "get_length"       );            
+    luaF_register_helper<F_PV_get_height,                   1>( L, "get_height"       );            
 
     // Conversions
     luaF_register_helper<F_PV_convert_to_audio,             1>( L, "convert_to_audio" );

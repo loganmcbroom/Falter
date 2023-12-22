@@ -7,6 +7,7 @@
 #include "FalterPlayer.h"
 #include "Settings.h"
 #include "DragAndDropTypes.h"
+#include "MainComponent.h"
 
 static std::vector<const float *> getFlanChanPointers( std::shared_ptr<flan::Audio> a )
 	{
@@ -22,6 +23,7 @@ FalterClip::FalterClip( std::shared_ptr<flan::Audio> _audio
 	, FalterPlayer & _player
 	, AudioThumbnailCache &_thumbnailCache
 	, const String & name
+	, const File & _file
 	) 
 	: Button( name )
 	, player( _player )
@@ -32,6 +34,7 @@ FalterClip::FalterClip( std::shared_ptr<flan::Audio> _audio
 	, thumbnail( 512, player.getFormatManager(), _thumbnailCache )
 	, busButton  ( "4", &FalterLookAndFeel::getLNF().fontWebdings, 18 ) 
 	, saveButton ( "<", &FalterLookAndFeel::getLNF().fontWingdings, 18 )
+	, file( _file )
 	, id()
 	{
 	auto & lnf = FalterLookAndFeel::getLNF();
@@ -53,21 +56,21 @@ FalterClip::FalterClip( std::shared_ptr<flan::Audio> _audio
 	currentPosition.setFill( lnf.light.withAlpha( 0.85f ) );
     addAndMakeVisible( currentPosition );
 
-	Thread::launch( [a = audio, id = id]()
-		{ 
-		a->save( "workspace/" + id.toDashedString().toStdString() + ".wav" ); 
-		} );
+	if( !file.existsAsFile() )
+		{
+		file = MainComponent::getInstance()->workingDirectory.getChildFile( id.toDashedString() + ".wav" );
+
+		Thread::launch( [a = audio, id = id, file = file]()
+			{ 	
+			a->save( file.getFullPathName().toStdString() ); 
+			} );
+		}
 	}
 
 FalterClip::~FalterClip()
 	{
 	thumbnail.setSource( nullptr );
 	player.deactivateClip( this );
-
-	// Delete file
-	File f = getWorkspaceFile();
-	if( f.existsAsFile() )
-		f.deleteFile();
 	}
 
 void FalterClip::resized()
@@ -160,11 +163,9 @@ void FalterClip::setToggle( bool playMode )
 		}
 	}
 
-File FalterClip::getWorkspaceFile() const
+File FalterClip::getFile() const
 	{
-	return File::getCurrentWorkingDirectory()
-		.getChildFile( "workspace" )
-		.getChildFile( id.toDashedString() + ".wav" );
+	return file.existsAsFile() ? file : File();
 	}
 
 void FalterClip::buttonClicked( Button * button )

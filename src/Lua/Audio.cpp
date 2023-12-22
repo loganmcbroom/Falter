@@ -45,6 +45,28 @@ static std::vector<const T *> sharedPvecToPvec( const std::vector<std::shared_pt
 
 
 //============================================================================================================================================================
+// Buffer Methods
+//============================================================================================================================================================
+
+struct F_Audio_get_num_channels { float operator()( pAudio a )
+    { std::cout << "flan::Audio::get_num_channels";
+    return a->get_num_channels(); } };
+
+struct F_Audio_get_num_frames { float operator()( pAudio a )
+    { std::cout << "flan::Audio::get_num_frames";
+    return a->get_num_frames(); } };
+
+struct F_Audio_get_sample_rate { float operator()( pAudio a )
+    { std::cout << "flan::Audio::get_sample_rate";
+    return a->get_sample_rate(); } };
+
+struct F_Audio_get_length { float operator()( pAudio a )
+    { std::cout << "flan::Audio::get_length";
+    return a->get_length(); } };
+
+
+
+//============================================================================================================================================================
 // Construction
 //============================================================================================================================================================
 
@@ -294,11 +316,12 @@ struct F_Audio_repitch { pAudio operator()( pAudio a,
     return std::make_shared<flan::Audio>( a->repitch( *b, c, flan::Audio::WDLResampleType::Sinc ) ); } };
 
 struct F_Audio_iterate { pAudio operator()( pAudio a, 
-    uint32_t b = 1, 
+    uint32_t b, 
+    Second fade = 0,
     pAudioMod c = std::make_shared<flan::AudioMod>(), 
     Fool d = false )
     { std::cout << "flan::Audio::iterate";
-    return std::make_shared<flan::Audio>( a->iterate( b, *c, d.b ) ); } };
+    return std::make_shared<flan::Audio>( a->iterate( b, fade, *c, d.b ) ); } };
 
 struct F_Audio_delay { pAudio operator()( pAudio a, 
     flan::Second b = 10, 
@@ -672,13 +695,14 @@ struct F_Audio_synthesize_grains_repeat { pAudio operator()( pAudio a,
     { std::cout << "flan::Audio::synthesize_grains_repeat";
     return std::make_shared<flan::Audio>( a->synthesize_grains_repeat( length, *grains_per_second, *time_scatter, *gain ) ); } };
 
-struct F_Audio_synthesize_grains_with_feedback_mod { pAudio operator()( pAudio a,
+struct F_Audio_synthesize_grains_with_mod { pAudio operator()( pAudio a,
     Second length, 
     pFunc1x1 grains_per_second, 
     pFunc1x1 time_scatter, 
-    pAudioMod mod )
-    { std::cout << "flan::Audio::synthesize_grains_with_feedback_mod";
-    return std::make_shared<flan::Audio>( a->synthesize_grains_with_feedback_mod( length, *grains_per_second, *time_scatter, *mod, true ) ); } };
+    pAudioMod mod,
+    Fool feedback = false )
+    { std::cout << "flan::Audio::synthesize_grains_with_mod";
+    return std::make_shared<flan::Audio>( a->synthesize_grains_with_mod( length, *grains_per_second, *time_scatter, *mod, feedback.b ) ); } };
 
 // Grain Compositions ===================================================================================================================
 
@@ -821,6 +845,12 @@ void luaF_register_Audio( lua_State * L )
 	    luaL_newmetatable( L, luaF_getUsertypeName<AudioVec>().c_str() );
             lua_pushvalue( L, -1 ); lua_setfield( L, -2, "__index" );
 
+            // Buffer methods
+            luaF_register_helper<F_Audio_get_num_channels,                      1>( L, "get_num_channels"                       );                  
+            luaF_register_helper<F_Audio_get_num_frames,                        1>( L, "get_num_frames"                         );              
+            luaF_register_helper<F_Audio_get_sample_rate,                       1>( L, "get_sample_rate"                        );              
+            luaF_register_helper<F_Audio_get_length,                            1>( L, "get_length"                             );      
+
             // Conversions
             luaF_register_helper<F_Audio_resample,                              2>( L, "resample"                               );
             //luaF_register_helper<F_Audio_convert_to_graph, flan::Graph, flan::Audio, Interval, Pixel, Pixel, float>( L, "convert_to_graph" );
@@ -830,7 +860,7 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_convert_to_PV,                         1>( L, "convert_to_PV"                          );
             luaF_register_helper<F_Audio_convert_to_ms_PV,                      1>( L, "convert_to_ms_PV"                       );          
             //luaF_register_helper<F_Audio_convert_to_PV_selector,                1>( L, "__call"                                 );
-            luaF_register_helper<F_Audio_convert_to_mid_side,                   1>( L, "convert_to_mid_side"                       );
+            luaF_register_helper<F_Audio_convert_to_mid_side,                   1>( L, "convert_to_mid_side"                    );
             luaF_register_helper<F_Audio_convert_to_left_right,                 1>( L, "convert_to_left_right"                  );
             luaF_register_helper<F_Audio_convert_to_stereo,                     1>( L, "convert_to_stereo"                      );
             luaF_register_helper<F_Audio_convert_to_mono,                       1>( L, "convert_to_mono"                        );
@@ -910,7 +940,7 @@ void luaF_register_Audio( lua_State * L )
 
             // Synthesis
             luaF_register_helper<F_Audio_synthesize_grains_repeat,              5>( L, "synthesize_grains_repeat"               );                          
-            luaF_register_helper<F_Audio_synthesize_grains_with_feedback_mod,   5>( L, "synthesize_grains_with_feedback_mod"    );                                                 
+            luaF_register_helper<F_Audio_synthesize_grains_with_mod,            5>( L, "synthesize_grains_with_mod"             );                                                 
             luaF_register_helper<F_Audio_synthesize_granulation,                6>( L, "synthesize_granulation"                 );                        
             luaF_register_helper<F_Audio_synthesize_psola,                      3>( L, "synthesize_psola"                       );          
 

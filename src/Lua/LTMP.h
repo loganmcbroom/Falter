@@ -213,6 +213,7 @@ static int luaF_LTMP( lua_State* L )
         else static_assert( ! sizeof( Functor * ), "Wrong number of non-defaulted arguments passed to a Lua function wrapper." );
         }
     catch( std::exception & e ) { lua_pushstring( L, e.what() ); }
+    catch(...){ lua_pushstring( L, "Unknown error occured (please let me know how you made this show up)" ); }
     lua_error( L );
     return 0;
     }

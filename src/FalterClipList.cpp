@@ -37,7 +37,14 @@ void FalterClipList::clear()
 
 void FalterClipList::insertClipFromAudio( std::shared_ptr<flan::Audio> a, int index, const String & name )
 	{
-	insertItem( std::make_shared<FalterClip>( a, player, thumbnailCache, name ), index == -1 ? getNumItems() : index );
+	if( !a->is_null() )
+		insertItem( std::make_shared<FalterClip>( a, player, thumbnailCache, name ), index == -1 ? getNumItems() : index );
+	}
+
+void FalterClipList::insertClipFromFile( std::shared_ptr<flan::Audio> file, int index, const File & source )
+	{
+	if( !file->is_null() )
+		insertItem( std::make_shared<FalterClip>( file, player, thumbnailCache, source.getFileName(), source ), index == -1 ? getNumItems() : index );
 	}
 
 bool FalterClipList::isInterestedInDragSource( const SourceDetails & s )
@@ -60,7 +67,7 @@ void FalterClipList::itemDropped( const SourceDetails & s )
 		
 		if( parent != this )
 			{ 
-			insertClipFromAudio( item->audio, slot, item->getName() );
+			insertClipFromFile( item->audio, slot, item->getFile() );
 			parent->erase( item );	
 			}
 		else
@@ -102,6 +109,6 @@ void FalterClipList::exitSignalSent()
 
 	const MessageManagerLock mml;
 	if( mml.lockWasGained() )
-		insertClipFromAudio( std::move( job->output ), -1, job->file.getFileName() );
+		insertClipFromFile( std::move( job->output ), -1, job->file );
 	}
 

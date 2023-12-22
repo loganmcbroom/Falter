@@ -28,7 +28,8 @@ public:
     MainComponent();
     ~MainComponent();
 
-private:
+	static MainComponent * getInstance();
+
     void paint( Graphics & g ) override;
     void resized() override;
 	void buttonClicked( Button * button ) override;
@@ -93,7 +94,11 @@ private:
 	Component settingsContainer;
 	FalterAudioDeviceSelector deviceSelector;
 
+	File workingDirectory;
+
 	const int logHeight;
+
+	static MainComponent * instance;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR( MainComponent )
 };

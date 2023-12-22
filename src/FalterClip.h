@@ -24,6 +24,7 @@ public:
 			 , FalterPlayer & player
 			 , AudioThumbnailCache & thumbnailCache
 			 , const String & name = "-"
+			 , const File & file = File()
 			 );
 	~FalterClip() override;
 
@@ -35,13 +36,13 @@ public:
 	void stopPressed();
 	void setToggle( bool );
 
-	File getWorkspaceFile() const;
+	File getFile() const;
 
 private:  
 	void timerCallback() override;
 	void changeListenerCallback( ChangeBroadcaster * source ) override;
-	void paintButton(Graphics &g, bool isMouseOverButton, bool isButtonDown) override;
-	void buttonClicked( Button *button ) override;
+	void paintButton( Graphics & g, bool isMouseOverButton, bool isButtonDown ) override;
+	void buttonClicked( Button * button ) override;
 	void resized() override;
 	void mouseDrag( const MouseEvent & event ) override;
 
@@ -56,5 +57,6 @@ private:
 	FalterButton busButton, saveButton;
 	DrawableRectangle currentPosition;
 
+	File file; // File on disk of this audio. Could be saved to workspace or a loaded file.
 	juce::Uuid id;
 }; 

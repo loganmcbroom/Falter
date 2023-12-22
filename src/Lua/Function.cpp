@@ -43,6 +43,7 @@ T luaF_checkFunc_base( lua_State * L, int i )
         return std::make_shared<F>( luaF_check<O>( L, i ) );
     else if( lua_isfunction( L, i ) ) // Lua function recieved, convert to userdata wrapped type
         {
+        
         lua_pushvalue( L, i ); // Copy the function, ref will pop it. Check functions like this one shouldn't pop.
         const int ref = luaL_ref( L, LUA_REGISTRYINDEX );
         return std::make_shared<F>( [L, ref]( I in ) -> O
@@ -62,17 +63,27 @@ T luaF_checkFunc_base( lua_State * L, int i )
                 num_args = 1;
                 }
 
+            auto is_degenerate = []( float x ) { return std::isnan( x ) || std::isinf( x ); };
+
             if constexpr( std::is_same_v<O, flan::vec2> == true )
                 {
                 lua_call( L, num_args, 2 );
-                const vec2 out = { luaF_check<float>( L, -2 ), luaF_check<float>( L, -1 ) };
+                vec2 out = { luaF_check<float>( L, -2 ), luaF_check<float>( L, -1 ) };
+                // This and the degen condition below should throw, but throwing out through parallel algorithms aborts,
+                // even when the policy is lin_seq. To fix this we would need to call a non-policy version of std algos
+                // in flan whenever policy is lin_seq. I don't think I care in my current case, but this could cause 
+                // other issues in the future.
+                if( is_degenerate( out.x() ) || is_degenerate( out.y() ) )
+                    out = {0,0};
                 lua_settop( L, 0 );
                 return out;
                 }
             else
                 {
                 lua_call( L, num_args, 1 );
-                const auto out = luaF_check<O>( L, -1 );
+                auto out = luaF_check<O>( L, -1 );
+                if( is_degenerate( out ) )
+                    out = 0;
                 lua_settop( L, 0 );
                 return out;
                 }

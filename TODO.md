@@ -14,4 +14,22 @@ Task:
     publish lls addon
         wait a bit for new framework developments
         
-    
+    We should have some type of process that takes in a bunch of inputs and texturizes as in cdp
+
+    PV::freeze and other vector param methods can't ltmp, but why not?
+
+    lls needs to know that [] on a vec type returns non vec of that type
+
+    clicking save and cancelling currently makes the file name blank
+
+    new idea for file saving
+        clip save button currently unused
+        red if unsaved
+        green if saved
+        click to save as current name
+        clicking name allows rename
+        dragging out of application auto saves
+
+    There should be some kind of reasonably short limit on the size of an Audio, we can probably just throw if it tries to be too big
+
+    qmk compile -kb sofle_choc -km loganmcbroom -e CONVERT_TO=elite_pi
