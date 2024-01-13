@@ -15,8 +15,9 @@ FalterLookAndFeel::FalterLookAndFeel()
     , dark          ( Colour::fromHSV( .58f, .08f, .08f, 1 ) )
     , mid           ( Colour::fromHSV( .58f, .09f, .12f, 1 ) )
     , light         ( Colour::fromHSV( 0, 0, .80f, 1 ) )
-    , accent1       ( Colour::fromHSL( .97f, .65f, .48f, 1 ) ) // Redish
-    , accent2       ( Colour::fromHSL( .33f, .50f, .42f, 1 ) ) // Green
+    , red           ( Colour::fromHSL( .97f, .65f, .48f, 1 ) ) 
+    , green         ( Colour::fromHSL( .33f, .50f, .42f, 1 ) )
+    , yellow        ( Colour::fromHSL( .16f, .9f, .50f, 1 ) )
     , fontDefault   ( Font::getDefaultSansSerifFontName(), fontSize, Font::plain )
     , fontWingdings ( "Wingdings", fontSize, Font::bold )
 	, fontWebdings  ( "Webdings" , fontSize, Font::bold )
@@ -62,7 +63,7 @@ void FalterLookAndFeel::drawFileBrowserRow( Graphics & g,
 
     if( isItemSelected )
         {
-        g.setColour( accent2 );
+        g.setColour( green );
         g.fillRect( area );
         }
     

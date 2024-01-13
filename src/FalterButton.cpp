@@ -7,6 +7,8 @@ FalterButton::FalterButton( const String & _text, const Font * _font, size_t _fo
 	, font(_font)
 	, circle( false )
 	, down_text( _text )
+	, baseColour( FalterLookAndFeel::getLNF().green )
+	, hoverColour( FalterLookAndFeel::getLNF().red )
 	{
 	setButtonText(_text);
 	if( _fontHeight != 0 )
@@ -25,12 +27,12 @@ void FalterButton::paintButton(Graphics &g, bool isMouseOverButton, bool isButto
 	if( circle )
 		{
 		auto r = getBounds();
-		g.setColour( isMouseOverButton ? lnf.accent1 : lnf.accent2 );
+		g.setColour( isMouseOverButton ? hoverColour : baseColour );
 		g.fillEllipse( 0, 0, r.getWidth() - 1, r.getHeight() - 1 );
 		}
 	else
 		{
-		g.fillAll( isMouseOverButton ? lnf.accent1 : lnf.accent2 );
+		g.fillAll( isMouseOverButton ? hoverColour : baseColour );
 		}
 
 	if( font == nullptr ) return;

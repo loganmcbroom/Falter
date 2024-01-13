@@ -32,8 +32,9 @@ public:
     const juce::Colour shadow;
     const juce::Colour mid;
     const juce::Colour light;
-    const juce::Colour accent1;
-    const juce::Colour accent2;
+    const juce::Colour red;
+    const juce::Colour green;
+    const juce::Colour yellow;
 
     const juce::Font fontDefault;
     const juce::Font fontWingdings;

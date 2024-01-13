@@ -15,5 +15,7 @@ public:
 	size_t fontHeight;
 	bool circle;
 	String down_text;
+	Colour baseColour;
+	Colour hoverColour;
 };
 

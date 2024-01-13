@@ -125,7 +125,7 @@ void FalterThread::paint( Graphics & g )
 	// Draw info text
 	const auto bound = getLocalBounds().reduced( 6 );
 	g.setFont( lnf.fontMonospace );
-	g.setColour( canceller? threadSuccess? lnf.accent2 : lnf.accent1 : lnf.light );
+	g.setColour( canceller? threadSuccess? lnf.green : lnf.red : lnf.light );
 	g.drawText( getThreadName(), bound, Justification::topLeft );
 	g.drawText( String( "ID: " ) + String( ID ), bound, Justification::bottomLeft );
 	g.drawText( getStartTimeString(), bound, Justification::topRight );
