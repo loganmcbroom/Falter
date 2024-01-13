@@ -343,7 +343,7 @@ bool MainComponent::shouldDropFilesWhenDraggedExternally(
 		if( f.existsAsFile() )
 			{
 			files.add( f.getFullPathName() );
-			canMoveFiles = true;
+			canMoveFiles = false;
 			return true;
 			}		
 		}
