@@ -57,6 +57,7 @@ private:
 	FalterButton busButton, saveButton;
 	DrawableRectangle currentPosition;
 
+	void saveToFile(); // If the file is empty, create the file and save to it
 	File file; // File on disk of this audio. Could be saved to workspace or a loaded file.
 	juce::Uuid id;
 }; 
