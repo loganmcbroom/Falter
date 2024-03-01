@@ -24,7 +24,7 @@ public:
 			 , FalterPlayer & player
 			 , AudioThumbnailCache & thumbnailCache
 			 , const String & name = "-"
-			 , const File & file = File()
+			 //, const File & file = File()
 			 );
 	~FalterClip() override;
 
@@ -58,6 +58,6 @@ private:
 	DrawableRectangle currentPosition;
 
 	void saveToFile(); // If the file is empty, create the file and save to it
-	File file; // File on disk of this audio. Could be saved to workspace or a loaded file.
+	File local_file; // Local file stored in workspace folder
 	juce::Uuid id;
 }; 

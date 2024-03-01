@@ -109,12 +109,8 @@ MainComponent::MainComponent()
 
 	// Set up the working directory
 	workingDirectory = File::getCurrentWorkingDirectory().getChildFile( "workspace" );
-	if( !workingDirectory.exists() ) 
-		workingDirectory.createDirectory();
-	String timeString = Time::getCurrentTime().toString( true, true );
-	timeString = timeString.replaceCharacter( ':', '-' );
-	timeString = timeString.replaceCharacter( ' ', '_' );
-	workingDirectory = workingDirectory.getChildFile( timeString );
+	if( workingDirectory.exists() && workingDirectory.isDirectory() )
+		workingDirectory.deleteRecursively();
 	workingDirectory.createDirectory();
 
 	Logger::writeToLog( "Falter Initialized\n" );
@@ -127,10 +123,11 @@ MainComponent::~MainComponent()
 	audioDeviceManager->removeAudioCallback( recorder.get() );
 	Logger::setCurrentLogger( nullptr );
 	setLookAndFeel( nullptr );
-	// const File f = File::getCurrentWorkingDirectory().getChildFile( "workspace" );
-	// if( f.exists() && f.isDirectory() )
-	// 	f.deleteRecursively();
+
 	instance = nullptr;
+
+	// if( workingDirectory.exists() && workingDirectory.findChildFiles( File::TypesOfFileToFind::findFiles, false ).isEmpty() )
+	// 	workingDirectory.deleteFile();
 	}
 
 void MainComponent::paint( Graphics& g )

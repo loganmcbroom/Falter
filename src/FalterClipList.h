@@ -20,7 +20,6 @@ public:
 	void clear();
 
 	void insertClipFromAudio( std::shared_ptr<flan::Audio> audio, int index = -1, const String & name = "-" );
-	void insertClipFromFile( std::shared_ptr<flan::Audio> file, int index = -1, const File & source = File() );
 	void importAudioFileAsync( const File & file );
 
 private:
