@@ -43,7 +43,8 @@ void luaF_LTMP_push( lua_State* L, const std::vector<T> & os )
     if( os.size() == 0 ) 
         throw std::runtime_error( "luaF_LTMP_push was called with an empty output vector" );
 
-    luaF_pushArrayOfType( L, os ); 
+    if( os.size() == 1 ) luaF_push( L, os[0] );
+    else luaF_pushArrayOfType( L, os ); 
 
     // if constexpr ( std::same_as<T, pAudio> || std::same_as<T, pPV> )
     //     {
@@ -52,7 +53,7 @@ void luaF_LTMP_push( lua_State* L, const std::vector<T> & os )
     // else
     //     {
     //     if( os.size() == 1 ) luaF_push( L, os[0] );
-    //     else l
+    //     else luaF_pushArrayOfType( L, os ); 
     //     }
        
     }
@@ -60,7 +61,7 @@ void luaF_LTMP_push( lua_State* L, const std::vector<T> & os )
 // This recursively gets all the arguments needed for a flan function call from the Lua stack as a tuple.
 // The elements of the tuple are all vectors of the type needed for the current argument type
 template<typename Functor, size_t numArgs, size_t I = 0> 
-constexpr auto luaF_wrapFunctor_checkArgs( lua_State * L ) 
+constexpr auto luaF_get_args_as_tuple( lua_State * L ) 
     {
     if constexpr( I == numArgs )
         return std::tuple();
@@ -72,7 +73,7 @@ constexpr auto luaF_wrapFunctor_checkArgs( lua_State * L )
 
         return std::tuple_cat( 
             std::make_tuple( luaF_LTMP_check<ArgType>( L, I + 1 ) ), // +1 for lua indexing
-            luaF_wrapFunctor_checkArgs<Functor, numArgs, I + 1>( L ) // +1 for recursion
+            luaF_get_args_as_tuple<Functor, numArgs, I + 1>( L ) // +1 for recursion
             );
         }
     }
@@ -80,23 +81,23 @@ constexpr auto luaF_wrapFunctor_checkArgs( lua_State * L )
 // LTMP tuples contain only vectors. 
 // This gets the size of the vector with the smallest size within an LTMP tuple.
 template<typename Tup, size_t I = 0>
-static size_t getMinSize_tuple( const Tup & t )
+static size_t get_size_of_smallest_tuple( const Tup & t )
     {
     if constexpr( I == std::tuple_size_v<Tup> )
         return std::numeric_limits<size_t>::max(); // At end of tuple, return a value that does not disrupt the min( min( ... ) ) chain.
     else
-        return std::min( std::get<I>( t ).size(), getMinSize_tuple<Tup, I + 1>( t ) );
+        return std::min( std::get<I>( t ).size(), get_size_of_smallest_tuple<Tup, I + 1>( t ) );
     }
 
 // LTMP tuples contain only vectors. 
 // This gets the size of the vector with the largest size within an LTMP tuple.
 template<typename Tup, size_t I = 0>
-static size_t getMaxSize_tuple( const Tup & t )
+static size_t get_size_of_largest_tuple( const Tup & t )
     {
     if constexpr( I == std::tuple_size_v<Tup> )
         return std::numeric_limits<size_t>::min(); // At end of tuple, return a value that does not disrupt the max( max( ... ) ) chain.
     else
-        return std::max( std::get<I>( t ).size(), getMaxSize_tuple<Tup, I + 1>( t ) );
+        return std::max( std::get<I>( t ).size(), get_size_of_largest_tuple<Tup, I + 1>( t ) );
     }
 
 // The LTMP system will run the flan algorithm requested as many times as the largest vector passed to it.
@@ -119,6 +120,7 @@ auto luaF_LTMP_getCurrentTuple( Tup t, int i )
         }
     }
 
+// Flattens a vector of vectors into a single vector
 template <typename T>
 static std::vector<T> flatten( const std::vector<std::vector<T>> & v ) 
     {
@@ -144,17 +146,17 @@ static int luaF_LTMP_dispatched( lua_State* L )
     auto & canceller = getThreadCanceller( L );
 
     // Get args as a tuple of vectors
-    auto vecTuple = luaF_wrapFunctor_checkArgs<Functor, numArgs>( L );
+    auto vecTuple = luaF_get_args_as_tuple<Functor, numArgs>( L );
 
-    const int maxArgLength = getMaxSize_tuple( vecTuple );
-    const int minArgLength = getMinSize_tuple( vecTuple );
-    if( minArgLength == 0 ) throw std::runtime_error( "Flan method recieved an empty argument in LTMP." );
+    const int size_of_largest_tuple = get_size_of_largest_tuple( vecTuple );
+    const int size_of_smallest_tuple = get_size_of_smallest_tuple( vecTuple );
+    if( size_of_smallest_tuple == 0 ) throw std::runtime_error( "Flan method recieved an empty argument in LTMP." );
 
     using R = liph::function_return_type<Functor>;
 
     if constexpr( std::is_void_v<R> ) // Handle functions which return nothing
         {
-        for( int i = 0; i < maxArgLength; ++i )
+        for( int i = 0; i < size_of_largest_tuple; ++i )
             {
             auto currentTuple = luaF_LTMP_getCurrentTuple( vecTuple, i );
             std::apply( Functor(), currentTuple );
@@ -166,16 +168,17 @@ static int luaF_LTMP_dispatched( lua_State* L )
     else
         {
         std::vector<R> outputs;
-        outputs.reserve( maxArgLength );
-        for( int i = 0; i < maxArgLength; ++i )
+        outputs.reserve( size_of_largest_tuple );
+        for( int i = 0; i < size_of_largest_tuple; ++i )
             {
             auto currentTuple = luaF_LTMP_getCurrentTuple( vecTuple, i );
             outputs.push_back( std::apply( Functor(), currentTuple ) );
             if( canceller ) 
                 throw std::runtime_error( "Couldn't complete script, thread was cancelled" );
             }
-        if constexpr( is_vector<R> )
+        if constexpr( is_vector<R> ) 
             {
+            // Returning a vec of vec would really muck up some systems so if we ltmp'd a vec returning function, it gets flat
             luaF_LTMP_push( L, flatten( outputs ) );
             }
         else
@@ -186,7 +189,7 @@ static int luaF_LTMP_dispatched( lua_State* L )
         }
     }
 
-// We want to call luaF_wrapFunctor_checkArgs<Functor, lua_gettop( L )>, but this requires passing a runtime value to a compile time parameter.
+// We want to call luaF_get_args_as_tuple<Functor, lua_gettop( L )>, but this requires passing a runtime value to a compile time parameter.
 // To get around this we make the call using a runtime dispatch.
 // We start with I set to the number of arguments for Functor and check if we got that many args from Lua.
 // If not, as long as there are more arguments that have defaults, recurse the function at I-1 and check if that's how many arguments were passed from Lua.
