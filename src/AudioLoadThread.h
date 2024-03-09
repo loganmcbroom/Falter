@@ -2,7 +2,7 @@
 
 #include <JuceHeader.h>
 
-#include "Types.h"
+#include <flan/Audio/Audio.h>
 
 //using AudioLoadThreadCallback = std::function<void ( const flan::Audio & )>;
 
@@ -13,5 +13,7 @@ struct AudioLoadThread : public ThreadPoolJob
 	JobStatus runJob() override;
 
 	std::unique_ptr<flan::Audio> output;
+	flan::AudioBuffer::SndfileStrings strings;
+
 	const File file;
 };

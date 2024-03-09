@@ -19,7 +19,11 @@ public:
 	void erase( unsigned int pos );
 	void clear();
 
-	void insertClipFromAudio( std::shared_ptr<flan::Audio> audio, int index = -1, const String & name = "-" );
+	void insertClipFromAudio( 
+		std::shared_ptr<flan::Audio> audio, 
+		int index = -1, 
+		const String & name = "-", 
+		flan::Audio::SndfileStrings = flan::Audio::SndfileStrings() );
 	void importAudioFileAsync( const File & file );
 
 private:

@@ -24,7 +24,7 @@ public:
 			 , FalterPlayer & player
 			 , AudioThumbnailCache & thumbnailCache
 			 , const String & name = "-"
-			 //, const File & file = File()
+			 , flan::Audio::SndfileStrings = flan::Audio::SndfileStrings()
 			 );
 	~FalterClip() override;
 
@@ -54,10 +54,14 @@ private:
 	MemoryAudioSource audioSource; // Juce AudioSource wrapper for Juce buffer
 
 	AudioThumbnail thumbnail;
-	FalterButton busButton, saveButton;
+	FalterButton busButton, saveButton, retrieveScriptButton, retrieveInputsButton;
 	DrawableRectangle currentPosition;
 
-	void saveToFile(); // If the file is empty, create the file and save to it
+	void saveButtonPressed(); // If the file is empty, create the file and save to it
 	File local_file; // Local file stored in workspace folder
 	juce::Uuid id;
+
+	void retrieveScriptButtonPressed() const;
+	void retrieveInputsButtonPressed() const;
+	flan::Audio::SndfileStrings sndfileStrings;
 }; 

@@ -113,7 +113,7 @@ struct F_Audio_convert_to_graph { pGraph operator()( pAudio a,
     return std::make_shared<flan::Graph>( a->convert_to_graph( b, c, d, flan::Graph::WaveformMode::Direct, e ) ); } };
 
 struct F_Audio_save_to_bmp { void operator()( pAudio a, 
-    const std::string & b = "audio.bmp", 
+    const std::string & b, 
     Interval c = Interval( 0, -1 ), 
     Pixel d = -1, 
     Pixel e = -1 )
@@ -216,8 +216,8 @@ struct F_Audio_get_energy_difference { std::vector<float> operator()( pAudio a,
     return a->get_energy_difference( *b ); } };
 
 struct F_Audio_get_local_wavelength { float operator()( pAudio a, 
-    Channel b = 0, 
-    Frame c = 0, 
+    Channel b, 
+    Frame c, 
     Frame d = 2048 )
     { std::cout << "flan::Audio::get_local_wavelength";
     return a->get_local_wavelength( b, c, d ); } };
@@ -242,7 +242,7 @@ struct F_Audio_get_average_wavelength { float operator()( pAudio a,
     return a->get_average_wavelength( b, c, d, e, f, g, h ); } };
 
 struct F_Audio_get_local_frequency { float operator()( pAudio a, 
-    Channel b = 0, 
+    Channel b, 
     Frame c = 0, 
     Frame d = 2048 )
     { std::cout << "flan::Audio::get_local_frequency";
@@ -294,16 +294,16 @@ struct F_Audio_reverse { pAudio operator()( pAudio a )
     return std::make_shared<flan::Audio>( a->reverse() ); } };
 
 struct F_Audio_cut { pAudio operator()( pAudio a, 
-    flan::Second b = 0, 
-    flan::Second c = 0, 
+    flan::Second b, 
+    flan::Second c, 
     flan::Second d = 0, 
     flan::Second e = 0 )
     { std::cout << "flan::Audio::cut";
     return std::make_shared<flan::Audio>( a->cut( b, c, d, e ) ); } };
 
 struct F_Audio_cut_frames { pAudio operator()( pAudio a, 
-    Frame b = 0, 
-    Frame c = 0, 
+    Frame b, 
+    Frame c, 
     Frame d = 0, 
     Frame e = 0 )
     { std::cout << "flan::Audio::cut_frames";
@@ -324,9 +324,9 @@ struct F_Audio_iterate { pAudio operator()( pAudio a,
     return std::make_shared<flan::Audio>( a->iterate( b, fade, *c, d.b ) ); } };
 
 struct F_Audio_delay { pAudio operator()( pAudio a, 
-    flan::Second b = 10, 
-    pFunc1x1 c = std::make_shared<Func1x1>( 1 ), 
-    pFunc1x1 d = std::make_shared<Func1x1>( 1 ), 
+    flan::Second b, 
+    pFunc1x1 c, 
+    pFunc1x1 d, 
     pAudioMod e = std::make_shared<flan::AudioMod>() )
     { std::cout << "flan::Audio::delay";
     return std::make_shared<flan::Audio>( a->delay( b, *c, *d, *e ) ); } };
@@ -890,7 +890,7 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_cut_frames,                            3>( L, "cut_frames"                             );
             luaF_register_helper<F_Audio_repitch,                               2>( L, "repitch"                                );
             luaF_register_helper<F_Audio_iterate,                               2>( L, "iterate"                                );
-            luaF_register_helper<F_Audio_delay,                                 3>( L, "delay"                                  );
+            luaF_register_helper<F_Audio_delay,                                 4>( L, "delay"                                  );
             luaF_register_helper<F_Audio_split_at_times,                        2>( L, "split_at_times"                         );
             luaF_register_helper<F_Audio_split_with_lengths,                    2>( L, "split_with_lengths"                     );
             luaF_register_helper<F_Audio_split_with_equal_lengths,              2>( L, "split_with_equal_lengths"               );

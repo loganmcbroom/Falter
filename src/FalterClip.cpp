@@ -23,7 +23,7 @@ FalterClip::FalterClip( std::shared_ptr<flan::Audio> _audio
 	, FalterPlayer & _player
 	, AudioThumbnailCache &_thumbnailCache
 	, const String & name
-	//, const File & _file
+	, flan::Audio::SndfileStrings sndfileStrings_
 	) 
 	: Button( name )
 	, player( _player )
@@ -34,8 +34,11 @@ FalterClip::FalterClip( std::shared_ptr<flan::Audio> _audio
 	, thumbnail( 512, player.getFormatManager(), _thumbnailCache )
 	, busButton( "4", &FalterLookAndFeel::getLNF().fontWebdings, 18 ) 
 	, saveButton( "<", &FalterLookAndFeel::getLNF().fontWingdings, 18 )
+	, retrieveScriptButton( "&", &FalterLookAndFeel::getLNF().fontWingdings, 18 )
+	, retrieveInputsButton( "v", &FalterLookAndFeel::getLNF().fontWingdings, 18 )
 	, local_file()
 	, id()
+	, sndfileStrings( sndfileStrings_ )
 	{
 	auto & lnf = FalterLookAndFeel::getLNF();
 
@@ -44,11 +47,15 @@ FalterClip::FalterClip( std::shared_ptr<flan::Audio> _audio
 	thumbnail.reset( audio->get_num_channels(), audio->get_sample_rate(), audio->get_num_frames() );
 	thumbnail.addBlock( 0, juceAudio, 0, audio->get_num_frames() );
 
-	addAndMakeVisible( busButton   );
-	addAndMakeVisible( saveButton  );
+	addAndMakeVisible( busButton   			);
+	addAndMakeVisible( saveButton  			);
+	addAndMakeVisible( retrieveScriptButton );
+	addAndMakeVisible( retrieveInputsButton );
 
-	saveButton.addListener( this );
-	busButton .addListener( this );
+	saveButton			.addListener( this );
+	busButton 			.addListener( this );
+	retrieveScriptButton.addListener( this );
+	retrieveInputsButton.addListener( this );
 
 	const int clipGroupID = 1;
 	setRadioGroupId( clipGroupID );
@@ -56,18 +63,15 @@ FalterClip::FalterClip( std::shared_ptr<flan::Audio> _audio
 	currentPosition.setFill( lnf.light.withAlpha( 0.85f ) );
     addAndMakeVisible( currentPosition );
 
-	saveButton.baseColour = FalterLookAndFeel::getLNF().green;
-	saveButton.hoverColour = FalterLookAndFeel::getLNF().red;
-
 	if( !local_file.existsAsFile() )
 		{
 		String time_String = Time::getCurrentTime().formatted( "%H-%M-%S___" );
 		String filename = time_String + id.toDashedString() + ".wav";
 		local_file = MainComponent::getInstance()->workingDirectory.getChildFile( filename );
 
-		Thread::launch( [a = audio, id = id, file = local_file]()
+		Thread::launch( [a = audio, id = id, file = local_file, sndfileStrings = sndfileStrings]()
 			{ 	
-			a->save( file.getFullPathName().toStdString() ); 
+			a->save( file.getFullPathName().toStdString(), -1, sndfileStrings ); 
 			} );
 		}
 	}
@@ -83,8 +87,10 @@ FalterClip::~FalterClip()
 void FalterClip::resized()
 	{
 	int s = getHeight() / 2;
-	busButton.setBounds  ( 0, 0, s, s );
-	saveButton.setBounds ( 0, s, s, s );
+	busButton.setBounds( 0, 0, s, s );
+	saveButton.setBounds( 0, s, s, s );
+	retrieveScriptButton.setBounds( s, 0, s, s );
+	retrieveInputsButton.setBounds( s, s, s, s );
 	}
 
 void FalterClip::mouseDrag( const MouseEvent & )
@@ -107,8 +113,8 @@ void FalterClip::paintButton(Graphics &g, bool isMouseOverButton, bool )
 	if( audio->get_num_frames() > 0 )
 		{
 		// Draw audio thumbnail
-		g.setColour( isMouseOverButton? lnf.red.withAlpha( .3f ) : lnf.red );
-		juce::Rectangle<int> boundsWithoutExitButtonRect( getLocalBounds().withLeft( getHeight() / 2 ) );
+		g.setColour( isMouseOverButton? lnf.yellow.withAlpha( .3f ) : lnf.yellow );
+		juce::Rectangle<int> boundsWithoutExitButtonRect( getLocalBounds().withLeft( getHeight() ) );
 		thumbnail.drawChannels( g, boundsWithoutExitButtonRect.reduced( 2 ), 0, thumbnail.getTotalLength(), 1.0f );
 
 		if( isMouseOverButton ) 
@@ -188,17 +194,15 @@ void FalterClip::buttonClicked( Button * button )
 
 	else if( button == &saveButton )
 		{
-		// FileChooser chooser( "Save file as", Settings::getFileLoadDir(), ".wav" );
-
-		// if( chooser.browseForFileToSave( true ) )
-		// 	{
-		// 	File choice = chooser.getResult();
-		// 	audio->save( choice.getFullPathName().toStdString() );
-		// 	}
-		// setName( chooser.getResult().getFileName() );
-		// repaint();
-
-		saveToFile();
+		saveButtonPressed();
+		}
+	else if( button == &retrieveScriptButton )
+		{
+		retrieveScriptButtonPressed();
+		}
+	else if( button == &retrieveInputsButton )
+		{
+		retrieveInputsButtonPressed();
 		}
 	}
 
@@ -210,7 +214,7 @@ void FalterClip::timerCallback()
 	const float s = getHeight() / 2.0f;
 	const float e = static_cast<float>( getWidth() );
 	const float r = static_cast<float>( source.getCurrentPosition() ) / static_cast<float>( audio->get_length() );
-	const float initialX = s + ( e - s ) * r;
+	const float initialX = 2*s + ( e - s ) * r;
 	
 	// Draw white line to show current playback position
 	currentPosition.setRectangle( juce::Rectangle<float>( 
@@ -226,14 +230,14 @@ void FalterClip::timerCallback()
 		stopPressed();
 	} 
 
-void FalterClip::saveToFile()
+void FalterClip::saveButtonPressed()
 	{
-	FileChooser chooser( "Save file as", Settings::getFileLoadDir(), "*.wav" );
+	FileChooser chooser( "Save audio as", Settings::getFileLoadDir(), "*.wav" );
 
 	if( chooser.browseForFileToSave( true ) )
 		{
 		File choice = chooser.getResult();
-		audio->save( choice.getFullPathName().toStdString() );
+		audio->save( choice.getFullPathName().toStdString(), -1, sndfileStrings );
 		setName( chooser.getResult().getFileName() );
 		}
 	repaint();
@@ -254,4 +258,22 @@ void FalterClip::saveToFile()
 	// 	saveButton.setButtonText( "C" );
 	// 	saveButton.down_text = "B";
 	// 	}
+	}
+
+void FalterClip::retrieveScriptButtonPressed() const
+	{
+	FileChooser chooser( "Save script as", File::getCurrentWorkingDirectory().getChildFile( sndfileStrings.artist ), "*.lua" );
+
+	if( chooser.browseForFileToSave( true ) )
+		{
+		File choice = chooser.getResult();
+		if( ! choice.existsAsFile() )
+			choice.create();
+		choice.replaceWithText( sndfileStrings.comment );
+		}
+	}
+
+void FalterClip::retrieveInputsButtonPressed() const
+	{
+	Logger::writeToLog( sndfileStrings.title );
 	}

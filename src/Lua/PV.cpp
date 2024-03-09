@@ -99,7 +99,11 @@ struct F_Audio_convert_to_audio_selector { pAudio operator()( pPV a )
 //     { std::cout << "flan::PV::";
 //    return std::make_shared<flan::PV>( a->convertToGraph( b, c, d, e ); } };
 
-struct F_PV_save_to_bmp { void operator()( pPV a, const std::string & b, Rect c = { 0, 0, -1, -1 }, Pixel d = -1, Pixel e = -1 )
+struct F_PV_save_to_bmp { void operator()( pPV a, 
+    const std::string & b, 
+    Rect c = { 0, 0, -1, -1 }, 
+    Pixel d = -1, 
+    Pixel e = -1 )
     { std::cout << "flan::PV::save_to_bmp";
     a->save_to_bmp( b, c, d, e ); } };
 
@@ -261,8 +265,8 @@ struct F_PV_resonate { pPV operator()( pPV a,
 //============================================================================================================================================================
 
 struct F_PV_synthesize { pPV operator()( 
-    flan::Second a = 5, 
-    pFunc1x1 freq = std::make_shared<Func1x1>( 220 ), 
+    flan::Second a, 
+    pFunc1x1 freq, 
 	pFunc2x1 harmonic_weights = std::make_shared<Func2x1>( []( vec2 sh ){ return 1.0f / ( 1.0f + sh.y() ); } ),
     pFunc1x1 harmonic_bandwidth = std::make_shared<Func1x1>( 60 ),
     pFunc2x1 harmonic_frequency_std_dev = std::make_shared<Func2x1>( 60 ) )

@@ -210,18 +210,34 @@ void MainComponent::importFile( File file )
 
 void MainComponent::procButtonClicked() 
 	{
-	if( ! File( scriptLabel.getText() ).exists() )
+	const File file = File( scriptLabel.getText() );
+	if( ! file.exists() )
 		{
 		Logger::writeToLog( "The provided script does not exist: " + scriptLabel.getText() );
 		return;
 		}
 
-	auto retrieveFiles = [&]( AudioVec & as, const String & threadName )
+	AudioVec inAudio;
+	for( int i = 0; i < inClips.getNumItems(); ++i )
+		{
+		flan::Audio input_copy = dynamic_pointer_cast<FalterClip>( inClips.getItem( i ) )->getAudio()->copy();
+		inAudio.push_back( std::make_shared<flan::Audio>( std::move( input_copy ) ) );
+		}
+
+	flan::Audio::SndfileStrings sndfileStrings;
+	sndfileStrings.comment = file.loadFileAsString().toStdString();
+	sndfileStrings.artist = scriptLabel.getText().toStdString();
+	String inputs_string;
+	for( int i = 0; i < inClips.getNumItems(); ++i )
+		inputs_string += ( dynamic_pointer_cast<FalterClip>( inClips.getItem( i ) )->getName() + "\n" );
+	sndfileStrings.title = inputs_string.toStdString();
+
+	auto retrieveFiles = [&, sndfileStrings = sndfileStrings]( AudioVec & as, const String & threadName )
 		{
 		for( int i = as.size()-1; i >= 0; --i )
 			{
 			if( ! as[i]->is_null() )
-				outClips.insertClipFromAudio( as[i], 0, String( "Output " ) + String( i + 1 ) + String( " of: " ) + threadName );
+				outClips.insertClipFromAudio( as[i], 0, String( "Output " ) + String( i + 1 ) + String( " of: " ) + threadName, sndfileStrings );
 			else
 				Logger::writeToLog( "Null output recieved, this is usually caused by an invalid method input" );
 			}
@@ -233,13 +249,6 @@ void MainComponent::procButtonClicked()
 				clip->playPressed();
 			}
 		};
-
-	AudioVec inAudio;
-	for( int i = 0; i < inClips.getNumItems(); ++i )
-		{
-		flan::Audio input_copy = dynamic_pointer_cast<FalterClip>( inClips.getItem( i ) )->getAudio()->copy();
-		inAudio.push_back( std::make_shared<flan::Audio>( std::move( input_copy ) ) );
-		}
 		
 	threads.addThread( scriptLabel.getText(), retrieveFiles, inAudio );
 	}
