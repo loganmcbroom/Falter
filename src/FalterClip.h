@@ -24,7 +24,7 @@ public:
 			 , FalterPlayer & player
 			 , AudioThumbnailCache & thumbnailCache
 			 , const String & name = "-"
-			 //, const File & global_file = File()
+			 , const File & global_file = File()
 			 , flan::Audio::SndfileStrings = flan::Audio::SndfileStrings()
 			 );
 	~FalterClip() override;
@@ -39,6 +39,7 @@ public:
 
 	File getWorkspaceFile() const;
 	File getGlobalFile() const;
+	flan::Audio::SndfileStrings getSndFileStrings();
 
 private:  
 	void timerCallback() override;

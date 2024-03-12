@@ -23,6 +23,7 @@ public:
 		std::shared_ptr<flan::Audio> audio, 
 		int index = -1, 
 		const String & name = "-", 
+		const File & globalFile = File(),
 		flan::Audio::SndfileStrings = flan::Audio::SndfileStrings() );
 	void importAudioFileAsync( const File & file );
 

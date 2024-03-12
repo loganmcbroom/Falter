@@ -237,7 +237,7 @@ void MainComponent::procButtonClicked()
 		for( int i = as.size()-1; i >= 0; --i )
 			{
 			if( ! as[i]->is_null() )
-				outClips.insertClipFromAudio( as[i], 0, String( "Output " ) + String( i + 1 ) + String( " of: " ) + threadName, sndfileStrings );
+				outClips.insertClipFromAudio( as[i], 0, String( "Output " ) + String( i + 1 ) + String( " of: " ) + threadName, File(), sndfileStrings );
 			else
 				Logger::writeToLog( "Null output recieved, this is usually caused by an invalid method input" );
 			}

@@ -23,7 +23,7 @@ FalterClip::FalterClip( std::shared_ptr<flan::Audio> _audio
 	, FalterPlayer & _player
 	, AudioThumbnailCache &_thumbnailCache
 	, const String & name
-	//, const File & global_file_
+	, const File & global_file_
 	, flan::Audio::SndfileStrings sndfileStrings_
 	) 
 	: Button( name )
@@ -38,7 +38,7 @@ FalterClip::FalterClip( std::shared_ptr<flan::Audio> _audio
 	, retrieveScriptButton( "&", &FalterLookAndFeel::getLNF().fontWingdings, 18 )
 	, retrieveInputsButton( "v", &FalterLookAndFeel::getLNF().fontWingdings, 18 )
 	, local_file()
-	, global_file( )//global_file_ )
+	, global_file( global_file_ )
 	, id()
 	, sndfileStrings( sndfileStrings_ )
 	{
@@ -192,6 +192,11 @@ File FalterClip::getGlobalFile() const
 		return global_file;
 	else	
 		return File();
+	}
+
+flan::Audio::SndfileStrings FalterClip::getSndFileStrings()
+	{
+	return sndfileStrings;
 	}
 
 void FalterClip::buttonClicked( Button * button )
