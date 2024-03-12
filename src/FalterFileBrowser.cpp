@@ -16,7 +16,7 @@ FalterFileBrowser::FalterFileBrowser()
 		FileBrowserComponent::useTreeView | 
 		FileBrowserComponent::filenameBoxIsReadOnly | 
 		FileBrowserComponent::warnAboutOverwriting,
-		Settings::getFileLoadDir(), 
+		Settings::getAudioLoadDir(), 
         nullptr, 
         nullptr ) 
     , filter( "*.wav;*.aiff", "", "Audio files" )

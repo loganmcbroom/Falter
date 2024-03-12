@@ -23,6 +23,7 @@ FalterClip::FalterClip( std::shared_ptr<flan::Audio> _audio
 	, FalterPlayer & _player
 	, AudioThumbnailCache &_thumbnailCache
 	, const String & name
+	//, const File & global_file_
 	, flan::Audio::SndfileStrings sndfileStrings_
 	) 
 	: Button( name )
@@ -37,6 +38,7 @@ FalterClip::FalterClip( std::shared_ptr<flan::Audio> _audio
 	, retrieveScriptButton( "&", &FalterLookAndFeel::getLNF().fontWingdings, 18 )
 	, retrieveInputsButton( "v", &FalterLookAndFeel::getLNF().fontWingdings, 18 )
 	, local_file()
+	, global_file( )//global_file_ )
 	, id()
 	, sndfileStrings( sndfileStrings_ )
 	{
@@ -176,11 +178,19 @@ void FalterClip::setToggle( bool playMode )
 		}
 	}
 
-File FalterClip::getFile() const
+File FalterClip::getWorkspaceFile() const
 	{
 	if( local_file.existsAsFile() )
 		return local_file;
 	else
+		return File();
+	}
+
+File FalterClip::getGlobalFile() const
+	{
+	if( global_file.existsAsFile() )
+		return global_file;
+	else	
 		return File();
 	}
 
@@ -232,12 +242,13 @@ void FalterClip::timerCallback()
 
 void FalterClip::saveButtonPressed()
 	{
-	FileChooser chooser( "Save audio as", Settings::getFileLoadDir(), "*.wav" );
+	FileChooser chooser( "Save audio as", Settings::getAudioSaveDir(), "*.wav" );
 
 	if( chooser.browseForFileToSave( true ) )
 		{
-		File choice = chooser.getResult();
-		audio->save( choice.getFullPathName().toStdString(), -1, sndfileStrings );
+		global_file = chooser.getResult();
+		Settings::setAudioSaveDir( global_file.getParentDirectory() );
+		audio->save( global_file.getFullPathName().toStdString(), -1, sndfileStrings );
 		setName( chooser.getResult().getFileName() );
 		}
 	repaint();
@@ -262,7 +273,9 @@ void FalterClip::saveButtonPressed()
 
 void FalterClip::retrieveScriptButtonPressed() const
 	{
-	FileChooser chooser( "Save script as", File::getCurrentWorkingDirectory().getChildFile( sndfileStrings.artist ), "*.lua" );
+	auto scriptName = File( sndfileStrings.artist ).getFileName();
+	auto scriptPath = Settings::getScriptFile().getParentDirectory().getChildFile( scriptName );
+	FileChooser chooser( "Save script as", scriptPath, "*.lua" );
 
 	if( chooser.browseForFileToSave( true ) )
 		{

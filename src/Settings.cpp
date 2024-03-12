@@ -2,18 +2,11 @@
 
 #include <fstream>
 
-extern "C"
-{
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
-}
-
-const String Settings::settingsFileName = "Settings.txt";
+const String Settings::settingsFileName = "Falter_Settings.txt";
 Settings * Settings::instance = nullptr;
 
 Settings::Settings()
-	: fileLoadDir()
+	: audioLoadDir()
 	{
 	jassert( instance == nullptr );
 	instance = this;
@@ -21,19 +14,24 @@ Settings::Settings()
 	std::ifstream file( settingsFileName.toStdString() );
 	if( file )
 		{
-		std::string fileLoadDirS;
+		std::string audioLoadDirS;
+		std::string audioSaveDirS;
 		std::string scriptFileS;
-		std::getline( file, fileLoadDirS );
+		std::getline( file, audioLoadDirS );
+		std::getline( file, audioSaveDirS );
 		std::getline( file, scriptFileS   );
-		fileLoadDir = File( fileLoadDirS );
+		audioLoadDir = File( audioLoadDirS );
+		audioSaveDir = File( audioSaveDirS );
 		scriptFile  = File( scriptFileS );
-		if( ! fileLoadDir.exists() ) fileLoadDir = defaultFileLoadDir();
-		if( ! scriptFile .exists() ) scriptFile  = defaultScriptFile();
+		if( ! audioLoadDir.exists() ) audioLoadDir = File::getCurrentWorkingDirectory();
+		if( ! audioSaveDir.exists() ) audioSaveDir = File::getCurrentWorkingDirectory();
+		if( ! scriptFile .exists() ) scriptFile  = File::getCurrentWorkingDirectory().getChildFile( "Select Script File" );
 		}
 	else
 		{
-		fileLoadDir = defaultFileLoadDir();
-		scriptFile  = defaultScriptFile();
+		audioLoadDir = File::getCurrentWorkingDirectory();
+		audioSaveDir = File::getCurrentWorkingDirectory();
+		scriptFile  = File::getCurrentWorkingDirectory().getChildFile( "Select Script File" );
 		}
 
 	saveToSettingsFile();
@@ -44,52 +42,43 @@ Settings::~Settings()
 	instance = nullptr;
 	}
 
-File Settings::getFileLoadDir()
+File Settings::getAudioLoadDir()
 	{
 	jassert( instance != nullptr );
-	if( instance )
-		return instance->fileLoadDir;
-	else 
-		return defaultFileLoadDir();
+	return instance->audioLoadDir;
 	}
 
-void Settings::setFileLoadDir( const File & newDir )
+void Settings::setAudioLoadDir( const File & newDir )
 	{
 	jassert( instance != nullptr );
-	if( instance )
-		{
-		instance->fileLoadDir = newDir;
-		instance->saveToSettingsFile();
-		}
+	instance->audioLoadDir = newDir;
+	instance->saveToSettingsFile();
 	}
 
-File Settings::defaultFileLoadDir()
+File Settings::getAudioSaveDir()
 	{
-	return File::getCurrentWorkingDirectory();
+	jassert( instance != nullptr );
+	return instance->audioSaveDir;
+	}
+
+void Settings::setAudioSaveDir( const File & newDir )
+	{
+	jassert( instance != nullptr );
+	instance->audioSaveDir = newDir;
+	instance->saveToSettingsFile();
 	}
 
 File Settings::getScriptFile()
 	{
 	jassert( instance != nullptr );
-	if( instance )
-		return instance->scriptFile;
-	else 
-		return defaultScriptFile();
+	return instance->scriptFile;
 	}
 
 void Settings::setScriptFile( const File & newFile )
 	{
 	jassert( instance != nullptr );
-	if( instance )
-		{
-		instance->scriptFile = newFile;
-		instance->saveToSettingsFile();
-		}
-	}
-
-File Settings::defaultScriptFile()
-	{
-	return File::getCurrentWorkingDirectory().getChildFile( "Select Script File" );
+	instance->scriptFile = newFile;
+	instance->saveToSettingsFile();
 	}
 
 void Settings::saveToSettingsFile()
@@ -116,6 +105,7 @@ void Settings::saveToSettingsFile()
 		}
 
 	// Write to file
-	file << fileLoadDir	.getFullPathName() << std::endl;
-	file << scriptFile	.getFullPathName() << std::endl;
+	file << audioLoadDir.getFullPathName() << std::endl;
+	file << audioSaveDir.getFullPathName() << std::endl;
+	file << scriptFile.getFullPathName() << std::endl;
 	}

@@ -94,8 +94,6 @@ public:
 	Component settingsContainer;
 	FalterAudioDeviceSelector deviceSelector;
 
-	TooltipWindow tooltip;
-
 	File workingDirectory;
 
 	const int logHeight;

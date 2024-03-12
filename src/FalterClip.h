@@ -24,6 +24,7 @@ public:
 			 , FalterPlayer & player
 			 , AudioThumbnailCache & thumbnailCache
 			 , const String & name = "-"
+			 //, const File & global_file = File()
 			 , flan::Audio::SndfileStrings = flan::Audio::SndfileStrings()
 			 );
 	~FalterClip() override;
@@ -36,7 +37,8 @@ public:
 	void stopPressed();
 	void setToggle( bool );
 
-	File getFile() const;
+	File getWorkspaceFile() const;
+	File getGlobalFile() const;
 
 private:  
 	void timerCallback() override;
@@ -59,6 +61,7 @@ private:
 
 	void saveButtonPressed(); // If the file is empty, create the file and save to it
 	File local_file; // Local file stored in workspace folder
+	File global_file;
 	juce::Uuid id;
 
 	void retrieveScriptButtonPressed() const;

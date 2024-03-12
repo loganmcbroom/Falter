@@ -8,18 +8,20 @@ public:
 	Settings();
 	~Settings();
 
-	static File getFileLoadDir();
-	static void setFileLoadDir( const File & );
-	static File defaultFileLoadDir();
+	static File getAudioLoadDir();
+	static void setAudioLoadDir( const File & );
+
+	static File getAudioSaveDir();
+	static void setAudioSaveDir( const File & );
 
 	static File getScriptFile();
 	static void setScriptFile( const File & );
-	static File defaultScriptFile();
 
 private:
 	void saveToSettingsFile();
 
-	File fileLoadDir;
+	File audioLoadDir;
+	File audioSaveDir;
 	File scriptFile;
 
 	static const String settingsFileName;

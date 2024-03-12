@@ -345,13 +345,17 @@ bool MainComponent::shouldDropFilesWhenDraggedExternally(
 		{
 		auto * clip = dynamic_cast<FalterClip *>( sourceDetails.sourceComponent.get() );
 		if( !clip ) return false;
-		File f = clip->getFile();
-		if( f.existsAsFile() )
-			{
-			files.add( f.getFullPathName() );
-			canMoveFiles = false;
-			return true;
-			}		
+
+		File f;
+		if( clip->getGlobalFile().existsAsFile() )
+			f = clip->getGlobalFile();
+		else if( clip->getWorkspaceFile().existsAsFile() )
+			f = clip->getWorkspaceFile();
+		else return false;
+
+		files.add( f.getFullPathName() );
+		canMoveFiles = false;
+		return true;
 		}
 	return false;
 	}
@@ -371,7 +375,7 @@ void MainComponent::fileDoubleClicked( const File & file )
 
 void MainComponent::browserRootChanged( const File & dir )
 	{
-	settings->setFileLoadDir( dir );
+	settings->setAudioLoadDir( dir );
 	}
 
 void MainComponent::handleFileAction( FW::WatchID otherWatchID, const FW::String &, const FW::String & filename, FW::Action action )
