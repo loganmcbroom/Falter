@@ -20,7 +20,7 @@ class FalterThread : public Thread
 public:
 	FalterThread( 
 		int threadID,
-		const String & script, 
+		const File & script, 
 		const FalterThreadCallback & callback,
 		const AudioVec & files = AudioVec()
 		);
@@ -41,11 +41,10 @@ private:
 	
 	int ID;
 	FalterThreadCallback callback;
-	const String script;
+	const File scriptFile;
 	lua_State * L;
 	juce::Time startTime;
 	juce::Time endTime;
-	File workingDir;
 	bool threadSuccess;
 	bool allProcessesSetUp;
 	std::atomic<bool> canceller;

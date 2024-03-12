@@ -36,15 +36,14 @@ static const struct luaL_Reg printlib [] =
 	{NULL, NULL} /* end of array */
 	};
 
-FalterThread::FalterThread( int threadID, const String & _script, const FalterThreadCallback & _callback, const AudioVec & inputs )
+FalterThread::FalterThread( int threadID, const File & _script, const FalterThreadCallback & _callback, const AudioVec & inputs )
 	: Thread( String( threadID ) + " " + File( _script ).getFileName() )
 	, ID( threadID )
 	, callback( _callback )
-	, script( _script )
+	, scriptFile( _script )
 	, L( lua_open() )
 	, startTime( )
 	, endTime( )
-	, workingDir( )
 	, threadSuccess( false )
 	, allProcessesSetUp( true )
 	, canceller( false )
@@ -79,8 +78,8 @@ FalterThread::FalterThread( int threadID, const String & _script, const FalterTh
 
 	lua_setglobal( L, "inputs" );
 
-	// Load the supplied script
-	if( luaL_loadfile( L, script.getCharPointer() ) )
+	// Load the supplied script into Lua
+	if( luaL_loadfile( L, scriptFile.getFullPathName().getCharPointer() ) )
 		{
 		luaerr( L );
 		return;
