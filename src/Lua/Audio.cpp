@@ -714,7 +714,7 @@ struct F_Audio_synthesize_trainlets { pAudio operator()(
     pFunc1x1 e,
     pFunc1x1 f,
     pFunc1x1 g,
-    pFunc1x1 h = std::make_shared<Func1x1>( 48000*10 ), // The default would normally be the max value the harmonic type could hold, this is fine though.
+    pFunc1x1 h = std::make_shared<Func1x1>( 48000*10 ), // I can't remember why I didn't just set this to max, but I don't care to find out.
     pFunc1x1 i = std::make_shared<Func1x1>( 1 ),
     pFunc1x1 j = std::make_shared<Func1x1>( 32 ),
     FrameRate k = 48000 )

@@ -113,7 +113,7 @@ MainComponent::MainComponent()
 		workingDirectory.deleteRecursively();
 	workingDirectory.createDirectory();
 
-	Logger::writeToLog( "Falter Initialized\n" );
+	Logger::writeToLog( "Falter initialized, welcome user.\n" );
 	}
 
 MainComponent::~MainComponent()
@@ -237,9 +237,9 @@ void MainComponent::procButtonClicked()
 		for( int i = as.size()-1; i >= 0; --i )
 			{
 			if( ! as[i]->is_null() )
-				outClips.insertClipFromAudio( as[i], 0, String( "Output " ) + String( i + 1 ) + String( " of: " ) + threadName, File(), sndfileStrings );
+				outClips.insertClipFromAudio( as[i], 0, String( "Output " ) + String( i+1 ) + String( " of: " ) + threadName, File(), sndfileStrings );
 			else
-				Logger::writeToLog( "Null output recieved, this is usually caused by an invalid method input" );
+				Logger::writeToLog( "Null output recieved, this is usually caused by an invalid method input." );
 			}
 		// If we are in hot mode and got outputs, play the first of them
 		if( !std::all_of( as.begin(), as.end(), []( std::shared_ptr<flan::Audio> a ){ return a->is_null(); } ) && autoProcess )
