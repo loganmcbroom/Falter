@@ -736,8 +736,13 @@ struct F_Audio_synthesize_psola { pAudio operator()( pAudio a,
     Second length, 
     pFunc1x1 time_selection,
     pAudioMod mod = std::make_shared<flan::AudioMod>() )
-    { std::cout << "flan::Audio::synthesize_psola";
-    return std::make_shared<flan::Audio>( a->synthesize_psola( length, *time_selection, *mod ) ); } };
+    { 
+    std::cout << "flan::Audio::synthesize_psola";
+    auto out = std::make_shared<flan::Audio>( a->synthesize_psola( length, *time_selection, *mod ) ); 
+    if( length > 0 && !a->is_null() && out->is_null() )
+        std::cout << "    Psola returned no data, which indicates the input had no detectable frequency envelope.";
+    return out;
+    } };
 
 
 
