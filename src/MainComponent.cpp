@@ -211,6 +211,8 @@ void MainComponent::mouseUp( const MouseEvent & e )
 		File f( scriptLabel.getText() );
 		if( f.existsAsFile() )
 			f.revealToUser();
+		else
+			Logger::writeToLog( "Couldn't open the current script location." );
 		}
 	}
 
