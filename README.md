@@ -28,7 +28,7 @@ In the top left of the gui there are five buttons.
     the currently active script is watched for changes. When you hit ctrl-s and some changes are saved to disk, it detects this, and automatically
     retriggers processing as though you had clicked the skull.
 * The folder button selects the active script. You will probably not want to just throw out your scripts every time, right? Well, just create a 
-    new one and use this button to select it. The currently active script will have its name displayed next to the script select button
+    new one and use this button to select it. The currently active script will have its name displayed next to the script select button. Secret feature, click the label displaying the current script to open that folder in a file browser.
 
 #### File Browser
 I don't think a really have much to say about this. It's a file browser. Double clicking a folder will set it as the browser root, and this is
@@ -37,8 +37,11 @@ them into a clip list.
 
 #### Clip Lists
 There are two clip lists, labelled "Inputs" and "Outputs". Audio clips within these lists can be dragged and dropped to reorder them, as well as being
-dragged and dropped from one to the other. This is very useful for reprocessing a previous output without having to save it to disk. The buttons on each
-clip should be self-explanatory. The X at the top of each clip list clears the entire list.
+dragged and dropped from one to the other. This is very useful for reprocessing a previous output without having to save it to disk. The X at the top of each clip list clears the entire list. There are four buttons on each clip.  
+* Top left: Plays/stops the clip.
+* Bottom left: Opens a file save dialogue.
+* Top right: If the audio for the clip was generated with falter, this opens a dialogue to save the script used to generate it.
+* Bottom right: If the audio for the clip was generated with falter, this prints the names of any inputs used to generate it.
 
 #### Thread Lists
 Between the clip lists is the thread list. Any time processing is triggered, a new thread is spawned to manage that processing. Information about each
