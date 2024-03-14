@@ -278,20 +278,28 @@ void FalterClip::saveButtonPressed()
 
 void FalterClip::retrieveScriptButtonPressed() const
 	{
-	auto scriptName = File( sndfileStrings.artist ).getFileName();
-	auto scriptPath = Settings::getScriptFile().getParentDirectory().getChildFile( scriptName );
-	FileChooser chooser( "Save script as", scriptPath, "*.lua" );
-
-	if( chooser.browseForFileToSave( true ) )
+	if( sndfileStrings.artist.empty() || sndfileStrings.comment.empty() )
+		Logger::writeToLog( "This file contains no script =(" );
+	else
 		{
-		File choice = chooser.getResult();
-		if( ! choice.existsAsFile() )
-			choice.create();
-		choice.replaceWithText( sndfileStrings.comment );
+		auto scriptName = File( sndfileStrings.artist ).getFileName();
+		auto scriptPath = Settings::getScriptFile().getParentDirectory().getChildFile( scriptName );
+		FileChooser chooser( "Save script as", scriptPath, "*.lua" );
+
+		if( chooser.browseForFileToSave( true ) )
+			{
+			File choice = chooser.getResult();
+			if( ! choice.existsAsFile() )
+				choice.create();
+			choice.replaceWithText( sndfileStrings.comment );
+			}
 		}
 	}
 
 void FalterClip::retrieveInputsButtonPressed() const
 	{
-	Logger::writeToLog( sndfileStrings.title );
+	if( sndfileStrings.title.empty() )
+		Logger::writeToLog( "No inputs to list." );
+	else
+		Logger::writeToLog( sndfileStrings.title );
 	}
