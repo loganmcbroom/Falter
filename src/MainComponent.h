@@ -33,6 +33,7 @@ public:
     void paint( Graphics & g ) override;
     void resized() override;
 	void buttonClicked( Button * button ) override;
+	void mouseUp( const MouseEvent & e ) override;
 
     void importFile( File file );
 

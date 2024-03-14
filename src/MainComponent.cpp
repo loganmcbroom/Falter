@@ -102,6 +102,7 @@ MainComponent::MainComponent()
 	scriptLabel.setText( Settings::getScriptFile().getFullPathName(), dontSendNotification );
 	if( File( scriptLabel.getText() ).exists() )
 		addWatchProtected();
+	scriptLabel.addMouseListener( this, false );
 
 	setSize( 1000, 700 );
 
@@ -201,6 +202,16 @@ void MainComponent::buttonClicked( Button* button )
 	else if( button == &settingsButton		) settingsButtonClicked();		
 	else if( button == &scriptSelectButton	) scriptSelectButtonClicked(); 	
 	else if( button == &autoProcessButton	) autoProcessButtonClicked(); 	
+	}
+
+void MainComponent::mouseUp( const MouseEvent & e )
+	{
+	if( e.eventComponent == &scriptLabel )
+		{
+		File f( scriptLabel.getText() );
+		if( f.existsAsFile() )
+			f.revealToUser();
+		}
 	}
 
 void MainComponent::importFile( File file )
