@@ -371,10 +371,15 @@ struct F_Audio_modify_volume_in_place { void operator()( pAudio a,
     { std::cout << "flan::Audio::modify_volume_in_place";
     a->modify_volume_in_place( *b ); } };
 
-struct F_Audio_set_volume { pAudio operator()(pAudio a, 
-    pFunc1x1 b = std::make_shared<Func1x1>( 1 ) )
+struct F_Audio_set_volume { pAudio operator()( pAudio a, 
+    pFunc1x1 b )
     { std::cout << "flan::Audio::set_volume";
     return std::make_shared<flan::Audio>( a->set_volume( *b ) ); } };
+
+struct F_Audio_ring_modulate { pAudio operator()( pAudio a, 
+    pAudio b )
+    { std::cout << "flan::Audio::ring_modulate";
+    return std::make_shared<flan::Audio>( a->ring_modulate( *b ) ); } };
 
 struct F_Audio_fade { pAudio operator()( pAudio a, 
     flan::Second b = 16.0f/48000.0f, 
@@ -858,13 +863,10 @@ void luaF_register_Audio( lua_State * L )
 
             // Conversions
             luaF_register_helper<F_Audio_resample,                              2>( L, "resample"                               );
-            //luaF_register_helper<F_Audio_convert_to_graph, flan::Graph, flan::Audio, Interval, Pixel, Pixel, float>( L, "convert_to_graph" );
             luaF_register_helper<F_Audio_save_to_bmp,                           2>( L, "save_to_bmp"                            );
-            //luaF_register_helper<F_Audio_convert_to_spectrum_graph,             1>( L, "convert_to_spectrum_graph"              );                           
             luaF_register_helper<F_Audio_save_spectrum_to_bmp,                  2>( L, "save_spectrum_to_bmp"                   );                           
             luaF_register_helper<F_Audio_convert_to_PV,                         1>( L, "convert_to_PV"                          );
             luaF_register_helper<F_Audio_convert_to_ms_PV,                      1>( L, "convert_to_ms_PV"                       );          
-            //luaF_register_helper<F_Audio_convert_to_PV_selector,                1>( L, "__call"                                 );
             luaF_register_helper<F_Audio_convert_to_mid_side,                   1>( L, "convert_to_mid_side"                    );
             luaF_register_helper<F_Audio_convert_to_left_right,                 1>( L, "convert_to_left_right"                  );
             luaF_register_helper<F_Audio_convert_to_stereo,                     1>( L, "convert_to_stereo"                      );
@@ -879,10 +881,7 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_get_total_energy,                      1>( L, "get_total_energy"                       );
             luaF_register_helper<F_Audio_get_energy_difference,                 2>( L, "get_energy_difference"                  );                   
             luaF_register_helper<F_Audio_get_local_wavelength,                  3>( L, "get_local_wavelength"                   );
-            //luaF_register_helper<F_Audio_get_local_wavelengths,                 2>( L, "get_local_wavelengths"                  );
-            //luaF_register_helper<F_Audio_get_average_wavelength,                2>( L, "get_average_wavelength"                 );
             luaF_register_helper<F_Audio_get_local_frequency,                   2>( L, "get_local_frequency"                    );
-            //luaF_register_helper<F_Audio_get_local_frequencies,                 2>( L, "get_local_frequencies"                  );
             luaF_register_helper<F_Audio_get_amplitude_envelope,                1>( L, "get_amplitude_envelope"                 );                        
             luaF_register_helper<F_Audio_get_frequency_envelope,                1>( L, "get_frequency_envelope"                 );                        
 
@@ -903,14 +902,12 @@ void luaF_register_Audio( lua_State * L )
 
             // Volume
             luaF_register_helper<F_Audio_modify_volume,                         2>( L, "modify_volume"                          );
-            // luaF_register_helper<F_Audio_modify_volume_in_place,                2>( L, "modify_volume_in_place"                 );                                        
             luaF_register_helper<F_Audio_set_volume,                            2>( L, "set_volume"                             );
+            luaF_register_helper<F_Audio_ring_modulate,                         2>( L, "ring_modulate"                          );
             luaF_register_helper<F_Audio_apply_adsr,                            3>( L, "apply_adsr"                             );
             luaF_register_helper<F_Audio_apply_ar,                              3>( L, "apply_ar"                               );
             luaF_register_helper<F_Audio_fade,                                  1>( L, "fade"                                   );
-            // luaF_register_helper<F_Audio_fade_in_place,                         1>( L, "fade_in_place"                          );   
             luaF_register_helper<F_Audio_fade_frames,                           1>( L, "fade_frames"                            );
-            // luaF_register_helper<F_Audio_fade_frames_in_place,                  1>( L, "fade_frames_in_place"                   );                                      
             luaF_register_helper<F_Audio_invert_phase,                          1>( L, "invert_phase"                           );
             luaF_register_helper<F_Audio_waveshape,                             2>( L, "waveshape"                              );
             luaF_register_helper<F_Audio_add_moisture,                          1>( L, "add_moisture"                           );  
@@ -919,7 +916,6 @@ void luaF_register_Audio( lua_State * L )
             // Spatial
             luaF_register_helper<F_Audio_stereo_spatialize,                     2>( L, "stereo_spatialize"                      );                               
             luaF_register_helper<F_Audio_pan,                                   2>( L, "pan"                                    );
-            // luaF_register_helper<F_Audio_pan_in_place,                          2>( L, "pan_in_place"                           );  
             luaF_register_helper<F_Audio_widen,                                 2>( L, "widen"                                  );
 
             // Filters
@@ -940,7 +936,6 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_filter_comb,                           2>( L, "filter_comb"                            );      
 
             // Combination
-            // luaF_register_helper<F_Audio_mix_in_place,                          2>( L, "mix_in_place"                           );  
             luaF_register_helper<F_Audio_convolve,                              2>( L, "convolve"                               );
 
             // Synthesis

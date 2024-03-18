@@ -226,10 +226,10 @@ void FalterClip::timerCallback()
 	auto & source = player.getTransportSource();
 
 	// The weird computation handles some buttons being stuck on top of the component
-	const float s = getHeight() / 2.0f;
+	const float s = getHeight();
 	const float e = static_cast<float>( getWidth() );
 	const float r = static_cast<float>( source.getCurrentPosition() ) / static_cast<float>( audio->get_length() );
-	const float initialX = 2*s + ( e - s ) * r;
+	const float initialX = s + ( e - s ) * r;
 	
 	// Draw white line to show current playback position
 	currentPosition.setRectangle( juce::Rectangle<float>( 
