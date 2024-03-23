@@ -400,8 +400,7 @@ struct F_Audio_apply_adsr { pAudio operator()( pAudio a,
     { 
     // This isn't a real flan function but nobody needs to know that.
     std::cout << "flan::Audio::apply_adsr";
-    auto envelope = flan::ADSR( b, c, d, e, f, g, h, i );
-    return std::make_shared<flan::Audio>( a->modify_volume( envelope ) ); 
+    return std::make_shared<flan::Audio>( a->apply_adsr( b, c, d, e, f, g, h, i ) ); 
     } };
 
 struct F_Audio_apply_ar { pAudio operator()( pAudio a, 
@@ -411,9 +410,8 @@ struct F_Audio_apply_ar { pAudio operator()( pAudio a,
     float i = 1 )
     { 
     // This isn't a real flan function but nobody needs to know that.
-    std::cout << "flan::Audio::apply_ad";
-    auto envelope = flan::ADSR( b, 0, 0, e, 1, 1, h, i );
-    return std::make_shared<flan::Audio>( a->modify_volume( envelope ) ); 
+    std::cout << "flan::Audio::apply_ar";
+    return std::make_shared<flan::Audio>( a->apply_ar( b, 0, 0, e, 1, h, 1, i ) ); 
     } };
 
 struct F_Audio_fade_in_place { void operator()( pAudio a, 
@@ -692,22 +690,24 @@ struct F_Audio_synthesize_grains { pAudio operator()(
     { std::cout << "flan::Audio::synthesize_grains";
     return std::make_shared<flan::Audio>( Audio::synthesize_grains( length, *grains_per_second, *time_scatter, *grain_source, sample_rate ) ); } };
 
-struct F_Audio_synthesize_grains_repeat { pAudio operator()( pAudio a,
-    Second length,
-    pFunc1x1 grains_per_second,
-    pFunc1x1 time_scatter,
-    pFunc1x1 gain )
-    { std::cout << "flan::Audio::synthesize_grains_repeat";
-    return std::make_shared<flan::Audio>( a->synthesize_grains_repeat( length, *grains_per_second, *time_scatter, *gain ) ); } };
+// struct F_Audio_synthesize_grains_repeat { pAudio operator()( pAudio a,
+//     Second length,
+//     pFunc1x1 grains_per_second,
+//     pFunc1x1 time_scatter,
+//     pFunc1x1 gain = std::make_shared<Func1x1>( 1 ) )
+//     { std::cout << "flan::Audio::synthesize_grains_repeat";
+//     return std::make_shared<flan::Audio>( a->synthesize_grains_repeat( length, *grains_per_second, *time_scatter, *gain ) ); } };
 
-struct F_Audio_synthesize_grains_with_mod { pAudio operator()( pAudio a,
+struct F_Audio_texture { pAudio operator()( pAudio a,
     Second length, 
     pFunc1x1 grains_per_second, 
     pFunc1x1 time_scatter, 
-    pAudioMod mod,
+    pAudioMod mod = std::make_shared<flan::AudioMod>(),
     Fool feedback = false )
-    { std::cout << "flan::Audio::synthesize_grains_with_mod";
-    return std::make_shared<flan::Audio>( a->synthesize_grains_with_mod( length, *grains_per_second, *time_scatter, *mod, feedback.b ) ); } };
+    { 
+    std::cout << "flan::Audio::texture";
+        return std::make_shared<flan::Audio>( a->texture( length, *grains_per_second, *time_scatter, *mod, feedback.b ) ); 
+    } };
 
 // Grain Compositions ===================================================================================================================
 
@@ -726,7 +726,7 @@ struct F_Audio_synthesize_trainlets { pAudio operator()(
     { std::cout << "flan::Audio::synthesize_trainlets";
     return std::make_shared<flan::Audio>( Audio::synthesize_trainlets( a, *b, *c, *d, *e, *f, *g, wrapFuncAxB<Second, Harmonic>( h ), *i, *j, k ) ); } };
 
-struct F_Audio_synthesize_granulation { pAudio operator()( pAudio a,
+struct F_Audio_granulate { pAudio operator()( pAudio a,
     Second length, 
     pFunc1x1 grains_per_second, 
     pFunc1x1 time_scatter, 
@@ -734,16 +734,16 @@ struct F_Audio_synthesize_granulation { pAudio operator()( pAudio a,
     pFunc1x1 grain_length,
     Second fade = 0,
     pAudioMod mod = std::make_shared<flan::AudioMod>() )
-    { std::cout << "flan::Audio::synthesize_granulation";
-    return std::make_shared<flan::Audio>( a->synthesize_granulation( length, *grains_per_second, *time_scatter, *time_selection, *grain_length, fade, *mod ) ); } };
+    { std::cout << "flan::Audio::texture_granulate";
+    return std::make_shared<flan::Audio>( a->granulate( length, *grains_per_second, *time_scatter, *time_selection, *grain_length, fade, *mod ) ); } };
 
-struct F_Audio_synthesize_psola { pAudio operator()( pAudio a,
+struct F_Audio_psola { pAudio operator()( pAudio a,
     Second length, 
     pFunc1x1 time_selection,
     pAudioMod mod = std::make_shared<flan::AudioMod>() )
     { 
-    std::cout << "flan::Audio::synthesize_psola";
-    auto out = std::make_shared<flan::Audio>( a->synthesize_psola( length, *time_selection, *mod ) ); 
+    std::cout << "flan::Audio::texture_psola";
+    auto out = std::make_shared<flan::Audio>( a->psola( length, *time_selection, *mod ) ); 
     if( length > 0 && !a->is_null() && out->is_null() )
         std::cout << "    Psola returned no data, which indicates the input had no detectable frequency envelope.";
     return out;
@@ -939,10 +939,9 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_convolve,                              2>( L, "convolve"                               );
 
             // Synthesis
-            luaF_register_helper<F_Audio_synthesize_grains_repeat,              5>( L, "synthesize_grains_repeat"               );                          
-            luaF_register_helper<F_Audio_synthesize_grains_with_mod,            5>( L, "synthesize_grains_with_mod"             );                                                 
-            luaF_register_helper<F_Audio_synthesize_granulation,                6>( L, "synthesize_granulation"                 );                        
-            luaF_register_helper<F_Audio_synthesize_psola,                      3>( L, "synthesize_psola"                       );          
+            luaF_register_helper<F_Audio_texture,                               5>( L, "texture"                                );                                                 
+            luaF_register_helper<F_Audio_granulate,                             6>( L, "texture_granulate"                      );                        
+            luaF_register_helper<F_Audio_psola,                                 3>( L, "texture_psola"                          );          
 
             // Static methods taking vector<Audio> are also added as AudioVec methods for convenience
             lua_pushcclosure( L, luaF_LTMP<F_Audio_combine_channels,         1>, 0 ); lua_setfield( L, -2, "combine_channels"       );  

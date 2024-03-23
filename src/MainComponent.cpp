@@ -212,7 +212,7 @@ void MainComponent::mouseUp( const MouseEvent & e )
 		if( f.existsAsFile() )
 			f.revealToUser();
 		else
-			Logger::writeToLog( "Couldn't open the current script location." );
+			Logger::writeToLog( "Couldn't open the current script location in the file browser. Where did it go?" );
 		}
 	}
 
@@ -224,7 +224,7 @@ void MainComponent::importFile( File file )
 void MainComponent::procButtonClicked() 
 	{
 	const File file = File( scriptLabel.getText() );
-	if( ! file.exists() )
+	if( ! file.existsAsFile() )
 		{
 		Logger::writeToLog( "The provided script does not exist: " + scriptLabel.getText() );
 		return;
