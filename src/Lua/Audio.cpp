@@ -399,8 +399,8 @@ struct F_Audio_apply_adsr { pAudio operator()( pAudio a,
     float i = 1 )
     { 
     // This isn't a real flan function but nobody needs to know that.
-    std::cout << "flan::Audio::apply_adsr";
-    return std::make_shared<flan::Audio>( a->apply_adsr( b, c, d, e, f, g, h, i ) ); 
+    std::cout << "flan::Audio::apply_adsr_envelope";
+    return std::make_shared<flan::Audio>( a->apply_adsr_envelope( b, c, d, e, f, g, h, i ) ); 
     } };
 
 struct F_Audio_apply_ar { pAudio operator()( pAudio a, 
@@ -410,8 +410,8 @@ struct F_Audio_apply_ar { pAudio operator()( pAudio a,
     float i = 1 )
     { 
     // This isn't a real flan function but nobody needs to know that.
-    std::cout << "flan::Audio::apply_ar";
-    return std::make_shared<flan::Audio>( a->apply_ar( b, 0, 0, e, 1, h, 1, i ) ); 
+    std::cout << "flan::Audio::apply_ar_envelope";
+    return std::make_shared<flan::Audio>( a->apply_ar_envelope( b, e, h, i ) ); 
     } };
 
 struct F_Audio_fade_in_place { void operator()( pAudio a, 
@@ -904,8 +904,8 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_modify_volume,                         2>( L, "modify_volume"                          );
             luaF_register_helper<F_Audio_set_volume,                            2>( L, "set_volume"                             );
             luaF_register_helper<F_Audio_ring_modulate,                         2>( L, "ring_modulate"                          );
-            luaF_register_helper<F_Audio_apply_adsr,                            3>( L, "apply_adsr"                             );
-            luaF_register_helper<F_Audio_apply_ar,                              3>( L, "apply_ar"                               );
+            luaF_register_helper<F_Audio_apply_adsr,                            3>( L, "apply_adsr_envelope"                    );
+            luaF_register_helper<F_Audio_apply_ar,                              3>( L, "apply_ar_envelope"                      );
             luaF_register_helper<F_Audio_fade,                                  1>( L, "fade"                                   );
             luaF_register_helper<F_Audio_fade_frames,                           1>( L, "fade_frames"                            );
             luaF_register_helper<F_Audio_invert_phase,                          1>( L, "invert_phase"                           );
