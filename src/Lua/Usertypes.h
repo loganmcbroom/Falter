@@ -34,8 +34,15 @@ template<> constexpr bool luaF_isUsertype<Func1x2Vec>()         { return true; }
 template<> constexpr bool luaF_isUsertype<Func2x2Vec>()         { return true; };
 template<> constexpr bool luaF_isUsertype<WavetableVec>()       { return true; };
 
-
 template<typename T> std::string luaF_getUsertypeName();
+
+template<typename T> std::string luaF_getTypeName()
+    {
+    if constexpr( luaF_isUsertype<T>() )
+        return luaF_getUsertypeName<T>();
+    else 
+        return typeid( T ).name();
+    }
 
 void luaF_register_Usertypes( lua_State * );
 

@@ -30,7 +30,16 @@ std::vector<T> luaF_LTMP_check( lua_State * L, int i )
         return { luaF_check<T>( L, i ) };
     else if( luaF_isArrayOfType<T>( L, i ) )
         return luaF_checkArrayOfType<T>( L, i );
-    else throw std::runtime_error( std::string( "Expected type " ) + typeid( T ).name() );
+    else 
+        {
+        std::string error_end = i==1? 
+            ( std::string(" for Self") ): 
+            ( std::string(" for argument ") + std::to_string( i-1 ) );
+
+        throw std::runtime_error( std::string( "Expected type: " ) 
+            + luaF_getTypeName<T>() 
+            + error_end );
+        }
     }
 
 // Push a vector of T onto the Lua stack.
@@ -205,6 +214,8 @@ static int luaF_LTMP( lua_State* L )
         // Get the number of arguments on the Lua stack
         const size_t numLuaInputs = static_cast<size_t>( lua_gettop( L ) );
 
+        if( numLuaInputs > I ) throw std::runtime_error( "Too many arguments passed to flan function: " );
+
         if constexpr( I > numNonDefaults ) // If we still have arguments that could be defaulted
             {
             if( numLuaInputs == I ) return luaF_LTMP_dispatched<Functor, I>( L );
@@ -216,9 +227,17 @@ static int luaF_LTMP( lua_State* L )
             else throw std::runtime_error( "Too few arguments passed to flan function." );
             }
         // ! sizeof( T * ) is always false and type dependant. Using plain false does not compile.
+        // This issue is fixed in newer cpp versions, but I'm leaving this as is for the time being
         else static_assert( ! sizeof( Functor * ), "Wrong number of non-defaulted arguments passed to a Lua function wrapper." );
         }
-    catch( std::exception & e ) { lua_pushstring( L, e.what() ); }
+    catch( std::exception & e ) 
+        { 
+        std::string errorString = std::string( "In " )
+            + typeid( Functor ).name()
+            + " - " 
+            + e.what();
+        lua_pushstring( L, errorString.c_str() ); 
+        }
     catch(...){ lua_pushstring( L, "Unknown error occured (please let me know how you made this show up)" ); }
     lua_error( L );
     return 0;

@@ -73,7 +73,7 @@ pPrismFunc luaF_checkPrismFunc( lua_State * L, int i )
             lua_rawgeti( L, LUA_REGISTRYINDEX, ref );
             luaF_push( L, note );
             luaF_push( L, t );
-            luaF_push( L, harmonic + 1 ); // +1 for lua index
+            luaF_push( L, harmonic );
             luaF_push( L, contourFreq );
             luaF_push( L, harmonicMagnitudes );
             lua_call( L, 5, 1 );
