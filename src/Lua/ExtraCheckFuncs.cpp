@@ -53,7 +53,6 @@ pAudioMod luaF_checkAudioMod( lua_State * L, int i )
             }, flan::ExecutionPolicy::Linear_Sequenced );
         }
     else throw std::runtime_error( "Non-function used in place of AudioMod." );
-    return std::make_shared<flan::AudioMod>();
     }
 
 pPrismFunc luaF_checkPrismFunc( lua_State * L, int i )
@@ -83,7 +82,6 @@ pPrismFunc luaF_checkPrismFunc( lua_State * L, int i )
             }, flan::ExecutionPolicy::Linear_Sequenced );
         }
     else throw std::runtime_error( "Non-function used in place of prism function." );
-    return std::make_shared<flan::PrismFunc>();
     }
 
 pGrainSource luaF_checkGrainSource( lua_State * L, int i )
@@ -110,6 +108,7 @@ pGrainSource luaF_checkGrainSource( lua_State * L, int i )
                 lua_pop( L, 1 );
                 return out_p->copy();
                 }
+            else return flan::Audio::create_null();
             
             // It would be much more effecient to not copy in this func, however, we can't guarantee the grain source is returning 
             // a freshly generated Audio. It may be returning an Audio still being used in other parts of the script, or it may
@@ -120,6 +119,33 @@ pGrainSource luaF_checkGrainSource( lua_State * L, int i )
         }
     else throw std::runtime_error( "Non-function used in place of grain source." );
     }
+
+pModIfPredicate luaF_checkModIfPredicate( lua_State * L, int i )
+    {
+    if( lua_isfunction( L, i ) )
+        {
+        lua_pushvalue( L, i ); // Copy the function, ref will pop it
+        const int ref = luaL_ref( L, LUA_REGISTRYINDEX );
+        return std::make_shared<ModIfPredicate>( [L, ref]( std::pair<int, pAudio> x ) -> bool
+            {
+            int n = x.first;
+            pAudio a = x.second;
+            lua_rawgeti( L, LUA_REGISTRYINDEX, ref );
+            luaF_push( L, n );
+            luaF_push( L, a );
+            lua_call( L, 2, 1 );
+            if( luaF_is<Fool>( L, -1 ) )
+                {
+                const bool choich = luaF_check<Fool>( L, -1 ).b; 
+                lua_pop( L, 1 );
+                return choich;
+                }
+            else return false;
+            }, flan::ExecutionPolicy::Linear_Sequenced );
+        }
+    else throw std::runtime_error( "Non-function used in place of vector_mod_if predicate." );
+    }
+
 
 // static int luaF_AudioMod_call( lua_State * L )
 //     {

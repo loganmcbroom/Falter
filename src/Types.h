@@ -18,21 +18,26 @@ namespace flan
     class Wavetable;
     struct MF;
     struct TF;
-    struct vec2;
     class AudioMod;
     class PrismFunc;
 
     template<typename I, typename O>
     struct Function;
+
+    template<typename T>
+    struct vec2Base;
+    using vec2 = vec2Base<float>;
     }
 
-using pAudio        = std::shared_ptr<flan::Audio>;
-using pPV           = std::shared_ptr<flan::PV>;
-using pWavetable    = std::shared_ptr<flan::Wavetable>;
-using pGraph        = std::shared_ptr<flan::Graph>;
-using pAudioMod     = std::shared_ptr<flan::AudioMod>;
-using pPrismFunc    = std::shared_ptr<flan::PrismFunc>;
-using pGrainSource  = std::shared_ptr<flan::Function<flan::Second, flan::Audio>>;
+using pAudio            = std::shared_ptr<flan::Audio>;
+using pPV               = std::shared_ptr<flan::PV>;
+using pWavetable        = std::shared_ptr<flan::Wavetable>;
+using pGraph            = std::shared_ptr<flan::Graph>;
+using pAudioMod         = std::shared_ptr<flan::AudioMod>;
+using pPrismFunc        = std::shared_ptr<flan::PrismFunc>;
+using pGrainSource      = std::shared_ptr<flan::Function<flan::Second, flan::Audio>>;
+using ModIfPredicate    = flan::Function<std::pair<int, pAudio>, bool>;
+using pModIfPredicate   = std::shared_ptr<ModIfPredicate>;
 
 using AudioVec      = std::vector<pAudio>;
 using PVVec         = std::vector<pPV>;

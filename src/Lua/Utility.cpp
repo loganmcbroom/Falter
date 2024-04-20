@@ -57,6 +57,7 @@ template<> bool luaF_is<InterpolatorIndex>( lua_State * L, int i ) { return luaF
 template<> bool luaF_is<pAudioMod>( lua_State * L, int i ) { return lua_isfunction( L, i ); }
 template<> bool luaF_is<pPrismFunc>( lua_State * L, int i ) { return lua_isfunction( L, i ); }
 template<> bool luaF_is<pGrainSource>( lua_State * L, int i ) { return lua_isfunction( L, i ); }
+template<> bool luaF_is<pModIfPredicate>( lua_State * L, int i ) { return lua_isfunction( L, i ); }
 
 template<> bool luaF_is<std::string>( lua_State * L, int i ) { return lua_isstring( L, i ); }
 
@@ -127,6 +128,7 @@ template<> InterpolatorIndex luaF_check( lua_State * L, int i ) { return luaF_ch
 template<> pAudioMod  luaF_check( lua_State * L, int i ) { return luaF_checkAudioMod( L, i ); }
 template<> pPrismFunc luaF_check( lua_State * L, int i ) { return luaF_checkPrismFunc( L, i ); }
 template<> pGrainSource luaF_check( lua_State * L, int i ) { return luaF_checkGrainSource( L, i ); }
+template<> pModIfPredicate luaF_check( lua_State * L, int i ) { return luaF_checkModIfPredicate( L, i ); }
 
 template<> std::string luaF_check( lua_State * L, int i ) { return std::string( luaL_checkstring( L, i ) ); }
 
@@ -162,9 +164,12 @@ template<> void luaF_push( lua_State * L, pFunc2x1 u )          { luaF_pushUsert
 template<> void luaF_push( lua_State * L, pFunc1x2 u )          { luaF_pushUsertype<pFunc1x2>( L, u );          }
 template<> void luaF_push( lua_State * L, pFunc2x2 u )          { luaF_pushUsertype<pFunc2x2>( L, u );          }
 template<> void luaF_push( lua_State * L, pWavetable u )        { luaF_pushUsertype<pWavetable>( L, u );        }
+
 template<> void luaF_push( lua_State * L, pAudioMod u )         { luaF_pushUsertype<pAudioMod>( L, u );         }
 template<> void luaF_push( lua_State * L, pPrismFunc u )        { luaF_pushUsertype<pPrismFunc>( L, u );        }
 template<> void luaF_push( lua_State * L, pGrainSource u )      { luaF_pushUsertype<pGrainSource>( L, u );      }
+template<> void luaF_push( lua_State * L, pModIfPredicate u )   { luaF_pushUsertype<pModIfPredicate>( L, u );      }
+
 template<> void luaF_push( lua_State * L, InterpolatorIndex u ) { luaF_pushUsertype<InterpolatorIndex>( L, u ); }
 
 template<> void luaF_push( lua_State * L, const std::string & u ) { lua_pushstring( L, u.c_str() ); }

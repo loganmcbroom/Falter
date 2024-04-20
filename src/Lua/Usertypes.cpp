@@ -33,6 +33,7 @@ template<> std::string luaF_getUsertypeName<WavetableVec>()         { return "Wa
 template<> std::string luaF_getUsertypeName<pAudioMod>()            { return "AudioMod";         }
 template<> std::string luaF_getUsertypeName<pPrismFunc>()           { return "PrismFunc";        }
 template<> std::string luaF_getUsertypeName<pGrainSource>()         { return "GrainSource";      }
+template<> std::string luaF_getUsertypeName<pModIfPredicate>()      { return "ModIfPredicate";   }
 
 
 // Register =======================================================================================================================
