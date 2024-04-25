@@ -32,13 +32,13 @@ std::vector<T> luaF_LTMP_check( lua_State * L, int i )
         return luaF_checkArrayOfType<T>( L, i );
     else 
         {
-        std::string error_end = i==1? 
-            ( std::string(" for Self") ): 
-            ( std::string(" for argument ") + std::to_string( i-1 ) );
+        // std::string error_end = i==1? 
+        //     ( std::string(" for Self") ): 
+        //     ( std::string(" for argument ") + std::to_string( i-1 ) );
 
         throw std::runtime_error( std::string( "Expected type: " ) 
             + luaF_getTypeName<T>() 
-            + error_end );
+            + std::string(" for argument ") + std::to_string( i ) );
         }
     }
 
@@ -159,6 +159,7 @@ static int luaF_LTMP_dispatched( lua_State* L )
 
     // Get args as a tuple of vectors
     auto vecTuple = luaF_get_args_as_tuple<Functor, numArgs>( L );
+    lua_settop( L, 0 ); // Clear stack of all args
 
     const int size_of_largest_tuple = get_size_of_largest_tuple( vecTuple );
     const int size_of_smallest_tuple = get_size_of_smallest_tuple( vecTuple );
@@ -241,6 +242,21 @@ static int luaF_LTMP( lua_State* L )
     catch(...){ lua_pushstring( L, "Unknown error occured (please let me know how you made this show up)" ); }
     lua_error( L );
     return 0;
+    }
+
+// Helper for a few global functions that return functions in a context where returning a
+// vector of functions from LTMP would feel unnatural.
+template<typename LuaCFunc, size_t NumNonDefaults>
+int luaF_LTMP_force_single_return( lua_State * L )
+    {
+    const int n = luaF_LTMP<LuaCFunc, NumNonDefaults>( L );
+    if( lua_istable( L, 1 ) && lua_objlen( L, 1 ) > 0 )
+        {
+        lua_rawgeti( L, 1, 1 );
+        lua_replace( L, 1 );
+        return 1;
+        }
+    else return n;
     }
 
 // Helper for pushing the correct LTMP method onto both the Lua type and the Lua array type.

@@ -15,6 +15,8 @@ extern "C"
 #include "Usertypes.h"
 #include "function_traits.h"
 
+void dump_lua_stack( lua_State * L );
+
 template<typename T> bool luaF_isArrayOfType( lua_State * L, int i );
 template<typename T> std::vector<T> luaF_checkArrayOfType( lua_State * L, int i );
 template<typename T> void luaF_pushArrayOfType( lua_State * L, const std::vector<T> & Ts );
@@ -27,7 +29,6 @@ template<typename T> concept is_vector = std::same_as<T, std::vector<typename T:
 template<is_vector T> bool luaF_is( lua_State * L, int i ) { return luaF_isArrayOfType<typename T::value_type>( L, i ); }
 template<is_vector T> T luaF_check( lua_State * L, int i ) { return luaF_checkArrayOfType<typename T::value_type>( L, i ); }
 template<is_vector T> void luaF_push( lua_State * L, T v ) { luaF_pushArrayOfType<typename T::value_type>( L, v ); }
-
 
 // Array passing ===============================================================================================================================
 

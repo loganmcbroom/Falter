@@ -7,6 +7,7 @@ extern "C"
 #include "lauxlib.h"
 }
 
+#include "GlobalFunctions.h"
 #include "Audio.h"
 #include "PV.h"
 #include "Wavetable.h"
@@ -20,7 +21,7 @@ template<> std::string luaF_getUsertypeName<pFunc2x1>()             { return "Fu
 template<> std::string luaF_getUsertypeName<pFunc1x2>()             { return "Func1x2";          }
 template<> std::string luaF_getUsertypeName<pFunc2x2>()             { return "Func2x2";          }
 template<> std::string luaF_getUsertypeName<pWavetable>()           { return "Wavetable";        }
-template<> std::string luaF_getUsertypeName<InterpolatorIndex>()    { return "Interpolator";     }
+template<> std::string luaF_getUsertypeName<InterpolatorIndex>()    { return "Interp";           }
 
 template<> std::string luaF_getUsertypeName<AudioVec>()             { return "AudioVec";         }
 template<> std::string luaF_getUsertypeName<PVVec>()                { return "PVVec";            }
@@ -40,6 +41,7 @@ template<> std::string luaF_getUsertypeName<pModIfPredicate>()      { return "Mo
 
 void luaF_register_Usertypes( lua_State * L )
     {
+    luaF_register_global_functions( L );
     luaF_register_Audio( L ); // Register Audio class into the Lua context
 	luaF_register_PV( L ); // Register PV class into the Lua context
 	luaF_register_Wavetable( L );

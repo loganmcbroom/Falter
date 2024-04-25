@@ -224,11 +224,6 @@ struct F_Func1x1_save_to_bmp { void operator()( pFunc1x1 a,
     { std::cout << "flan::Function<I, float>::save_to_bmp";
     a->save_to_bmp( b, c, d, e, f ); } };
 
-// struct F_Func1x1_periodize { pFunc1x1 operator()( pFunc1x1 f, 
-//     Second period = 1.0f ) 
-//     { std::cout << "flan::Function<float, O>::periodize";
-//     return std::make_shared<Func1x1>( f->periodize( period ) ); } };
-
 
 
 // ====================================================================================================================================================
@@ -256,7 +251,6 @@ void luaF_register_function_types( lua_State* L )
         lua_register( L, luaF_getUsertypeName<Func1x1Vec>().c_str(), luaF_Usertype_vec_new<pFunc1x1> );
 	    luaL_newmetatable( L, luaF_getUsertypeName<Func1x1Vec>().c_str() );
             luaF_register_helper<F_Func1x1_save_to_bmp, 2>( L, "save_to_bmp" );
-            //luaF_register_helper<F_Func1x1_periodize, 2>( L, "periodize" );
     lua_pop( L, 2 );
    
 

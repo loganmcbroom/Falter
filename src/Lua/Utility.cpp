@@ -11,6 +11,50 @@
 #include "ExtraCheckFuncs.h"
 #include "Interpolators.h"
 
+void dump_lua_stack( lua_State * L )
+    {
+    std::cout << "Lua stack dump:";
+    const int top = lua_gettop(L);
+    for( int i = 1; i <= top; i++ ) 
+        {
+        std::ostringstream ss;
+        ss << "    " << i << "\t" << luaL_typename( L, i ) << " - ";
+        switch( lua_type(L, i) ) {
+            case LUA_TBOOLEAN:
+                ss << lua_toboolean(L, i) ? "true" : "false";
+                break;
+            case LUA_TFUNCTION:
+                ss << "";
+                break;
+            case LUA_TLIGHTUSERDATA:
+                ss << "";
+                break;
+            case LUA_TNIL:
+                ss << "";
+                break;
+            case LUA_TNONE:
+                ss << "";
+                break;
+            case LUA_TNUMBER: 
+                ss << lua_tonumber(L,i); 
+                break;
+            case LUA_TSTRING:
+                ss << lua_tostring(L,i);
+                break;
+            case LUA_TTABLE:
+                ss << lua_objlen( L, i ) << " elements";
+                break;
+            case LUA_TTHREAD:
+                ss << "";
+                break;
+            case LUA_TUSERDATA:
+                ss << "";
+                break;
+            }
+        std::cout << ss.str();
+        }
+    }
+
 // Is =============================================================================================================================
 
 template<> bool luaF_is<int>( lua_State * L, int i ) { return lua_isnumber( L, i ); }
