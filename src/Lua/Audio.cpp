@@ -17,6 +17,7 @@ extern "C"
 #include "Utility.h"
 #include "Function.h"
 #include "Interpolators.h"
+#include "VecMethods.h"
 
 using namespace flan;
 
@@ -63,6 +64,10 @@ struct F_Audio_get_sample_rate { float operator()( pAudio a )
 struct F_Audio_get_length { float operator()( pAudio a )
     { std::cout << "flan::Audio::get_length";
     return a->get_length(); } };
+
+struct F_Audio_get_max_amplitude { float operator()( pAudio a )
+    { std::cout << "flan::Audio::get_max_amplitude";
+    return a->get_max_sample_magnitude(); } };
 
 
 
@@ -366,6 +371,12 @@ struct F_Audio_random_chunks { pAudio operator()( pAudio a,
     { std::cout << "flan::Audio::random_chunks";
     return std::make_shared<flan::Audio>( a->random_chunks( b, *c, *d, *e ) ); } };
 
+struct F_Audio_rearrange { pAudio operator()( pAudio a, 
+    Second slice_length,
+    Second fade_time = 0 )
+    { std::cout << "flan::Audio::rearrange";
+    return std::make_shared<flan::Audio>( a->rearrange( slice_length, fade_time ) ); } };
+
 
 
 //============================================================================================================================================================
@@ -635,17 +646,17 @@ struct F_Audio_filter_comb { pAudio operator()( pAudio a,
 // Combination
 //============================================================================================================================================================
  
-struct F_Audio_mix_variable_gain { pAudio operator()( AudioVec a, 
-    std::vector<flan::Second> start_times = std::vector<flan::Second>(),
-    Func1x1Vec gains = Func1x1Vec() )
-    { 
-    Audio out = Audio::mix_variable_gain( 
-        sharedPvecToPvec( a ), 
-        start_times, 
-        sharedPvecToPvec<Func1x1>( gains ) );
-    std::cout << "flan::Audio::mix_variable_gain";
-    return std::make_shared<flan::Audio>( std::move( out ) ); 
-    } };
+// struct F_Audio_mix_variable_gain { pAudio operator()( AudioVec a, 
+//     std::vector<flan::Second> start_times = std::vector<flan::Second>(),
+//     Func1x1Vec gains = Func1x1Vec() )
+//     { 
+//     Audio out = Audio::mix_variable_gain( 
+//         sharedPvecToPvec( a ), 
+//         start_times, 
+//         sharedPvecToPvec<Func1x1>( gains ) );
+//     std::cout << "flan::Audio::mix_variable_gain";
+//     return std::make_shared<flan::Audio>( std::move( out ) ); 
+//     } };
 
 struct F_Audio_mix { pAudio operator()( AudioVec a, 
     std::vector<float> start_times = std::vector<float>(), 
@@ -756,7 +767,7 @@ struct F_Audio_synthesize_grains { pAudio operator()(
 struct F_Audio_texture { pAudio operator()( pAudio a,
     Second length, 
     pFunc1x1 grains_per_second, 
-    pFunc1x1 time_scatter, 
+    pFunc1x1 time_scatter = std::make_shared<Func1x1>( 0 ),
     pAudioMod mod = std::make_shared<flan::AudioMod>(),
     Fool feedback = false )
     { 
@@ -809,145 +820,123 @@ struct F_Audio_psola { pAudio operator()( pAudio a,
 //============================================================================================================================================================
 // Helpers - These are not part of flan, they are helpers for ltmp processing
 //============================================================================================================================================================
-  
-static std::vector<std::vector<const Audio *>> groupify( const AudioVec & a, int group_size )
+
+// struct F_Audio_vec_repeat_for_each { AudioVec operator()( AudioVec a,
+//     int n,
+//     pAudioMod mod,
+//     Fool b = false )
+//     { 
+//     std::cout << "falter::Audio::vec_repeat_for_each";
+
+//     AudioVec out;
+
+//     if( b.b )
+//         for( int input_index = 0; input_index < a.size(); ++input_index )
+//             for( int repeat_index = 0; repeat_index < n; ++repeat_index )
+//                 {
+//                 Audio audio = a[input_index]->copy();
+//                 (*mod)( audio, repeat_index+1 ); 
+//                 out.push_back( std::make_shared<flan::Audio>( std::move( audio ) ) );
+//                 }
+//     else
+//         for( int repeat_index = 0; repeat_index < n; ++repeat_index )
+//             for( int input_index = 0; input_index < a.size(); ++input_index )
+//                 {
+//                 Audio audio = a[input_index]->copy();
+//                 (*mod)( audio, repeat_index+1 ); 
+//                 out.push_back( std::make_shared<flan::Audio>( std::move( audio ) ) );
+//                 }
+
+//     return out;
+//     } };
+
+struct F_Audio_vec_texture { pAudio operator()( AudioVec a,
+    Second length, 
+    pFunc1x1 grains_per_second, 
+    pFunc1x1 time_scatter = std::make_shared<Func1x1>( 0 ), 
+    pAudioMod mod = std::make_shared<flan::AudioMod>() )
+    { 
+    std::cout << "flan::Audio::vec_texture";
+
+    std::random_device rng;
+    std::mt19937 gen( rng() );
+    std::uniform_int_distribution<int> dist(0, a.size()-1);
+
+    return std::make_shared<flan::Audio>( Audio::synthesize_grains( length, *grains_per_second, *time_scatter, 
+        flan::Function<Second, Audio>( [&]( Second t )
+            { 
+            const size_t selection = dist( gen );
+            flan::Audio out = a[selection]->copy();
+            (*mod)( out, t );
+            return std::move( out );
+            }, ExecutionPolicy::Linear_Sequenced ), 
+        48000 ) );
+    } };
+    
+struct F_Audio_apply_to_section { pAudio operator()( pAudio a,
+    Second start_time,
+    Second length,
+    pAudioMod mod,
+    Second fade = 0.0f,
+    Fool keep_timing = true )
     {
-    const auto pvec = sharedPvecToPvec( a );
+    /*
+    I'm sure the branches in this function could be simplified, but I don't think it's worth doing.
+    The branches handle cases where the start_time/end_time lay outside the bounds of the input.
+    */
 
-    const int num_groups = std::ceil( float( a.size() ) / group_size );
-    std::vector<std::vector<const Audio *>> pvec_split( num_groups );
-    for( int i = 0; i < a.size(); ++i )
-        {
-        const int group = std::floor( float( i ) / group_size );
-        pvec_split[group].push_back( pvec[i] );
+    length = std::max( 0.0f, length );
+    const Second end_time = start_time + length;
+    if( start_time >= a->get_length() || end_time <= 0.0f ) return a;
+
+    std::vector<flan::Audio> a_split;
+    std::vector<Second> mix_times;
+
+    if( start_time <= 0 )
+        {  
+        if( end_time >= a->get_length() )
+            {
+            a_split.push_back( a->copy() );
+            mix_times = {0};
+            }
+        else
+            {
+            a_split = a->split_at_times( { start_time+length }, fade );
+            mix_times = {0, end_time - fade};
+            }
+
+        (*mod)( a_split[0], 0 );
         }
-    return pvec_split;
-    }
-
-struct F_Audio_vector_mix { AudioVec operator()( AudioVec a,
-    int group_size )
-    { 
-    std::cout << "falter::Audio::vector_mix";
-
-    auto pvec_split = groupify( a, group_size );
-    AudioVec out;
-    std::transform( pvec_split.begin(), pvec_split.end(), std::back_inserter( out ), []( const std::vector<const Audio *> & v )
+    else
         {
-        return std::make_shared<flan::Audio>( flan::Audio::mix( v ) );
-        } );
+        if( end_time >= a->get_length() )
+            {
+            a_split = a->split_at_times( { start_time }, fade );
+            mix_times = {0, start_time - fade};
+            }
+        else
+            {
+            a_split = a->split_at_times( { start_time, end_time }, fade );
+            mix_times = {0, start_time - fade, end_time - 2*fade};
+            }
 
-    return out;
+        (*mod)( a_split[1], start_time );
+        }
+
+    if( keep_timing.b ) return std::make_shared<flan::Audio>( Audio::mix( a_split, mix_times ) );
+    else return std::make_shared<flan::Audio>( Audio::join( a_split, -fade ) );
     } };
 
-struct F_Audio_vector_combine_channel { AudioVec operator()( AudioVec a,
-    int group_size )
-    { 
-    std::cout << "falter::Audio::vector_combine_channel";
-
-    auto pvec_split = groupify( a, group_size );
-    AudioVec out;
-    std::transform( pvec_split.begin(), pvec_split.end(), std::back_inserter( out ), []( const std::vector<const Audio *> & v )
-        {
-        return std::make_shared<flan::Audio>( flan::Audio::combine_channels( v ) );
-        } );
-
-    return out;
-    } };
-
-struct F_Audio_vector_join { AudioVec operator()( AudioVec a,
-    int group_size )
-    { 
-    std::cout << "falter::Audio::vector_join";
-
-    auto pvec_split = groupify( a, group_size );
-    AudioVec out;
-    std::transform( pvec_split.begin(), pvec_split.end(), std::back_inserter( out ), []( const std::vector<const Audio *> & v )
-        {
-        return std::make_shared<flan::Audio>( flan::Audio::join( v ) );
-        } );
-
-    return out;
-    } };
-
-struct F_Audio_vector_attach { AudioVec operator()( pAudio a,
-    AudioVec b )
-    { 
-    std::cout << "falter::Audio::vector_attach";
-
-    AudioVec out = { std::make_shared<flan::Audio>( a->copy() ) };
-    out.insert( out.end(), b.begin(), b.end() );
-
-    return out;
-    } };
-
-struct F_Audio_vector_attach_vec { AudioVec operator()( AudioVec a,
-    AudioVec b )
-    { 
-    std::cout << "falter::Audio::vector_attach";
-
-    AudioVec out;
-    for( pAudio & audio : a )
-        out.push_back( std::make_shared<flan::Audio>( audio->copy() ) );
-    out.insert( out.end(), b.begin(), b.end() );
-
-    return out;
-    } };
-
-struct F_Audio_vector_repeat { AudioVec operator()( pAudio a,
-    int n )
-    { 
-    std::cout << "falter::Audio::vector_repeat";
-
-    AudioVec out;
-    for( int i = 0; i < n; ++i )
-        out.push_back( std::make_shared<flan::Audio>( a->copy() ) );
-
-    return out;
-    } };
-
-struct F_Audio_vector_repeat_vec { AudioVec operator()( AudioVec a,
-    int n )
-    { 
-    std::cout << "falter::Audio::vector_repeat";
-
-    AudioVec out;
-    for( int i = 0; i < n; ++i )
-        for( int j = 0; j < a.size(); ++j )
-            out.push_back( std::make_shared<flan::Audio>( a[j]->copy() ) );
-
-    return out;
-    } };
-
-struct F_Audio_vector_mod_n { AudioVec operator()( AudioVec a,
+struct F_Audio_dry_wet { pAudio operator()( pAudio a,
+    pFunc1x1 ratio,
     pAudioMod mod )
-    { 
-    std::cout << "falter::Audio::vector_mod_n";
-
-    AudioVec out;
-    for( pAudio & audio : a )
-        out.push_back( std::make_shared<flan::Audio>( audio->copy() ) );
-    for( int n = 0; n < a.size(); ++n )
-        (*mod)( *out[n], n + 1 );
-    
-    return out;
+    {
+    Audio b = a->copy();
+    (*mod)( b, 0 );
+    Func1x1 f1 = [&]( float t ){ const float ratio_c = std::clamp( (*ratio)(t), 0.0f, 1.0f ); return std::sqrt( 1.0f - ratio_c ); };
+    Func1x1 f2 = [&]( float t ){ const float ratio_c = std::clamp( (*ratio)(t), 0.0f, 1.0f ); return std::sqrt( ratio_c ); };
+    return std::make_shared<flan::Audio>( Audio::mix( { a.get(), &b }, {0, 0}, std::vector<const Func1x1*>{&f1, &f2} ) );
     } };
-
-struct F_Audio_vector_mod_if { AudioVec operator()( AudioVec a,
-    pModIfPredicate predicate,
-    pAudioMod mod )
-    { 
-    std::cout << "falter::Audio::vector_mod_if";
-
-    AudioVec out;
-    for( pAudio & audio : a )
-        out.push_back( std::make_shared<flan::Audio>( audio->copy() ) );
-    for( int n = 0; n < a.size(); ++n )
-        if( (*predicate)( std::make_pair( n + 1, out[n] ) ) )
-            (*mod)( *out[n], n + 1 );
-    
-    return out;
-    } };
-
 
 
 //============================================================================================================================================================
@@ -988,6 +977,7 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_get_num_frames,                        1>( L, "get_num_frames"                         );              
             luaF_register_helper<F_Audio_get_sample_rate,                       1>( L, "get_sample_rate"                        );              
             luaF_register_helper<F_Audio_get_length,                            1>( L, "get_length"                             );      
+            luaF_register_helper<F_Audio_get_max_amplitude,                     1>( L, "get_max_amplitude"                      );      
 
             // Conversions
             luaF_register_helper<F_Audio_resample,                              2>( L, "resample"                               );
@@ -999,8 +989,8 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_convert_to_left_right,                 1>( L, "convert_to_left_right"                  );
             luaF_register_helper<F_Audio_convert_to_stereo,                     1>( L, "convert_to_stereo"                      );
             luaF_register_helper<F_Audio_convert_to_mono,                       1>( L, "convert_to_mono"                        );
-            luaF_register_helper<F_Audio_convert_to_function,                   1>( L, "convert_to_function"                    );
-            luaF_register_helper<F_Audio_convert_to_wavetable,                  1>( L, "convert_to_wavetable"                   );
+            luaF_register_helper_select_return_type<F_Audio_convert_to_function, 1>( L, "convert_to_function"                   );
+            luaF_register_helper<F_Audio_convert_to_wavetable,                   1>( L, "convert_to_wavetable"                  );
 
             // Channels
             luaF_register_helper<F_Audio_split_channels,                        1>( L, "split_channels"                         );        
@@ -1010,8 +1000,8 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_get_energy_difference,                 2>( L, "get_energy_difference"                  );                   
             luaF_register_helper<F_Audio_get_local_wavelength,                  3>( L, "get_local_wavelength"                   );
             luaF_register_helper<F_Audio_get_local_frequency,                   2>( L, "get_local_frequency"                    );
-            luaF_register_helper<F_Audio_get_amplitude_envelope,                1>( L, "get_amplitude_envelope"                 );                        
-            luaF_register_helper<F_Audio_get_frequency_envelope,                1>( L, "get_frequency_envelope"                 );                        
+            luaF_register_helper_select_return_type<F_Audio_get_amplitude_envelope, 1>( L, "get_amplitude_envelope"             );
+            luaF_register_helper_select_return_type<F_Audio_get_frequency_envelope, 1>( L, "get_frequency_envelope"             );
 
             // Temporal
             luaF_register_helper<F_Audio_modify_boundaries,                     3>( L, "modify_boundaries"                      );           
@@ -1027,6 +1017,7 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_split_at_times,                        2>( L, "split_at_times"                         );
             luaF_register_helper<F_Audio_split_with_lengths,                    2>( L, "split_with_lengths"                     );
             luaF_register_helper<F_Audio_split_with_equal_lengths,              2>( L, "split_with_equal_lengths"               );
+            luaF_register_helper<F_Audio_rearrange,                             2>( L, "rearrange"                              );
             luaF_register_helper<F_Audio_random_chunks,                         3>( L, "random_chunks"                          );
 
             // Volume
@@ -1043,7 +1034,7 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_compress,                              2>( L, "compress"                               );
 
             // Spatial
-            luaF_register_helper<F_Audio_stereo_spatialize,                     2>( L, "spatialize"                      );                               
+            luaF_register_helper<F_Audio_stereo_spatialize,                     2>( L, "spatialize"                             );                               
             luaF_register_helper<F_Audio_pan,                                   2>( L, "pan"                                    );
             luaF_register_helper<F_Audio_widen,                                 2>( L, "widen"                                  );
 
@@ -1068,27 +1059,25 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_convolve,                              2>( L, "convolve"                               );
 
             // Synthesis
-            luaF_register_helper<F_Audio_texture,                               5>( L, "texture"                                );                                                 
+            luaF_register_helper<F_Audio_texture,                               3>( L, "texture"                                );                                                 
             luaF_register_helper<F_Audio_granulate,                             6>( L, "texture_granulate"                      );                        
             luaF_register_helper<F_Audio_psola,                                 3>( L, "texture_psola"                          );          
 
-            // These are only registered to Audio
-            lua_pushcclosure( L, luaF_LTMP<F_Audio_vector_attach,        2>, 0 ); lua_setfield( L, -3, "vector_attach"          ); 
-            lua_pushcclosure( L, luaF_LTMP<F_Audio_vector_repeat,        2>, 0 ); lua_setfield( L, -3, "vector_repeat"          );          
+            // Vector input methods. These can still act on single Audios, but usually are no-ops when doing so.
+            luaF_register_helper<F_Audio_combine_channels,                      1>( L, "combine_channels"                       );  
+            luaF_register_helper<F_Audio_mix,                                   1>( L, "mix"                                    ); 
+            luaF_register_helper<F_Audio_join,                                  1>( L, "join"                                   ); 
+            luaF_register_helper<F_Audio_select,                                2>( L, "select"                                 );  
+            luaF_register_helper<F_Audio_vec_texture,                           3>( L, "vec_texture"                            );  
 
-            // Register static Audio functions taking vector<Audio> as AudioVec methods
-            lua_pushcclosure( L, luaF_LTMP<F_Audio_combine_channels,         1>, 0 ); lua_setfield( L, -2, "combine_channels"       );  
-            lua_pushcclosure( L, luaF_LTMP<F_Audio_mix,                      1>, 0 ); lua_setfield( L, -2, "mix"                    ); 
-            lua_pushcclosure( L, luaF_LTMP<F_Audio_mix_variable_gain,        3>, 0 ); lua_setfield( L, -2, "mix_variable_gain"      ); 
-            lua_pushcclosure( L, luaF_LTMP<F_Audio_vector_mix,               2>, 0 ); lua_setfield( L, -2, "vector_mix"             ); 
-            lua_pushcclosure( L, luaF_LTMP<F_Audio_vector_combine_channel,   2>, 0 ); lua_setfield( L, -2, "vector_combine_channel" ); 
-            lua_pushcclosure( L, luaF_LTMP<F_Audio_vector_attach_vec,        2>, 0 ); lua_setfield( L, -2, "vector_attach"          ); 
-            lua_pushcclosure( L, luaF_LTMP<F_Audio_vector_repeat_vec,        2>, 0 ); lua_setfield( L, -2, "vector_repeat"          ); 
-            lua_pushcclosure( L, luaF_LTMP<F_Audio_vector_mod_n,             2>, 0 ); lua_setfield( L, -2, "vector_mod_n"           ); 
-            lua_pushcclosure( L, luaF_LTMP<F_Audio_vector_mod_if,            3>, 0 ); lua_setfield( L, -2, "vector_mod_if"          ); 
-            lua_pushcclosure( L, luaF_LTMP<F_Audio_vector_join,              2>, 0 ); lua_setfield( L, -2, "vector_join"            ); 
-            lua_pushcclosure( L, luaF_LTMP<F_Audio_join,                     1>, 0 ); lua_setfield( L, -2, "join"                   ); 
-            lua_pushcclosure( L, luaF_LTMP<F_Audio_select,                   2>, 0 ); lua_setfield( L, -2, "select"                 );  
+            luaF_register_helper<F_vec_group<Audio>,                            3>( L, "vec_group"                              ); 
+            luaF_register_helper<F_vec_attach<Audio>,                           2>( L, "vec_attach"                             ); 
+            luaF_register_helper<F_vec_repeat<Audio>,                           2>( L, "vec_repeat"                             );
+            luaF_register_helper<F_vec_for_each<Audio>,                         2>( L, "vec_for_each"                           );
+            luaF_register_helper<F_vec_filter<Audio>,                           2>( L, "vec_filter"                             ); 
+
+            luaF_register_helper<F_Audio_apply_to_section,                      4>( L, "apply_to_section"                       ); 
+            luaF_register_helper<F_Audio_dry_wet,                               3>( L, "dry_wet"                                ); 
 
 	lua_pop( L, 2 );
     } 

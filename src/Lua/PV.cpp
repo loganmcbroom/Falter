@@ -17,6 +17,7 @@ extern "C"
 #include "Usertypes.h"
 #include "Interpolators.h"
 #include "Function.h"
+#include "VecMethods.h"
 
 using namespace flan;
 
@@ -278,6 +279,57 @@ struct F_PV_synthesize { pPV operator()(
         wrapFuncAxB<TF, Frequency>( harmonic_frequency_std_dev ) 
         ) ); 
     } };
+
+
+//============================================================================================================================================================
+// Helpers - These are not part of flan, they are helpers for ltmp processing
+//============================================================================================================================================================
+
+struct F_PV_apply_to_section { pPV operator()( pPV a,
+    Second start_time,
+    Second length,
+    pPVMod mod )
+    {
+    /*
+    I'm sure the branches in this function could be simplified, but I don't think it's worth doing.
+    The branches handle cases where the start_time/end_time lay outside the bounds of the input.
+    */
+
+    length = std::max( 0.0f, length );
+    const Second end_time = start_time + length;
+    if( start_time >= a->get_length() || end_time <= 0.0f ) return a;
+
+    std::vector<flan::PV> a_split;
+
+    if( start_time <= 0 )
+        {  
+        if( end_time >= a->get_length() ) a_split.push_back( a->copy() );
+        else a_split = a->split_at_times( { start_time+length } );
+        (*mod)( a_split[0], 0 );
+        }
+    else
+        {
+        if( end_time >= a->get_length() ) a_split = a->split_at_times( { start_time } );
+        else a_split = a->split_at_times( { start_time, end_time } );
+        (*mod)( a_split[1], start_time );
+        }
+
+    return std::make_shared<flan::PV>( PV::join( a_split ) );
+    } };
+
+struct F_PV_dry_wet { pPV operator()( pPV a,
+    pFunc1x1 ratio,
+    pPVMod mod )
+    {
+    PV b = a->copy();
+    (*mod)( b, 0 );
+    Func1x1 f1 = [&]( float t ){ const float ratio_c = std::clamp( (*ratio)(t), 0.0f, 1.0f ); return std::sqrt( 1.0f - ratio_c ); };
+    Func1x1 f2 = [&]( float t ){ const float ratio_c = std::clamp( (*ratio)(t), 0.0f, 1.0f ); return std::sqrt( ratio_c ); };
+    const Audio dry_audio = a->convert_to_audio();
+    const Audio wet_audio = b.convert_to_audio();
+    const Audio mixed = Audio::mix( { &dry_audio, &wet_audio }, {0, 0}, std::vector<const Func1x1*>{&f1, &f2} );
+    return std::make_shared<flan::PV>( mixed.convert_to_PV() );
+    } };
  
 
 
@@ -319,8 +371,6 @@ void luaF_register_PV( lua_State * L )
     // Conversions
     luaF_register_helper<F_PV_convert_to_audio,             1>( L, "convert_to_audio" );
     luaF_register_helper<F_PV_convert_to_lr_audio,          1>( L, "convert_to_lr_audio" );
-    // luaF_register_helper<F_Audio_convert_to_audio_selector, 1>( L, "__call" );
-    // luaF_register_helper<F_PV_convertToGraph, flan::Graph, PV, Rect, Pixel, Pixel, float>( L, "convertToGraph" );
     luaF_register_helper<F_PV_save_to_bmp,                  2>( L, "save_to_bmp" );
 
     // Contour
@@ -349,10 +399,17 @@ void luaF_register_PV( lua_State * L )
     luaF_register_helper<F_PV_replace_amplitudes,           2>( L, "replace_amplitudes" );
     luaF_register_helper<F_PV_subtract_amplitudes,          2>( L, "subtract_amplitudes" );
     luaF_register_helper<F_PV_shape,                        2>( L, "shape" );
-    // luaF_register_helper<F_PV_perturb,                  3>( L, "perturb" );
     luaF_register_helper<F_PV_retain_n_loudest_partials,    2>( L, "retain_n_loudest_partials" );
     luaF_register_helper<F_PV_remove_n_loudest_partials,    2>( L, "remove_n_loudest_partials" );
     luaF_register_helper<F_PV_resonate,                     3>( L, "resonate" );
+
+    luaF_register_helper<F_vec_group<PV>,                   3>( L, "vec_group"                              ); 
+    luaF_register_helper<F_vec_attach<PV>,                  2>( L, "vec_attach"                             ); 
+    luaF_register_helper<F_vec_repeat<PV>,                  2>( L, "vec_repeat"                             );
+    luaF_register_helper<F_vec_for_each<PV>,                2>( L, "vec_for_each"                           );
+    luaF_register_helper<F_vec_filter<PV>,                  2>( L, "vec_filter"                             );
+    luaF_register_helper<F_PV_apply_to_section,             4>( L, "apply_to_section"                       );
+    luaF_register_helper<F_PV_dry_wet,                      3>( L, "dry_wet"                                );
 
 	lua_pop( L, 2 );
     }

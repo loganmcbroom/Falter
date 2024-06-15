@@ -83,6 +83,19 @@ constexpr auto luaF_get_args_as_tuple( lua_State * L )
         // You can't get a reference from lua, so remove ref and const from the type
         using ArgType = std::remove_const_t< std::remove_reference_t< liph::function_argument_n<I, Functor> > >;
 
+        // For algorithms taking an AudioVec, it's convenient to be able to call them with plain Audio
+        if constexpr( std::is_same_v<ArgType, AudioVec> ) // If Arg type needed is AudioVec
+            {
+            if( luaF_is<pAudio>( L, I + 1) ) // If Arg type provided is Audio
+                {
+                // Put the Audio into a Vec
+                const pAudio a = luaF_check<pAudio>( L, I + 1 );
+                const AudioVec vec = { a };
+                luaF_push( L, vec );
+                lua_replace( L, I + 1 );
+                }
+            }
+
         return std::tuple_cat( 
             std::make_tuple( luaF_LTMP_check<ArgType>( L, I + 1 ) ), // +1 for lua indexing
             luaF_get_args_as_tuple<Functor, numArgs, I + 1>( L ) // +1 for recursion
@@ -116,7 +129,7 @@ static size_t get_size_of_largest_tuple( const Tup & t )
 // As the other arguments may be vectors with less elements, those vectors are used modulo thier size.
 // Given an index i, this returns a tuple not of LTMP vectors, but of elements from those vectors, for the ith LTMP step.
 template<typename Tup, size_t I = 0>
-auto luaF_LTMP_getCurrentTuple( Tup t, int i )
+auto luaF_LTMP_get_current_tuple( Tup t, int i )
     {
     constexpr size_t numArgs = std::tuple_size_v<Tup>;
 
@@ -127,7 +140,7 @@ auto luaF_LTMP_getCurrentTuple( Tup t, int i )
         auto vec = std::get<I>( t );
         return std::tuple_cat( 
             std::make_tuple( vec[ i % vec.size() ] ),
-            luaF_LTMP_getCurrentTuple<Tup, I + 1>( t, i )
+            luaF_LTMP_get_current_tuple<Tup, I + 1>( t, i )
             );
         }
     }
@@ -171,7 +184,7 @@ static int luaF_LTMP_dispatched( lua_State* L )
         {
         for( int i = 0; i < size_of_largest_tuple; ++i )
             {
-            auto currentTuple = luaF_LTMP_getCurrentTuple( vecTuple, i );
+            auto currentTuple = luaF_LTMP_get_current_tuple( vecTuple, i );
             std::apply( Functor(), currentTuple );
             if( canceller ) 
                 throw std::runtime_error( "Couldn't complete script, thread was cancelled." );
@@ -184,7 +197,7 @@ static int luaF_LTMP_dispatched( lua_State* L )
         outputs.reserve( size_of_largest_tuple );
         for( int i = 0; i < size_of_largest_tuple; ++i )
             {
-            auto currentTuple = luaF_LTMP_getCurrentTuple( vecTuple, i );
+            auto currentTuple = luaF_LTMP_get_current_tuple( vecTuple, i );
             outputs.push_back( std::apply( Functor(), currentTuple ) );
             if( canceller ) 
                 throw std::runtime_error( "Couldn't complete script, thread was cancelled" );
@@ -259,10 +272,41 @@ int luaF_LTMP_force_single_return( lua_State * L )
     else return n;
     }
 
+// Helper, mostly for methods returning functions that would be awkward to need to say [1] after for single inputs.
+// This returns the same as LTMP for arrays returned larger than 1 element, and for single element arrays, returns the contained object.
+template<typename LuaCFunc, size_t NumNonDefaults>
+int luaF_LTMP_select_return_type( lua_State * L )
+    {
+    const int n = luaF_LTMP<LuaCFunc, NumNonDefaults>( L );
+    if( lua_istable( L, 1 ) && lua_objlen( L, 1 ) == 1 )
+        {
+        lua_rawgeti( L, 1, 1 );
+        lua_replace( L, 1 );
+        return 1;
+        }
+    else return n;
+    }
+
 // Helper for pushing the correct LTMP method onto both the Lua type and the Lua array type.
 template<typename Functor, size_t numNonDefaults>
 void luaF_register_helper( lua_State* L, const std::string & name )
     {
     lua_pushcclosure( L, luaF_LTMP<Functor, numNonDefaults>, 0 );  lua_setfield( L, -3, name.c_str() ); 
     lua_pushcclosure( L, luaF_LTMP<Functor, numNonDefaults>, 0 );  lua_setfield( L, -2, name.c_str() );
+    }
+
+// Same as luaF_register_helper but with force_single_return
+template<typename Functor, size_t numNonDefaults>
+void luaF_register_helper_force_single_return( lua_State* L, const std::string & name )
+    {
+    lua_pushcclosure( L, luaF_LTMP_force_single_return<Functor, numNonDefaults>, 0 );  lua_setfield( L, -3, name.c_str() ); 
+    lua_pushcclosure( L, luaF_LTMP_force_single_return<Functor, numNonDefaults>, 0 );  lua_setfield( L, -2, name.c_str() );
+    }
+
+// Same as luaF_register_helper but with select_return_type
+template<typename Functor, size_t numNonDefaults>
+void luaF_register_helper_select_return_type( lua_State* L, const std::string & name )
+    {
+    lua_pushcclosure( L, luaF_LTMP_select_return_type<Functor, numNonDefaults>, 0 );  lua_setfield( L, -3, name.c_str() ); 
+    lua_pushcclosure( L, luaF_LTMP_select_return_type<Functor, numNonDefaults>, 0 );  lua_setfield( L, -2, name.c_str() );
     }

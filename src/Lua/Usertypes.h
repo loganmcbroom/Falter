@@ -23,10 +23,14 @@ template<> constexpr bool luaF_isUsertype<pFunc2x2>()           { return true; }
 template<> constexpr bool luaF_isUsertype<pWavetable>()         { return true; };
 template<> constexpr bool luaF_isUsertype<InterpolatorIndex>()  { return true; };
 
-template<> constexpr bool luaF_isUsertype<pAudioMod>()          { return true; };
+template<> constexpr bool luaF_isUsertype<pSoundMod<flan::Audio>>()          { return true; };
+template<> constexpr bool luaF_isUsertype<pSoundMod<flan::PV>>()          { return true; };
 template<> constexpr bool luaF_isUsertype<pPrismFunc>()         { return true; };
 template<> constexpr bool luaF_isUsertype<pGrainSource>()       { return true; };
-template<> constexpr bool luaF_isUsertype<pModIfPredicate>()    { return true; };
+template<> constexpr bool luaF_isUsertype<pVecPredicate<flan::Audio>>() { return true; };
+template<> constexpr bool luaF_isUsertype<pVecGroupFunc<flan::Audio>>() { return true; };
+template<> constexpr bool luaF_isUsertype<pVecPredicate<flan::PV>>() { return true; };
+template<> constexpr bool luaF_isUsertype<pVecGroupFunc<flan::PV>>() { return true; };
 
 template<> constexpr bool luaF_isUsertype<AudioVec>()           { return true; };
 template<> constexpr bool luaF_isUsertype<PVVec>()              { return true; };

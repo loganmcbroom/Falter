@@ -31,10 +31,14 @@ template<> std::string luaF_getUsertypeName<Func1x2Vec>()           { return "Fu
 template<> std::string luaF_getUsertypeName<Func2x2Vec>()           { return "Func2x2Vec";       }
 template<> std::string luaF_getUsertypeName<WavetableVec>()         { return "WavetableVec";     }
 
-template<> std::string luaF_getUsertypeName<pAudioMod>()            { return "AudioMod";         }
-template<> std::string luaF_getUsertypeName<pPrismFunc>()           { return "PrismFunc";        }
-template<> std::string luaF_getUsertypeName<pGrainSource>()         { return "GrainSource";      }
-template<> std::string luaF_getUsertypeName<pModIfPredicate>()      { return "ModIfPredicate";   }
+template<> std::string luaF_getUsertypeName<pSoundMod<flan::Audio>>()       { return "AudioMod";            }
+template<> std::string luaF_getUsertypeName<pSoundMod<flan::PV>>()          { return "PVMod";               }
+template<> std::string luaF_getUsertypeName<pPrismFunc>()                   { return "PrismFunc";           }
+template<> std::string luaF_getUsertypeName<pGrainSource>()                 { return "GrainSource";         }
+template<> std::string luaF_getUsertypeName<pVecPredicate<flan::Audio>>()   { return "AudioVecPredicate";   }
+template<> std::string luaF_getUsertypeName<pVecGroupFunc<flan::Audio>>()   { return "AudioVecGroupFunc";   }
+template<> std::string luaF_getUsertypeName<pVecPredicate<flan::PV>>()      { return "PVVecPredicate";      }
+template<> std::string luaF_getUsertypeName<pVecGroupFunc<flan::PV>>()      { return "PVVecGroupFunc";      }
 
 
 // Register =======================================================================================================================

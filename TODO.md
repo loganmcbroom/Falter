@@ -5,9 +5,7 @@ Off topic:
 Maybe todo:
     Could keep seperate logs for each thread
     clicking on clip should set transport to that point in the clip
-    We should have some type of process that takes in a bunch of inputs and texturizes as in cdp
+    publish lls addon once the new framework develops
  
 Task:
-    publish lls addon
-        wait a bit for new framework developments
         

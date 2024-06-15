@@ -49,6 +49,7 @@ target_sources( Falter
         src/Lua/Function.cpp
         src/Lua/Interpolators.cpp
         src/Lua/Wavetable.cpp
+        src/Lua/VecMethods.cpp
 		
 		#simplefilewatcher lib
 		src/simplefilewatcher/FileWatcher.cpp
