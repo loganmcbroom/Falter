@@ -197,6 +197,21 @@ struct F_PV_desample { pPV operator()( pPV a,
     { std::cout << "flan::PV::desample";
     return std::make_shared<flan::PV>( a->desample( wrapFuncAxB<TF, float>( b ), index2interpolator( c ) ) ); } };
 
+struct F_PV_smear_time { pPV operator()( pPV a, 
+    pFunc2x1 smear_size, 
+    pFunc2x1 granularity = std::make_shared<Func2x1>( 5 ), 
+    pFunc1x1 distribution = std::make_shared<Func1x1>( []( Second t )
+        { 
+        return 0.5f * ( 1.0f + std::cos( std::_Pi * t ) );
+        } )
+    )
+    { std::cout << "flan::PV::smear_time";
+    return std::make_shared<flan::PV>( a->smear_time( 
+        wrapFuncAxB<TF, float>( smear_size ), 
+        wrapFuncAxB<TF, int>( granularity ), 
+        *distribution
+        ) ); } };
+
 struct F_PV_time_extrapolate { pPV operator()( pPV a, 
     flan::Second b = 0, 
     flan::Second c = -1, 
@@ -391,6 +406,7 @@ void luaF_register_PV( lua_State * L )
     luaF_register_helper<F_PV_stretch,                      2>( L, "stretch" );
     luaF_register_helper<F_PV_stretch_spline,               2>( L, "stretch_spline" );
     luaF_register_helper<F_PV_desample,                     2>( L, "desample" );
+    luaF_register_helper<F_PV_smear_time,                   2>( L, "smear_time" );
     luaF_register_helper<F_PV_time_extrapolate,             4>( L, "time_extrapolate" );
 
     // Extras

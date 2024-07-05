@@ -616,21 +616,27 @@ struct F_Audio_filter_2pole_highshelf { pAudio operator()( pAudio a,
 /* Other filters ==================== */
 
 struct F_Audio_filter_1pole_multinotch { pAudio operator()( pAudio a,
+    uint16_t order,
     pFunc1x1 cutoff,
+    pFunc1x1 feedback = std::make_shared<Func1x1>( 0 ),
+    Fool invert = false, 
     pFunc1x1 wet_dry = std::make_shared<Func1x1>( .5 ),
-    uint16_t order = 1,
-    Fool invert = false )
+    Fool use_saturator = false
+    )
     { std::cout << "flan::Audio::filter_1pole_multinotch";
-    return std::make_shared<flan::Audio>( a->filter_1pole_multinotch( *cutoff, *wet_dry, order, invert.b ) ); } };
+    return std::make_shared<flan::Audio>( a->filter_1pole_multinotch( order, *cutoff, *feedback, invert.b, *wet_dry, use_saturator.b ) ); } };
 
 struct F_Audio_filter_2pole_multinotch { pAudio operator()( pAudio a,
+    uint16_t order,
     pFunc1x1 cutoff,
     pFunc1x1 damping,
+    pFunc1x1 feedback = std::make_shared<Func1x1>( 0 ),
+    Fool invert = false,
     pFunc1x1 wet_dry = std::make_shared<Func1x1>( .5 ),
-    uint16_t order = 1,
-    Fool invert = false )
+    Fool use_saturator = false
+    )
     { std::cout << "flan::Audio::filter_2pole_multinotch";
-    return std::make_shared<flan::Audio>( a->filter_2pole_multinotch( *cutoff, *damping, *wet_dry, order, invert.b ) ); } };
+    return std::make_shared<flan::Audio>( a->filter_2pole_multinotch( order, *cutoff, *damping, *feedback, invert.b, *wet_dry, use_saturator.b ) ); } };
 
 struct F_Audio_filter_comb { pAudio operator()( pAudio a,
     pFunc1x1 cutoff,
@@ -640,6 +646,18 @@ struct F_Audio_filter_comb { pAudio operator()( pAudio a,
     { std::cout << "flan::Audio::filter_comb";
     return std::make_shared<flan::Audio>( a->filter_comb( *cutoff, *feedback, *wet_dry, invert.b ) ); } };
 
+struct F_Audio_shift_frequency { pAudio operator()( pAudio a,
+    pFunc1x1 shift,
+    Frequency low_cutoff = 30
+    )
+    { std::cout << "flan::Audio::shift_frequency";
+    return std::make_shared<flan::Audio>( a->shift_frequency( *shift, low_cutoff ) ); } };
+
+struct F_Audio_halfband_modulate { pAudio operator()( pAudio a,
+    pFunc1x2 modulator
+    )
+    { std::cout << "flan::Audio::halfband_modulate";
+    return std::make_shared<flan::Audio>( a->halfband_modulate( wrapFuncAxB<Second, std::complex<float>>( modulator ) ) ); } };
 
 
 //============================================================================================================================================================
@@ -772,7 +790,20 @@ struct F_Audio_texture { pAudio operator()( pAudio a,
     Fool feedback = false )
     { 
     std::cout << "flan::Audio::texture";
-        return std::make_shared<flan::Audio>( a->texture( length, *grains_per_second, *time_scatter, *mod, feedback.b ) ); 
+    return std::make_shared<flan::Audio>( a->texture( length, *grains_per_second, *time_scatter, *mod, feedback.b ) ); 
+    } };
+
+struct F_Audio_texture_effect { pAudio operator()( pAudio a,
+    pFunc1x1 effects_per_second, 
+    pFunc1x1 time_scatter,
+    pFunc1x1 effect_length,
+    pAudioMod mod,
+    Second fade_time = 16.0f/48000.0f,
+    InterpolatorIndex interp = InterpolatorIndex::linear
+    )
+    { 
+    std::cout << "flan::Audio::texture_effect";
+    return std::make_shared<flan::Audio>( a->texture_effect( *effects_per_second, *time_scatter, *effect_length, *mod, fade_time, index2interpolator( interp ) ) ); 
     } };
 
 // Grain Compositions ===================================================================================================================
@@ -1051,15 +1082,18 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_filter_2pole_lowshelf,                 4>( L, "filter_2pole_lowshelf"                  );                        
             luaF_register_helper<F_Audio_filter_2pole_bandshelf,                4>( L, "filter_2pole_bandshelf"                 );                             
             luaF_register_helper<F_Audio_filter_2pole_highshelf,                4>( L, "filter_2pole_highshelf"                 );                             
-            luaF_register_helper<F_Audio_filter_1pole_multinotch,               2>( L, "filter_1pole_multinotch"                );                              
-            luaF_register_helper<F_Audio_filter_2pole_multinotch,               3>( L, "filter_2pole_multinotch"                );                              
-            luaF_register_helper<F_Audio_filter_comb,                           2>( L, "filter_comb"                            );      
+            luaF_register_helper<F_Audio_filter_1pole_multinotch,               3>( L, "filter_1pole_multinotch"                );                              
+            luaF_register_helper<F_Audio_filter_2pole_multinotch,               4>( L, "filter_2pole_multinotch"                );                              
+            luaF_register_helper<F_Audio_filter_comb,                           2>( L, "filter_comb"                            );     
+            luaF_register_helper<F_Audio_shift_frequency,                       2>( L, "shift_frequency"                        );      
+            luaF_register_helper<F_Audio_halfband_modulate,                     2>( L, "halfband_modulate"                      );      
 
             // Combination
             luaF_register_helper<F_Audio_convolve,                              2>( L, "convolve"                               );
 
             // Synthesis
             luaF_register_helper<F_Audio_texture,                               3>( L, "texture"                                );                                                 
+            luaF_register_helper<F_Audio_texture_effect,                        5>( L, "texture_effect"                         );                                                 
             luaF_register_helper<F_Audio_granulate,                             6>( L, "texture_granulate"                      );                        
             luaF_register_helper<F_Audio_psola,                                 3>( L, "texture_psola"                          );          
 
