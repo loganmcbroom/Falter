@@ -88,7 +88,7 @@ FalterClip::~FalterClip()
 
 void FalterClip::resized()
 	{
-	int s = getHeight() / 2;
+	const int s = getHeight() / 2;
 	busButton.setBounds( 0, 0, s, s );
 	saveButton.setBounds( 0, s, s, s );
 	retrieveScriptButton.setBounds( s, 0, s, s );
@@ -102,6 +102,11 @@ void FalterClip::mouseDrag( const MouseEvent & )
 		{
 		dragC->startDragging( (String) DragAndDropTypes::AudioClip, this );
 		}
+	}
+
+void FalterClip::mouseMove( const MouseEvent & event )
+	{
+	repaint();
 	}
 
 AudioThumbnail &FalterClip::getThumbnail() { return thumbnail; }
@@ -124,16 +129,26 @@ void FalterClip::paintButton(Graphics &g, bool isMouseOverButton, bool )
 			g.setFont( lnf.fontMonospace );
 			g.setColour( lnf.light );
 
+			auto seconds2TimeString = [&]( float t )
+				{
+				return t > 60?
+					String( t / 60.0f, 3 ) + " min" :
+					String( t, 3 ) + " sec";
+				};
+
 			// Write audio length
-			auto r2dec = []( float x ){ return std::round( x * 1000 ) / 1000.0f; };
 			const float length = audio->get_length();
-			String lengthText = length > 60?
-				String( r2dec( length / 60.0f ) ) + " min" :
-				String( r2dec( length ) ) + " sec";
-			g.drawText( lengthText, boundsWithoutExitButtonRect.reduced( 3 ), Justification::bottomLeft );
+			g.drawText( seconds2TimeString( length ), boundsWithoutExitButtonRect.reduced( 3 ), Justification::bottomLeft );
 
 			// write audio name
 			g.drawText( getName(), boundsWithoutExitButtonRect.reduced( 3 ), Justification::topLeft );
+
+			// Write current mouse position in the audio
+			const Point<int> mousePos = getMouseXYRelative();
+			const int leftOffset = getHeight(); // Account for buttons on left side
+			const float ratio = float( mousePos.getX() - leftOffset ) / ( getWidth() - leftOffset );
+			const float numSecondsHovered = ratio * length;
+			g.drawText( seconds2TimeString( numSecondsHovered ), boundsWithoutExitButtonRect.reduced( 3 ), Justification::bottomRight );
 			}
 		}
 	}

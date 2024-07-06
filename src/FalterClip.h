@@ -48,6 +48,7 @@ private:
 	void buttonClicked( Button * button ) override;
 	void resized() override;
 	void mouseDrag( const MouseEvent & event ) override;
+	void mouseMove( const MouseEvent & event ) override;
 
 	FalterPlayer & player;
 	
