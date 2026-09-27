@@ -94,6 +94,11 @@ public:
     /** Returns the height of the treeview items. */
     int getItemHeight() const noexcept                          { return itemHeight; }
 
+    /* Falter modification */
+    enum class FileSortType { Name, LastModified };
+    FileSortType sortType;
+    bool shouldSortForward;
+
 private:
     //==============================================================================
     String dragAndDropDescription;

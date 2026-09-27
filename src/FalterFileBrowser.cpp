@@ -24,7 +24,11 @@ FalterFileBrowser::FalterFileBrowser()
     setFileFilter( &filter );
     auto * tree = dynamic_cast<FileTreeComponent *>( getDisplayComponent() );
     if( tree )
+        {
         tree->setDragAndDropDescription( DragAndDropTypes::FalterFile );
+        tree->sortType = FileTreeComponent::FileSortType::LastModified;
+        tree->shouldSortForward = false;
+        }
     else
         Logger::writeToLog( "Drag and Drop from file browser setup failed... somehow?" );
     }
@@ -34,25 +38,41 @@ void FalterFileBrowser::paint( Graphics & g )
     g.fillAll( FalterLookAndFeel::getLNF().dark );
     }
 
-bool FalterFileBrowser::isInterestedInDragSource( const SourceDetails & s )
-    {
-    return s.description == DragAndDropTypes::AudioClip;
-    }
+// bool FalterFileBrowser::isInterestedInDragSource( const SourceDetails & s )
+//     {
+//     return s.description == DragAndDropTypes::AudioClip;
+//     }
 
-void FalterFileBrowser::itemDropped( const SourceDetails & s )
-    {
-    if( s.description == DragAndDropTypes::AudioClip )	
-		{
-		auto item = dynamic_cast<FalterClip *>( s.sourceComponent.get() );
-		if( ! item ) return;
-		const std::shared_ptr<flan::Audio> audio = item->getAudio();
-        if( audio->is_null() ) return;
+// void FalterFileBrowser::itemDropped( const SourceDetails & s )
+//     {
+//     if( s.description == DragAndDropTypes::AudioClip )	
+// 		{
+// 		auto item = dynamic_cast<FalterClip *>( s.sourceComponent.get() );
+// 		if( ! item ) return;
+// 		const std::shared_ptr<flan::Audio> audio = item->getAudio();
+//         if( audio->is_null() ) return;
 
-        const String filepath = getRoot().getFullPathName() + "\\" + item->getName();
-        Logger::writeToLog( "Saving by dropping to browser is currently disabled." );
-        //audio.save( filepath.toStdString() );
-		}
-	else jassertfalse;
-    }
+//         const String filepath = getRoot().getFullPathName() + "\\" + item->getName();
+//         Logger::writeToLog( "Saving by dropping to browser is currently disabled." );
+//         //audio.save( filepath.toStdString() );
+// 		}
+// 	else jassertfalse;
+//     }
+
+// void FalterFileBrowser::mouseDown( const MouseEvent & event ) 
+//     {
+//     if( event.mods.isRightButtonDown() )
+//         {
+//         if( auto * tree = dynamic_cast<FileTreeComponent *>( getDisplayComponent() ) )
+//             {
+//             tree->sortType = FileTreeComponent::FileSortType::LastModified;
+//             tree->shouldSortForward = false;
+//             }
+//         }
+//     else
+//         {
+//         FileBrowserComponent::mouseDown( event );
+//         }
+//     }
 
 

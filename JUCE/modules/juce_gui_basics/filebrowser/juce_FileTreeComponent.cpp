@@ -94,7 +94,8 @@ public:
     void update (const DirectoryContentsList::FileInfo& fileInfo)
     {
         fileSize = File::descriptionOfSizeInBytes (fileInfo.fileSize);
-        modTime = fileInfo.modificationTime.formatted ("%d %b '%y %H:%M");
+        //modTime = fileInfo.modificationTime.formatted ("%d %b '%y %H:%M");
+        modTime = fileInfo.modificationTime.toMilliseconds();
         isDirectory = fileInfo.isDirectory;
         repaintItem();
     }
@@ -131,7 +132,7 @@ public:
 
         owner.getLookAndFeel().drawFileBrowserRow (g, width, height,
                                                    file, file.getFileName(),
-                                                   &icon, fileSize, modTime,
+                                                   &icon, fileSize, String( modTime ),
                                                    isDirectory, isSelected(),
                                                    getIndexInParent(), owner);
     }
@@ -172,13 +173,14 @@ public:
     const File file;
     std::function<void (const File&, bool)> onOpennessChanged;
 
-private:
+//private:
     FileTreeComponent& owner;
     bool isDirectory = false;
     TimeSliceThread& thread;
     CriticalSection iconUpdate;
     Image icon;
-    String fileSize, modTime;
+    String fileSize;
+    int64 modTime;
 
     void updateIcon (const bool onlyUpdateIfCached)
     {
@@ -308,23 +310,48 @@ private:
 struct FileEntry
 {
     String path;
+    int64 modTime;
     bool isDirectory;
 
-    int compareWindows (const FileEntry& other) const
+    int compareWindows (const FileEntry& other, FileTreeComponent::FileSortType sortType = FileTreeComponent::FileSortType::Name ) const
     {
-        const auto toTuple = [] (const auto& x) { return std::tuple (! x.isDirectory, x.path.toLowerCase()); };
-        return threeWayCompare (toTuple (*this), toTuple (other));
+        if( sortType == FileTreeComponent::FileSortType::Name )
+            {
+            const auto toTuple = [] (const auto& x) { return std::tuple (! x.isDirectory, x.path.toLowerCase()); };
+            return threeWayCompare (toTuple (*this), toTuple (other));
+            }
+        else
+            {
+            const auto toTuple = [] (const auto& x) { return std::tuple (! x.isDirectory, x.modTime); };
+            return threeWayCompare (toTuple (*this), toTuple (other));
+            }
     }
 
-    int compareLinux (const FileEntry& other) const
+    int compareLinux (const FileEntry& other, FileTreeComponent::FileSortType sortType = FileTreeComponent::FileSortType::Name ) const
     {
-        const auto toTuple = [] (const auto& x) { return std::tuple (x.path.toUpperCase(), ReverseCompareString { x.path }); };
-        return threeWayCompare (toTuple (*this), toTuple (other));
+
+         if( sortType == FileTreeComponent::FileSortType::Name )
+            {
+            const auto toTuple = [] (const auto& x) { return std::tuple (x.path.toUpperCase(), ReverseCompareString { x.path }); };
+            return threeWayCompare (toTuple (*this), toTuple (other));
+            }
+        else
+            {
+            const auto toTuple = [] (const auto& x) { return std::tuple (! x.isDirectory, x.modTime); };
+            return threeWayCompare (toTuple (*this), toTuple (other));
+            }
     }
 
-    int compareDefault (const FileEntry& other) const
+    int compareDefault (const FileEntry& other, FileTreeComponent::FileSortType sortType = FileTreeComponent::FileSortType::Name ) const
     {
-        return threeWayCompare (path.toLowerCase(), other.path.toLowerCase());
+         if( sortType == FileTreeComponent::FileSortType::Name )
+            {
+            return threeWayCompare (path.toLowerCase(), other.path.toLowerCase());
+            }
+        else
+            {
+            return threeWayCompare (modTime, other.modTime);
+            }
     }
 };
 
@@ -335,15 +362,15 @@ public:
         : systemType (systemTypeIn)
     {}
 
-    int compare (const FileEntry& first, const FileEntry& second) const
+    int compare (const FileEntry& first, const FileEntry& second, FileTreeComponent::FileSortType sortType = FileTreeComponent::FileSortType::Name ) const
     {
         if ((systemType & SystemStats::OperatingSystemType::Windows) != 0)
-            return first.compareWindows (second);
+            return first.compareWindows (second, sortType);
 
         if ((systemType & SystemStats::OperatingSystemType::Linux) != 0)
-            return first.compareLinux (second);
+            return first.compareLinux (second, sortType);
 
-        return first.compareDefault (second);
+        return first.compareDefault (second, sortType);
     }
 
     bool operator() (const FileEntry& first, const FileEntry& second) const
@@ -487,8 +514,14 @@ private:
 
                 static const OSDependentFileComparisonRules comparisonRules { SystemStats::getOperatingSystemType() };
 
-                return comparisonRules.compare ({ item1->file.getFullPathName(), item1->file.isDirectory() },
-                                                { item2->file.getFullPathName(), item2->file.isDirectory() });
+                auto sortType = item1->owner.sortType;
+                int sortForward = item1->owner.shouldSortForward? 1 : -1;
+                return comparisonRules.compare ({ item1->file.getFullPathName(), sortForward * item1->modTime, item1->file.isDirectory() },
+                                                { item2->file.getFullPathName(), sortForward * item2->modTime, item2->file.isDirectory() },
+                                                sortType);
+
+                // return comparisonRules.compare ({ item1->file.getFullPathName(), item1->file.isDirectory() },
+                //                                 { item2->file.getFullPathName(), item2->file.isDirectory() });
             }
         };
 
@@ -550,6 +583,7 @@ private:
 //==============================================================================
 FileTreeComponent::FileTreeComponent (DirectoryContentsList& listToShow)
     : DirectoryContentsDisplayComponent (listToShow),
+    //  sortType( FileSortType::Name ),
       itemHeight (22)
 {
     controller = std::make_unique<Controller> (*this);

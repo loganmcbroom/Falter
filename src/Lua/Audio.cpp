@@ -105,7 +105,7 @@ struct F_Audio_create_empty_with_frames { pAudio operator()(
 //============================================================================================================================================================
 
 struct F_Audio_resample { pAudio operator()( pAudio a,
-    flan::FrameRate b )
+    FrameRate b )
     { std::cout << "flan::Audio::resample";
     return std::make_shared<flan::Audio>( a->resample( b ) ); } };
 
@@ -289,6 +289,12 @@ struct F_Audio_remove_edge_silence { pAudio operator()( pAudio a,
     { std::cout << "flan::Audio::remove_edge_silence";
     return std::make_shared<flan::Audio>( a->remove_edge_silence( non_silent_level, fade_time ) ); } };
 
+struct F_Audio_split_at_minima { AudioVec operator()( pAudio a,
+    float window_width = 0.1f,
+    float gain_threshold = 0.1f )
+    { std::cout << "flan::Audio::get_loud_chunks";
+    return vecToSharedPvec( a->split_at_minima( window_width, gain_threshold ) ); } };
+
 struct F_Audio_get_loud_chunks { AudioVec operator()( pAudio a,
     Amplitude non_silent_level,
     Second minimum_gap, 
@@ -461,20 +467,6 @@ struct F_Audio_invert_phase { pAudio operator()( pAudio a )
     { std::cout << "flan::Audio::invert_phase";
     return std::make_shared<flan::Audio>( a->invert_phase() ); } };
 
-struct F_Audio_waveshape { pAudio operator()( pAudio a, 
-    pFunc2x1 b,
-    uint16_t c = 4 )
-    { std::cout << "flan::Audio::waveshape";
-    return std::make_shared<flan::Audio>( a->waveshape( wrapFuncAxB<std::pair<Second, Sample>, Sample>( b ), c ) ); } };
-
-struct F_Audio_add_moisture { pAudio operator()( pAudio a,
-    pFunc1x1 amount = std::make_shared<Func1x1>( .5f ),
-    pFunc1x1 frequency = std::make_shared<Func1x1>( 96 ),
-    pFunc1x1 skew = std::make_shared<Func1x1>( 4 ),
-    pFunc1x1 waveform = std::make_shared<Func1x1>( flan::waveforms::sine ) )
-    { std::cout << "flan::Audio::add_moisture";
-    return std::make_shared<flan::Audio>( a->add_moisture( *amount, *frequency, *skew, *waveform ) ); } };
-
 struct F_Audio_compress { pAudio operator()( pAudio a,
     pFunc1x1 threshold, 
     pFunc1x1 compression_ratio = std::make_shared<Func1x1>( 3.0f ), 
@@ -485,6 +477,39 @@ struct F_Audio_compress { pAudio operator()( pAudio a,
     { std::cout << "flan::Audio::compress";
     return std::make_shared<flan::Audio>( a->compress( *threshold, *compression_ratio, *attack, *release, *knee_width, sidechain_source.get() ) ); } };
 
+
+
+//============================================================================================================================================================
+// Distortion
+//============================================================================================================================================================
+
+struct F_Audio_waveshape { pAudio operator()( pAudio a, 
+    pFunc2x1 b,
+    uint16_t c = 4 )
+    { std::cout << "flan::Audio::waveshape";
+    return std::make_shared<flan::Audio>( a->waveshape( wrapFuncAxB<std::pair<Second, Sample>, Sample>( b ), c ) ); } };
+
+struct F_distort { pAudio operator()( pAudio a, 
+    pShaper b,
+    pFunc1x1 c,
+    std::vector<pShaper> d = {},
+    int e = 4
+    )
+    { std::cout << "flan::Audio::distort";
+    return std::make_shared<flan::Audio>( a->waveshape_feedback( b, *c, d, e ) ); } };
+
+struct F_Audio_downsample { pAudio operator()( pAudio a, 
+    pFunc1x1 b )
+    { std::cout << "flan::Audio::downsample";
+    return std::make_shared<flan::Audio>( a->downsample( *b ) ); } };
+
+struct F_Audio_add_moisture { pAudio operator()( pAudio a,
+    pFunc1x1 amount = std::make_shared<Func1x1>( .5f ),
+    pFunc1x1 frequency = std::make_shared<Func1x1>( 96 ),
+    pFunc1x1 skew = std::make_shared<Func1x1>( 4 ),
+    pFunc1x1 waveform = std::make_shared<Func1x1>( flan::waveforms::sine ) )
+    { std::cout << "flan::Audio::add_moisture";
+    return std::make_shared<flan::Audio>( a->add_moisture( *amount, *frequency, *skew, *waveform ) ); } };
 
 
 //============================================================================================================================================================
@@ -620,11 +645,11 @@ struct F_Audio_filter_1pole_multinotch { pAudio operator()( pAudio a,
     pFunc1x1 cutoff,
     pFunc1x1 feedback = std::make_shared<Func1x1>( 0 ),
     Fool invert = false, 
-    pFunc1x1 wet_dry = std::make_shared<Func1x1>( .5 ),
-    Fool use_saturator = false
+    Fool use_saturator = false,
+    pFunc1x1 wet_dry = std::make_shared<Func1x1>( .5 )
     )
     { std::cout << "flan::Audio::filter_1pole_multinotch";
-    return std::make_shared<flan::Audio>( a->filter_1pole_multinotch( order, *cutoff, *feedback, invert.b, *wet_dry, use_saturator.b ) ); } };
+    return std::make_shared<flan::Audio>( a->filter_1pole_multinotch( order, *cutoff, *feedback, invert.b, use_saturator.b, *wet_dry ) ); } };
 
 struct F_Audio_filter_2pole_multinotch { pAudio operator()( pAudio a,
     uint16_t order,
@@ -632,11 +657,11 @@ struct F_Audio_filter_2pole_multinotch { pAudio operator()( pAudio a,
     pFunc1x1 damping,
     pFunc1x1 feedback = std::make_shared<Func1x1>( 0 ),
     Fool invert = false,
-    pFunc1x1 wet_dry = std::make_shared<Func1x1>( .5 ),
-    Fool use_saturator = false
+    Fool use_saturator = false,
+    pFunc1x1 wet_dry = std::make_shared<Func1x1>( .5 )
     )
     { std::cout << "flan::Audio::filter_2pole_multinotch";
-    return std::make_shared<flan::Audio>( a->filter_2pole_multinotch( order, *cutoff, *damping, *feedback, invert.b, *wet_dry, use_saturator.b ) ); } };
+    return std::make_shared<flan::Audio>( a->filter_2pole_multinotch( order, *cutoff, *damping, *feedback, invert.b, use_saturator.b, *wet_dry ) ); } };
 
 struct F_Audio_filter_comb { pAudio operator()( pAudio a,
     pFunc1x1 cutoff,
@@ -964,8 +989,10 @@ struct F_Audio_dry_wet { pAudio operator()( pAudio a,
     {
     Audio b = a->copy();
     (*mod)( b, 0 );
-    Func1x1 f1 = [&]( float t ){ const float ratio_c = std::clamp( (*ratio)(t), 0.0f, 1.0f ); return std::sqrt( 1.0f - ratio_c ); };
-    Func1x1 f2 = [&]( float t ){ const float ratio_c = std::clamp( (*ratio)(t), 0.0f, 1.0f ); return std::sqrt( ratio_c ); };
+    Func1x1 f1 = Func1x1( [&]( float t ){ const float ratio_c = std::clamp( (*ratio)(t), 0.0f, 1.0f ); return std::sqrt( 1.0f - ratio_c ); }, 
+        flan::ExecutionPolicy::Linear_Sequenced );
+    Func1x1 f2 = Func1x1( [&]( float t ){ const float ratio_c = std::clamp( (*ratio)(t), 0.0f, 1.0f ); return std::sqrt( ratio_c ); },
+        flan::ExecutionPolicy::Linear_Sequenced );
     return std::make_shared<flan::Audio>( Audio::mix( { a.get(), &b }, {0, 0}, std::vector<const Func1x1*>{&f1, &f2} ) );
     } };
 
@@ -1037,6 +1064,7 @@ void luaF_register_Audio( lua_State * L )
             // Temporal
             luaF_register_helper<F_Audio_modify_boundaries,                     3>( L, "modify_boundaries"                      );           
             luaF_register_helper<F_Audio_remove_edge_silence,                   2>( L, "remove_edge_silence"                    );                 
+            luaF_register_helper<F_Audio_split_at_minima,                       1>( L, "split_at_minima"                        );                 
             luaF_register_helper<F_Audio_get_loud_chunks,                       3>( L, "get_loud_chunks"                        );                 
             luaF_register_helper<F_Audio_remove_silence,                        3>( L, "remove_silence"                         );        
             luaF_register_helper<F_Audio_reverse,                               1>( L, "reverse"                                );
@@ -1060,9 +1088,13 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_fade,                                  1>( L, "fade"                                   );
             luaF_register_helper<F_Audio_fade_frames,                           1>( L, "fade_frames"                            );
             luaF_register_helper<F_Audio_invert_phase,                          1>( L, "invert_phase"                           );
-            luaF_register_helper<F_Audio_waveshape,                             2>( L, "waveshape"                              );
-            luaF_register_helper<F_Audio_add_moisture,                          1>( L, "add_moisture"                           );  
             luaF_register_helper<F_Audio_compress,                              2>( L, "compress"                               );
+
+            // Distortion
+            luaF_register_helper<F_Audio_waveshape,                             2>( L, "waveshape"                              );
+            luaF_register_helper<F_distort,                                     3>( L, "distort"                                );
+            luaF_register_helper<F_Audio_downsample,                            2>( L, "downsample"                             );
+            luaF_register_helper<F_Audio_add_moisture,                          1>( L, "add_moisture"                           );  
 
             // Spatial
             luaF_register_helper<F_Audio_stereo_spatialize,                     2>( L, "spatialize"                             );                               
@@ -1109,6 +1141,7 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_vec_repeat<Audio>,                           2>( L, "vec_repeat"                             );
             luaF_register_helper<F_vec_for_each<Audio>,                         2>( L, "vec_for_each"                           );
             luaF_register_helper<F_vec_filter<Audio>,                           2>( L, "vec_filter"                             ); 
+            luaF_register_helper<F_vec_sort<Audio>,                             2>( L, "vec_sort"                               ); 
 
             luaF_register_helper<F_Audio_apply_to_section,                      4>( L, "apply_to_section"                       ); 
             luaF_register_helper<F_Audio_dry_wet,                               3>( L, "dry_wet"                                ); 

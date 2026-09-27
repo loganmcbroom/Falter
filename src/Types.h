@@ -19,6 +19,7 @@ namespace flan
     struct MF;
     struct TF;
     class PrismFunc;
+    struct Shaper;
 
     template<typename T>
     class SoundMod;
@@ -38,6 +39,7 @@ using pAudio                = std::shared_ptr<flan::Audio>;
 using pPV                   = std::shared_ptr<flan::PV>;
 using pWavetable            = std::shared_ptr<flan::Wavetable>;
 using pGraph                = std::shared_ptr<flan::Graph>;
+using pShaper               = std::shared_ptr<flan::Shaper>;
 
 template<typename T>
 using VecP = std::vector<std::shared_ptr<T>>;
@@ -68,6 +70,10 @@ using pGrainSource          = std::shared_ptr<flan::Function<flan::Second, flan:
 
 template<typename T> using VecPredicate     = flan::Function<std::pair<std::shared_ptr<T>, int>, bool>;
 template<typename T> using pVecPredicate    = std::shared_ptr<VecPredicate<T>>;
+
+template<typename T> using VecMap           = flan::Function<std::shared_ptr<T>, float>;
+template<typename T> using pVecMap          = std::shared_ptr<VecMap<T>>;
+
 template<typename T> using VecGroupFunc     = flan::Function<std::pair<VecP<T>, int>, VecP<T>>;
 template<typename T> using pVecGroupFunc    = std::shared_ptr<VecGroupFunc<T>>;
 

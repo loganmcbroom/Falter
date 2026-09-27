@@ -20,3 +20,6 @@ struct F_vec_for_each { VecP<T> operator()( VecP<T> as,	pSoundMod<T> mod ); };
 
 template<typename T>
 struct F_vec_filter { VecP<T> operator()( VecP<T> a, pVecPredicate<T> predicate ); };
+
+template<typename T>
+struct F_vec_sort { VecP<T> operator()( VecP<T> a, pVecMap<T> metric ); };

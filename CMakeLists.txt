@@ -11,7 +11,7 @@ juce_add_gui_app( Falter
     # ICON_BIG ...                      # ICON_* arguments specify a path to an image file to use as an icon
     # ICON_SMALL ...
     # DOCUMENT_EXTENSIONS ...           # Specify file extensions that should be associated with this app
-    COMPANY_NAME "Logan McBroom"        # Specify the name of the app's author
+    COMPANY_NAME "Logan_McBroom"        # Specify the name of the app's author
     PRODUCT_NAME "Falter")              # The name of the final executable, which can differ from the target name
 
 juce_generate_juce_header( Falter )
@@ -44,6 +44,7 @@ target_sources( Falter
         src/Lua/LTMP.h
         src/Lua/LTMP.cpp
         src/Lua/Audio.cpp
+        src/Lua/Shapers.cpp
         src/Lua/ExtraCheckFuncs.cpp
         src/Lua/PV.cpp
         src/Lua/Function.cpp
@@ -85,8 +86,8 @@ target_link_libraries( Falter
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/" )
 
 # Flan
-find_package( Flan REQUIRED ) # Flan::Flan
-target_link_libraries( Falter PRIVATE Flan::Flan )
+find_package( Flan REQUIRED ) # Flan::Flan 
+target_link_libraries( Falter PRIVATE Flan::Flan ) 
 
 # LuaJit
 find_package( LuaJit REQUIRED ) # LuaJit::LuaJit

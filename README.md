@@ -123,6 +123,19 @@ as I think the former behaviour is easy enough to manually add as a Lua utility 
 One final issue with the LTMP is that it causes the LLS information to be imperfect. I am trying to get this sorted out, but there are some 
 complex edge cases, so if you spot an incorrect type let me know.
 
+#### Distortion
+Coming in hot from the future (compared to the rest of the text here) to tell you about how to use Audio:distort.
+I made this system for handling distortion but it's actually a general purpose dsp block that you slot units into.
+These units are called "Shapers", and they are stored in the global "sh" table. You can also pass a function in as a shaper to create your own,
+but there is currently no mechanism to allow custom shapers with memory from Lua. You can pass a capturing lambda and use the capture as memory,
+but that memory won't be wiped between channels. The function gets a time input, so you could in theory reset the memory by checking for t=0.
+ANYWAY, here's an example of how to use them. Also worth noting, compact lambda syntax has been added since the last time I used LuaJIT, which
+makes my entire software simply fantastic to use. Example:
+
+return inputs[1]:distort( sh.quantize( 0.5 ), 0.5, {|t,s| -> s*s, sh.compress( 0.5 )} )
+
+The first argument is the primary waveshaper, the second is the feedback scale, and the third is the process chain for the feedback path.
+
 #### Examples
 
 It's probably best to get started by modifying some example scripts. Examples should already be included with any release package of Falter,

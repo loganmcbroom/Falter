@@ -165,6 +165,32 @@ template pVecPredicate<flan::Audio> luaF_checkVecPredicate( lua_State * L, int i
 template pVecPredicate<flan::PV> luaF_checkVecPredicate( lua_State * L, int i );
 
 template<typename T>
+pVecMap<T> luaF_checkVecMap( lua_State * L, int i )
+    {
+    if( lua_isfunction( L, i ) )
+        {
+        lua_pushvalue( L, i ); // Copy the function, ref will pop it
+        const int ref = luaL_ref( L, LUA_REGISTRYINDEX );
+        return std::make_shared<VecMap<T>>( [L, ref]( std::shared_ptr<T> x ) -> float
+            {
+            lua_rawgeti( L, LUA_REGISTRYINDEX, ref );
+            luaF_push( L, x );
+            lua_call( L, 1, 1 );
+            if( luaF_is<float>( L, -1 ) )
+                {
+                const float choich = luaF_check<float>( L, -1 ); 
+                lua_pop( L, 1 );
+                return choich;
+                }
+            else return 0.0f;
+            }, flan::ExecutionPolicy::Linear_Sequenced );
+        }
+    else throw std::runtime_error( "Non-function used in place of predicate." );
+    }
+template pVecMap<flan::Audio> luaF_checkVecMap( lua_State * L, int i );
+template pVecMap<flan::PV> luaF_checkVecMap( lua_State * L, int i );
+
+template<typename T>
 pVecGroupFunc<T> luaF_checkVecGroupFunc( lua_State * L, int i )
     {
     if( lua_isfunction( L, i ) )

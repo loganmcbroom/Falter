@@ -297,17 +297,20 @@ void FalterClip::retrieveScriptButtonPressed() const
 		Logger::writeToLog( "This file contains no script =(" );
 	else
 		{
-		auto scriptName = File( sndfileStrings.artist ).getFileName();
-		auto scriptPath = Settings::getScriptFile().getParentDirectory().getChildFile( scriptName );
-		FileChooser chooser( "Save script as", scriptPath, "*.lua" );
+        Logger::writeToLog( "Copied script to clipboard" );
+        juce::SystemClipboard::copyTextToClipboard( sndfileStrings.comment );
 
-		if( chooser.browseForFileToSave( true ) )
-			{
-			File choice = chooser.getResult();
-			if( ! choice.existsAsFile() )
-				choice.create();
-			choice.replaceWithText( sndfileStrings.comment );
-			}
+		// auto scriptName = File( sndfileStrings.artist ).getFileName();
+		// auto scriptPath = Settings::getScriptFile().getParentDirectory().getChildFile( scriptName );
+		// FileChooser chooser( "Save script as", scriptPath, "*.lua" );
+
+		// if( chooser.browseForFileToSave( true ) )
+		// 	{
+		// 	File choice = chooser.getResult();
+		// 	if( ! choice.existsAsFile() )
+		// 		choice.create();
+		// 	choice.replaceWithText( sndfileStrings.comment );
+		// 	}
 		}
 	}
 

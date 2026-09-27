@@ -13,6 +13,7 @@ extern "C"
 #include "Wavetable.h"
 #include "Function.h"
 #include "Interpolators.h"
+#include "Shapers.h"
 
 template<> std::string luaF_getUsertypeName<pAudio>()               { return "Audio";            }
 template<> std::string luaF_getUsertypeName<pPV>()                  { return "PV";               }
@@ -22,6 +23,7 @@ template<> std::string luaF_getUsertypeName<pFunc1x2>()             { return "Fu
 template<> std::string luaF_getUsertypeName<pFunc2x2>()             { return "Func2x2";          }
 template<> std::string luaF_getUsertypeName<pWavetable>()           { return "Wavetable";        }
 template<> std::string luaF_getUsertypeName<InterpolatorIndex>()    { return "Interp";           }
+template<> std::string luaF_getUsertypeName<pShaper>()              { return "Shaper";           }
 
 template<> std::string luaF_getUsertypeName<AudioVec>()             { return "AudioVec";         }
 template<> std::string luaF_getUsertypeName<PVVec>()                { return "PVVec";            }
@@ -36,8 +38,10 @@ template<> std::string luaF_getUsertypeName<pSoundMod<flan::PV>>()          { re
 template<> std::string luaF_getUsertypeName<pPrismFunc>()                   { return "PrismFunc";           }
 template<> std::string luaF_getUsertypeName<pGrainSource>()                 { return "GrainSource";         }
 template<> std::string luaF_getUsertypeName<pVecPredicate<flan::Audio>>()   { return "AudioVecPredicate";   }
+template<> std::string luaF_getUsertypeName<pVecMap<flan::Audio>>()         { return "AudioVecMap";         }
 template<> std::string luaF_getUsertypeName<pVecGroupFunc<flan::Audio>>()   { return "AudioVecGroupFunc";   }
 template<> std::string luaF_getUsertypeName<pVecPredicate<flan::PV>>()      { return "PVVecPredicate";      }
+template<> std::string luaF_getUsertypeName<pVecMap<flan::PV>>()            { return "PVVecMap";            }
 template<> std::string luaF_getUsertypeName<pVecGroupFunc<flan::PV>>()      { return "PVVecGroupFunc";      }
 
 
@@ -51,6 +55,7 @@ void luaF_register_Usertypes( lua_State * L )
 	luaF_register_Wavetable( L );
     luaF_register_function_types( L ); // Register all function types into the Lua context
     luaF_register_Interpolators( L );
+    luaF_register_Shapers( L );
     }
 
     

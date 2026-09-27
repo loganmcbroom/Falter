@@ -43,7 +43,6 @@ T luaF_checkFunc_base( lua_State * L, int i )
         return std::make_shared<F>( luaF_check<O>( L, i ) );
     else if( lua_isfunction( L, i ) ) // Lua function recieved, convert to userdata wrapped type
         {
-        
         lua_pushvalue( L, i ); // Copy the function, ref will pop it. Check functions like this one shouldn't pop.
         const int ref = luaL_ref( L, LUA_REGISTRYINDEX );
         return std::make_shared<F>( [L, ref]( I in ) -> O

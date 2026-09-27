@@ -1,13 +1,13 @@
 #include "PV.h"
 
-#include "PV.h"
-
 extern "C"
 {
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
 }
+
+#include <numbers>
 
 #include <flan/Audio/Audio.h>
 #include <flan/PV/PV.h>
@@ -202,7 +202,7 @@ struct F_PV_smear_time { pPV operator()( pPV a,
     pFunc2x1 granularity = std::make_shared<Func2x1>( 5 ), 
     pFunc1x1 distribution = std::make_shared<Func1x1>( []( Second t )
         { 
-        return 0.5f * ( 1.0f + std::cos( std::_Pi * t ) );
+        return 0.5f * ( 1.0f + std::cos( std::numbers::pi_v<float> * t ) );
         } )
     )
     { std::cout << "flan::PV::smear_time";
@@ -424,6 +424,7 @@ void luaF_register_PV( lua_State * L )
     luaF_register_helper<F_vec_repeat<PV>,                  2>( L, "vec_repeat"                             );
     luaF_register_helper<F_vec_for_each<PV>,                2>( L, "vec_for_each"                           );
     luaF_register_helper<F_vec_filter<PV>,                  2>( L, "vec_filter"                             );
+    luaF_register_helper<F_vec_sort<PV>,                    2>( L, "vec_sort"                               );
     luaF_register_helper<F_PV_apply_to_section,             4>( L, "apply_to_section"                       );
     luaF_register_helper<F_PV_dry_wet,                      3>( L, "dry_wet"                                );
 

@@ -22,6 +22,7 @@ find_library( LUAJIT_LIBRARY_DIR
 		libluajit-5.1.a
 		libluajit-5.1.dll.a
 		libluajit-5.1.dll.lib
+        lua51.lib
 	PATH_SUFFIXES
 		src
 		lib

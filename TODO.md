@@ -3,9 +3,18 @@ Off topic:
     qmk compile -kb sofle_choc -km loganmcbroom -e CONVERT_TO=elite_pi
 
 Maybe todo:
-    Could keep seperate logs for each thread
     clicking on clip should set transport to that point in the clip
     publish lls addon once the new framework develops
  
 Task:
-        
+    add_harmonics is too slow
+    enforce vector access boundary in prism
+
+    honestly, ask ai about other fx, reverb in particular
+
+    add multiband splitter
+        we have this for 1pole already, just hard to remember because of weird name
+        rename then
+        also look into splitting at multiple points
+
+    review interp_points

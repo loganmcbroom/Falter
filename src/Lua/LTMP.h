@@ -43,14 +43,14 @@ std::vector<T> luaF_LTMP_check( lua_State * L, int i )
     }
 
 // Push a vector of T onto the Lua stack.
-// The vector should never be empty, if it is, error out.
+// The vector should never be empty, if it is, error out. - I'm here from the future, I now have an empty out use case.
 // If the vector has one element just push that element.
 // If the vector has multiple elements, push them all into a Lua array.
 template<typename T> 
 void luaF_LTMP_push( lua_State* L, const std::vector<T> & os )
     {
-    if( os.size() == 0 ) 
-        throw std::runtime_error( "luaF_LTMP_push was called with an empty output vector" );
+    // if( os.size() == 0 ) 
+    //     throw std::runtime_error( "luaF_LTMP_push was called with an empty output vector" );
 
     // I'd love to have this, but having the lua function output type depend on any number of args being LTMPd
     // makes knowing the return type nearly impossible.

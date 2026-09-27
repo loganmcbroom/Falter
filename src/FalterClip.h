@@ -54,7 +54,7 @@ private:
 	
 	std::shared_ptr<flan::Audio> audio;
 	std::vector<const float *> flanAudioChanPointers; // Needed to wrap flan buffer in Juce object
-	AudioBuffer<float> juceAudio; // Juce buffer wrapper for flan Audio
+	juce::AudioBuffer<float> juceAudio; // Juce buffer wrapper for flan Audio
 	MemoryAudioSource audioSource; // Juce AudioSource wrapper for Juce buffer
 
 	AudioThumbnail thumbnail;

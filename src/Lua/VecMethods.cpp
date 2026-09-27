@@ -1,5 +1,7 @@
 #include "VecMethods.h"
 
+#include <ranges>
+
 #include <flan/Audio/Audio.h>
 #include <flan/PV/PV.h>
 
@@ -106,3 +108,30 @@ VecP<T> F_vec_filter<T>::operator()(
     }
 template struct F_vec_filter<flan::Audio>;
 template struct F_vec_filter<flan::PV>;
+
+template<typename T>
+VecP<T> F_vec_sort<T>::operator()(
+    VecP<T> as,
+    pVecMap<T> metric )
+    {
+    std::cout << "falter::vec_filter";
+
+	std::vector<std::pair<float, std::shared_ptr<T>>> keyed;
+	keyed.reserve( as.size() );
+	for( auto& a : as )
+		{
+		auto copy = std::make_shared<T>( a->copy() );
+		keyed.emplace_back( (*metric)( copy ), std::move( copy ) );
+		}
+
+	std::ranges::sort( keyed, {}, []( const auto& x ) { return x.first; } );
+
+	VecP<T> out;
+	out.reserve( keyed.size() );
+	for( auto& [value, item] : keyed )
+		out.push_back( std::move( item ) );
+
+    return out;
+    }
+template struct F_vec_sort<flan::Audio>;
+template struct F_vec_sort<flan::PV>;

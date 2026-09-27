@@ -22,14 +22,17 @@ template<> constexpr bool luaF_isUsertype<pFunc1x2>()           { return true; }
 template<> constexpr bool luaF_isUsertype<pFunc2x2>()           { return true; };
 template<> constexpr bool luaF_isUsertype<pWavetable>()         { return true; };
 template<> constexpr bool luaF_isUsertype<InterpolatorIndex>()  { return true; };
+template<> constexpr bool luaF_isUsertype<pShaper>()            { return true; };
 
-template<> constexpr bool luaF_isUsertype<pSoundMod<flan::Audio>>()          { return true; };
-template<> constexpr bool luaF_isUsertype<pSoundMod<flan::PV>>()          { return true; };
+template<> constexpr bool luaF_isUsertype<pSoundMod<flan::Audio>>() { return true; };
+template<> constexpr bool luaF_isUsertype<pSoundMod<flan::PV>>()    { return true; };
 template<> constexpr bool luaF_isUsertype<pPrismFunc>()         { return true; };
 template<> constexpr bool luaF_isUsertype<pGrainSource>()       { return true; };
 template<> constexpr bool luaF_isUsertype<pVecPredicate<flan::Audio>>() { return true; };
+template<> constexpr bool luaF_isUsertype<pVecMap<flan::Audio>>() { return true; };
 template<> constexpr bool luaF_isUsertype<pVecGroupFunc<flan::Audio>>() { return true; };
 template<> constexpr bool luaF_isUsertype<pVecPredicate<flan::PV>>() { return true; };
+template<> constexpr bool luaF_isUsertype<pVecMap<flan::PV>>() { return true; };
 template<> constexpr bool luaF_isUsertype<pVecGroupFunc<flan::PV>>() { return true; };
 
 template<> constexpr bool luaF_isUsertype<AudioVec>()           { return true; };
@@ -66,7 +69,7 @@ bool luaF_isUsertype( lua_State * L, int i )
 template<typename T> T luaF_checkUsertype( lua_State * L, int i )
     {
     void * inputP = luaL_checkudata( L, i, luaF_getUsertypeName<T>().c_str() );
-    if( ! inputP ) 
+    if( !inputP ) 
         luaL_typerror( L, i, luaF_getUsertypeName<T>().c_str() );
     T * sap = static_cast<T*>( inputP );
     return *sap;
