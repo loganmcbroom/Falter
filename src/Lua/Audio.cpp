@@ -859,15 +859,28 @@ struct F_Audio_granulate { pAudio operator()( pAudio a,
     { std::cout << "flan::Audio::texture_granulate";
     return std::make_shared<flan::Audio>( a->granulate( length, *grains_per_second, *time_scatter, *time_selection, *grain_length, fade, *mod ) ); } };
 
-struct F_Audio_psola { pAudio operator()( pAudio a,
+struct F_Audio_time_warp { pAudio operator()( pAudio a,
     Second length, 
     pFunc1x1 time_selection,
     pAudioMod mod = std::make_shared<flan::AudioMod>() )
     { 
-    std::cout << "flan::Audio::texture_psola";
-    auto out = std::make_shared<flan::Audio>( a->psola( length, *time_selection, *mod ) ); 
+    std::cout << "flan::Audio::texture_time_warp";
+    auto out = std::make_shared<flan::Audio>( a->time_warp( length, *time_selection, *mod ) ); 
     if( length > 0 && !a->is_null() && out->is_null() )
-        std::cout << "    Psola returned no data, which indicates the input had no detectable frequency envelope.";
+        std::cout << "    time_warp returned no data, which indicates the input had no detectable frequency envelope.";
+    return out;
+    } };
+
+struct F_Audio_psola { pAudio operator()( pAudio a,
+    Second length, 
+    pFunc1x1 time_selection,
+    pFunc1x1 target_frequency,
+    pAudioMod mod = std::make_shared<flan::AudioMod>() )
+    { 
+    std::cout << "flan::Audio::psola";
+    auto out = std::make_shared<flan::Audio>( a->psola( length, *time_selection, *target_frequency, *mod ) ); 
+    if( length > 0 && !a->is_null() && out->is_null() )
+        std::cout << "    psola returned no data, which indicates the input had no detectable frequency envelope.";
     return out;
     } };
 
@@ -1127,7 +1140,8 @@ void luaF_register_Audio( lua_State * L )
             luaF_register_helper<F_Audio_texture,                               3>( L, "texture"                                );                                                 
             luaF_register_helper<F_Audio_texture_effect,                        5>( L, "texture_effect"                         );                                                 
             luaF_register_helper<F_Audio_granulate,                             6>( L, "texture_granulate"                      );                        
-            luaF_register_helper<F_Audio_psola,                                 3>( L, "texture_psola"                          );          
+            luaF_register_helper<F_Audio_time_warp,                             3>( L, "time_warp"                              );
+            luaF_register_helper<F_Audio_psola,                                 4>( L, "psola"                                  );
 
             // Vector input methods. These can still act on single Audios, but usually are no-ops when doing so.
             luaF_register_helper<F_Audio_combine_channels,                      1>( L, "combine_channels"                       );  

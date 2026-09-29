@@ -7,11 +7,6 @@ Maybe todo:
     publish lls addon once the new framework develops
  
 Task:
-    add_harmonics is too slow
-    enforce vector access boundary in prism
-
-    honestly, ask ai about other fx, reverb in particular
-
     add multiband splitter
         we have this for 1pole already, just hard to remember because of weird name
         rename then
